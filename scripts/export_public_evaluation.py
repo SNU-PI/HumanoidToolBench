@@ -24,6 +24,7 @@ FILES = (
     "pytest.ini",
     "uv.lock",
     "data/README.md",
+    "docs/ENVIRONMENTS.md",
     "docs/PUBLIC_EVALUATION.md",
     "docs/assets/paper-overview.png",
     "examples/serve_policy.py",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import traceback
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
@@ -64,6 +65,9 @@ def make_handler(
                     )
                 self.send_json(200, {"action": action})
             except Exception as exc:
+                # The evaluator only receives str(exc); keep the full traceback
+                # on the server's terminal so policy bugs can be located.
+                traceback.print_exc()
                 self.send_json(500, {"error": str(exc)})
 
         def log_message(self, format: str, *args) -> None:

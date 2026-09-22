@@ -30,8 +30,13 @@ uv run --no-project scripts/setup_evaluation.py --check
 The runtime needs the pinned MuJoCo/Python dependencies, G1 MJCF and meshes,
 the `gear_sonic` and `decoupled_wbc` runtime code, Balance/Walk controller
 weights, and the benchmark tool/distractor meshes with their collision parts.
-The downloader requires the `zstd` command. A Git checkout containing LFS
-pointers also needs Git LFS; source snapshots already contain those files.
+The balls, ice blocks and ring markers are primitives generated in code.
+Every mesh in the scene, the tools and the irrelevant household objects, is
+downloaded by the installer from the pinned MolmoSpaces release into
+`data/ms_assets`, which is why `zstd` is required, and verified by SHA-256
+against `resources/evaluation_assets.json` together with the controller
+weights. The packaged `resources/benchmark_assets` catalogue is used only
+when replaying recordings; the installer checks that it is hydrated.
 Controller weights are required even when the task policy runs on another
 machine. Demonstration recordings are a separate download; `--model` downloads
 supported task-model checkpoints automatically.
@@ -81,16 +86,19 @@ uv run humanoidtoolbench-eval --model /path/to/checkpoint
 ```
 
 The default condition is `humanoidtoolbench/G1BallMove-L0-S`. Set the positional
-environment argument to any canonical ID, or use `all` for all 18 conditions:
+environment argument to any canonical ID, with or without the
+`humanoidtoolbench/` prefix, or use `all` for all 18 conditions. `--list-envs`
+prints the IDs; [ENVIRONMENTS.md](ENVIRONMENTS.md) describes each condition.
 
 ```bash
-uv run humanoidtoolbench-eval humanoidtoolbench/G1BallRetrieve-L1-R --model /path/to/checkpoint
+uv run humanoidtoolbench-eval G1BallRetrieve-L1-R --model /path/to/checkpoint
 uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
-For a short diagnostic, add `--episodes 1 --max-steps 100`. Use `--dry-run`
-to inspect the run configuration without downloading weights or starting
-simulation. Neither a diagnostic nor a dry run is a benchmark score.
+For a short diagnostic, add `--episodes 1 --max-steps 100`; `--max-steps`
+accepts 1 through 3000. Use `--dry-run` to inspect the environment and episode
+settings without downloading weights or starting simulation. Neither a
+diagnostic nor a dry run is a benchmark score.
 
 Automatic loading supports native **HumanoidToolBench ACT and Diffusion Policy (DP)
 simulation exports**. A compatible model has a `run_config.json` containing
@@ -149,21 +157,25 @@ its loading and inference code in a `my_policy.py` file in the checkout root,
 then start the supplied server:
 
 ```bash
-PYTHONPATH=. uv run python examples/serve_policy.py --port 21000 --policy my_policy:predict \
+uv run python examples/serve_policy.py --port 21000 --policy my_policy:predict \
   --checkpoint MODEL_ID_OR_REVISION
 ```
 
-To use a separate model environment, run
-`PYTHONPATH=src:. python examples/serve_policy.py` with the same arguments,
-NumPy, and requests installed. The source path makes the HTTP adapter available
-without installing the simulator's dependencies in your model environment.
-`my_policy.py` must be importable by that Python process and provide
+`--policy` takes `module:function`, resolved from the current directory
+first, or a file path such as `--policy adapters/my_policy.py:predict`. To use
+a separate model environment, run `PYTHONPATH=src python examples/serve_policy.py`
+with the same arguments, NumPy, and requests installed. The source path makes
+the HTTP adapter available without installing the simulator's dependencies in
+your model environment. `my_policy.py` must provide
 `predict(request)`. The server decodes the HTTP payload into Python objects
 and NumPy arrays before calling your function. Load your checkpoint once in
 your module, then perform inference in `predict`. Use an immutable model
 revision or checkpoint content hash for `--checkpoint`. The server reports
 this identifier as provenance; it does not load or verify the weights on your
-behalf. Server metadata is retained with the evaluation result.
+behalf. The flag is optional, but a run started without it records
+`checkpoint: null` and is still marked reportable, so always pass it for
+results you intend to publish. Server metadata is retained with the
+evaluation result.
 
 In another terminal, connect the evaluator to that server:
 
@@ -171,12 +183,18 @@ In another terminal, connect the evaluator to that server:
 uv run humanoidtoolbench-eval --host 127.0.0.1 --port 21000
 ```
 
-Use the server's address with `--host` when it runs on another machine.
-`--model` and `--host` are alternative policy sources.
+Use the server's address with `--host` when it runs on another machine, and
+start the server with `--host 0.0.0.0` so that it accepts remote connections.
+`--model` and `--host` are alternative policy sources. Before loading the
+simulator, the evaluator checks that something is listening at
+`http://HOST:PORT/info` and exits with instructions if the connection fails;
+a server without an `/info` route still passes, with empty `policy_info`. A
+`predict` exception is returned to the evaluator as an HTTP 500 with its
+message, and the full traceback is printed on the server's terminal.
 
 | Request field | Value |
 | --- | --- |
-| `request["image"]["rgb_head_stereo_left"]` | RGB image, shape `(H, W, 3)` |
+| `request["image"]["rgb_head_stereo_left"]` | RGB image, shape `(360, 640, 3)`, `uint8` |
 | `request["state"]["states"]` | Policy state, shape `(1, 32)`, float32 |
 | `request["instruction"]` | Canonical task instruction |
 | `request["history"].get("reset", False)` | True on the first policy query of an episode |
@@ -203,12 +221,77 @@ after undoing training-time action normalization.
 
 Joint angles and angular commands use radians, base height uses metres, and
 navigation velocities use metres/second or radians/second. The flat left-hand
-order is thumb/middle/index; the right-hand order is thumb/index/middle. Use
-the definitions in [actions/g1.py](../src/humanoidtoolbench/actions/g1.py) and the
-state builder in [remote_humanoid.py](../src/humanoidtoolbench/policies/remote_humanoid.py)
-when adapting a model. The policy state excludes the leg joints from the raw
-43-value robot observation and includes the previous commanded height, starting
-at 0.74 for a new episode.
+order is thumb/middle/index; the right-hand order is thumb/index/middle. The
+definitions are in [actions/g1.py](../src/humanoidtoolbench/actions/g1.py) and the
+state builder in [remote_humanoid.py](../src/humanoidtoolbench/policies/remote_humanoid.py).
+The policy state excludes the leg joints from the raw 43-value robot
+observation and includes the previous commanded height, starting at 0.74 for a
+new episode.
+
+State slots 0 through 30 hold the measured angles of the same joints, in the
+same order, that action slots 0 through 30 command; state slot 31 is the
+base-height value from the last row of the most recent action chunk the
+policy returned (0.74 before the first chunk), not a measurement. The table
+below lists every action slot with the joint range of the shipped G1 model.
+The evaluator does not clip commands, so keep targets inside these ranges;
+behaviour outside them is controller-defined. Slots 28 through 30 are
+converted to a torso roll/pitch/yaw command for the lower-body controller,
+which chooses the actual waist joint targets.
+
+| Slot | Joint | Range (rad) |
+| --- | --- | --- |
+| 0 | left_hand_thumb_0_joint | -1.047 to 1.047 |
+| 1 | left_hand_thumb_1_joint | -0.724 to 1.047 |
+| 2 | left_hand_thumb_2_joint | 0 to 1.745 |
+| 3 | left_hand_middle_0_joint | -1.571 to 0 |
+| 4 | left_hand_middle_1_joint | -1.745 to 0 |
+| 5 | left_hand_index_0_joint | -1.571 to 0 |
+| 6 | left_hand_index_1_joint | -1.745 to 0 |
+| 7 | right_hand_thumb_0_joint | -1.047 to 1.047 |
+| 8 | right_hand_thumb_1_joint | -1.047 to 0.724 |
+| 9 | right_hand_thumb_2_joint | -1.745 to 0 |
+| 10 | right_hand_index_0_joint | 0 to 1.571 |
+| 11 | right_hand_index_1_joint | 0 to 1.745 |
+| 12 | right_hand_middle_0_joint | 0 to 1.571 |
+| 13 | right_hand_middle_1_joint | 0 to 1.745 |
+| 14 | left_shoulder_pitch_joint | -3.089 to 2.670 |
+| 15 | left_shoulder_roll_joint | -1.588 to 2.252 |
+| 16 | left_shoulder_yaw_joint | -2.618 to 2.618 |
+| 17 | left_elbow_joint | -1.047 to 2.094 |
+| 18 | left_wrist_roll_joint | -1.972 to 1.972 |
+| 19 | left_wrist_pitch_joint | -1.614 to 1.614 |
+| 20 | left_wrist_yaw_joint | -1.614 to 1.614 |
+| 21 | right_shoulder_pitch_joint | -3.089 to 2.670 |
+| 22 | right_shoulder_roll_joint | -2.252 to 1.588 |
+| 23 | right_shoulder_yaw_joint | -2.618 to 2.618 |
+| 24 | right_elbow_joint | -1.047 to 2.094 |
+| 25 | right_wrist_roll_joint | -1.972 to 1.972 |
+| 26 | right_wrist_pitch_joint | -1.614 to 1.614 |
+| 27 | right_wrist_yaw_joint | -1.614 to 1.614 |
+| 28 | waist_roll_joint | -0.52 to 0.52 |
+| 29 | waist_pitch_joint | -0.52 to 0.52 |
+| 30 | waist_yaw_joint | -2.618 to 2.618 |
+| 31 | Base height command (m); 0.74 at reset | not bounded |
+| 32 | Navigation forward velocity (m/s) | not bounded |
+| 33 | Navigation lateral velocity (m/s) | not bounded |
+| 34 | Navigation turn flag: a magnitude of at least 0.1 enables heading tracking of slot 35 | not bounded |
+| 35 | Navigation target yaw, absolute heading (rad) | not bounded |
+
+For the index and middle finger joints, zero is the open pose and the other
+end of the range is closed; `thumb_2` also has zero at one end, while
+`thumb_0` and `thumb_1` have zero inside their range. The shipped controller
+switches from the standing to the walking policy when the norm of slots 32
+through 34 reaches 0.1. Slot 34 is a flag, not a rate: while its magnitude is
+at least 0.1 the controller turns towards the absolute heading in slot 35 at
+the heading error divided by 0.5 s, capped at 1 rad/s; below 0.1 it does not
+turn. A policy that stays still should return zeros in slots 32 through 35.
+
+The image is the left eye of the head-mounted stereo camera, rendered at
+640 by 360 pixels with a 110 degree horizontal field of view, delivered as an
+RGB `uint8` array. Wrist cameras are recorded but not sent to the policy. The
+instruction is one of six fixed sentences listed in
+[ENVIRONMENTS.md](ENVIRONMENTS.md#the-18-conditions); it changes with the
+scenario and with L0 versus L1/L2, not with the mode.
 
 For a custom HTTP implementation, serve `POST /act` using the NumPy-aware JSON
 encoding in [http_client.py](../src/humanoidtoolbench/policies/http_client.py).
@@ -226,9 +309,12 @@ uv run humanoidtoolbench-eval humanoidtoolbench/G1BallRetrieve-L1-R \
   --max-steps 3000 --output data/evals/my-policy
 ```
 
-Use `all` as the environment argument to run all 18 conditions. Use `--dry-run`
-to inspect the configuration without starting simulation or contacting the
-server.
+Use `all` as the environment argument to run all 18 conditions. They run one
+after another in a single process. If validation fails on one condition the
+command stops and the later conditions are not run; completed conditions keep
+their `benchmark_result.json`. There is no resume: rerun the remaining IDs
+from `--list-envs` individually. Use `--dry-run` to inspect the configuration
+without starting simulation or contacting the server.
 
 | Setting | Standard protocol |
 | --- | --- |
@@ -242,13 +328,14 @@ server.
 
 L0 success requires selecting and lifting the correct tool. L1/L2 require the
 scenario's execution success predicate, including both blocks for IceBreak.
+Success must hold for 50 consecutive control steps. The predicates, thresholds
+and recorded metrics are listed in [ENVIRONMENTS.md](ENVIRONMENTS.md#success-criteria).
 The evaluator preserves the task's success timing and termination rules.
 
-Smaller episode counts, a different seed start, or a different step budget
-are diagnostic settings and produce `reportable=false`. The supplied pose-holder
+Anything other than exactly 100 episodes, seed start 10000 and 3000 steps is
+a diagnostic setting and produces `reportable=false`. The supplied pose-holder
 identifies itself as diagnostic, and its runs remain non-reportable even with
-the standard episode budget. Historical completed 200-episode results retain their actual denominator
-and provenance; they are not truncated to the new 100-episode protocol.
+the standard episode budget.
 
 ## Results
 
@@ -260,7 +347,11 @@ only after the outcome and video checks pass. A standard condition requires
 
 Report per-condition successes and the actual denominator together with the
 exact environment IDs, code revision, asset/controller versions, model
-checkpoint identity, action-chunk length, and evaluation settings. Record wall
+checkpoint identity, action-chunk length, and evaluation settings. Present
+the 18 conditions as the 3 by 3 by 2 table; if you summarize with one number,
+state that it is the unweighted mean of the 18 condition success rates. Native
+`--model` runs record the chunk length as `chunk_size` in `policy_info`; for a
+custom server it is not recorded, so note the `T` your `predict` returns. Record wall
 time and the CPU/GPU/rendering configuration so runtime measurements can be
 interpreted. A process exit or a visible video alone does not establish a
 complete benchmark result.

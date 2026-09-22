@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import socket
+import sys
 from dataclasses import asdict, replace
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -79,11 +80,127 @@ def test_model_and_external_server_are_mutually_exclusive():
         public_eval.parser().parse_args(["--model", "lab/model", "--host", "localhost"])
 
 
+def test_bare_environment_ids_are_accepted(capsys):
+    public_eval.main(["G1BallRetrieve-L2-R", "--dry-run"])
+    recorded = json.loads(capsys.readouterr().out)
+    assert recorded[0]["env_id"] == "humanoidtoolbench/G1BallRetrieve-L2-R"
+
+
+def test_unknown_environment_points_at_list_envs(capsys):
+    with pytest.raises(SystemExit):
+        public_eval.main(["G1BallMove-L3-S", "--dry-run"])
+    assert "--list-envs" in capsys.readouterr().err
+
+
+def test_list_envs_prints_the_18_conditions(capsys):
+    public_eval.main(["--list-envs"])
+    assert capsys.readouterr().out.split() == list(public_eval.ENV_IDS)
+
+
+def test_missing_policy_server_fails_before_simulation(capsys, monkeypatch):
+    monkeypatch.delenv("HUMANOIDTOOLBENCH_PREFLIGHT_DONE", raising=False)
+    monkeypatch.setattr(
+        public_eval.os,
+        "execv",
+        lambda *args: pytest.fail("reached the simulator re-exec"),
+    )
+    # A bound, non-listening socket refuses connections for as long as it is open.
+    with socket.socket() as reserved_port:
+        reserved_port.bind(("127.0.0.1", 0))
+        port = reserved_port.getsockname()[1]
+        with pytest.raises(SystemExit) as caught:
+            public_eval.main(
+                ["--host", "127.0.0.1", "--port", str(port), "--episodes", "1"]
+            )
+    assert caught.value.code == 2
+    message = capsys.readouterr().err
+    assert f"http://127.0.0.1:{port}/info" in message
+    assert "examples/serve_policy.py" in message and "--model" in message
+
+
+def test_preflight_accepts_servers_without_an_info_endpoint():
+    class ActOnly(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_error(404)
+
+        def log_message(self, *args):
+            pass
+
+    with HTTPServer(("127.0.0.1", 0), ActOnly) as server:
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            assert (
+                public_eval.policy_server_unreachable("127.0.0.1", server.server_port)
+                is None
+            )
+        finally:
+            server.shutdown()
+            thread.join(timeout=5)
+
+
+def test_example_server_loads_policies_from_cwd_and_file_paths(
+    tmp_path, monkeypatch, capsys
+):
+    path = Path(__file__).resolve().parents[1] / "examples/serve_policy.py"
+    spec = importlib.util.spec_from_file_location("example_server_loader", path)
+    example = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(example)
+    (tmp_path / "cwd_policy.py").write_text(
+        "def predict(request):\n    return request\n"
+    )
+    (tmp_path / "needs_dep.py").write_text("import definitely_missing_dep_xyz\n")
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    (elsewhere / "file_policy.py").write_text("def predict(request):\n    return 3\n")
+    monkeypatch.chdir(tmp_path)
+    # load_policy inserts directories itself; restore sys.path afterwards.
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    loaded = (
+        "cwd_policy",
+        "humanoidtoolbench_policy_cwd_policy",
+        "file_policy",
+        "needs_dep",
+    )
+    for name in loaded:
+        assert name not in sys.modules
+    try:
+        assert example.load_policy("cwd_policy:predict")({"a": 1}) == {"a": 1}
+        by_path = example.load_policy(f"{tmp_path / 'cwd_policy.py'}:predict")
+        assert by_path({"b": 2}) == {"b": 2}
+        assert "cwd_policy" in capsys.readouterr().out
+        # A file whose name is already importable loads under a private name.
+        assert (
+            sys.modules["humanoidtoolbench_policy_cwd_policy"]
+            is not sys.modules["cwd_policy"]
+        )
+        # Otherwise it is registered under its own name and its directory is
+        # importable, so spawned worker processes can unpickle its functions.
+        assert example.load_policy(f"{elsewhere / 'file_policy.py'}:predict")({}) == 3
+        assert sys.modules["file_policy"].__file__ == str(elsewhere / "file_policy.py")
+        assert str(elsewhere) in sys.path
+        for bad in ("cwd_policy", "cwd_policy:missing", "no_such_module:predict"):
+            with pytest.raises(SystemExit) as caught:
+                example.load_policy(bad)
+            assert isinstance(caught.value.code, str) and caught.value.code
+        # A missing dependency inside the user's module is not a "module not found" hint.
+        with pytest.raises(ModuleNotFoundError, match="definitely_missing_dep_xyz"):
+            example.load_policy("needs_dep:predict")
+    finally:
+        for name in loaded:
+            sys.modules.pop(name, None)
+
+
 def test_managed_server_resets_inference_seeds_and_releases_its_port():
     received = []
 
     def policy(request):
-        received.append((request["humanoidtoolbench_episode_seed"], request["humanoidtoolbench_request_index"]))
+        received.append(
+            (
+                request["humanoidtoolbench_episode_seed"],
+                request["humanoidtoolbench_request_index"],
+            )
+        )
         return np.zeros((1, 36), dtype=np.float32)
 
     policy.metadata = {"policy": "test", "checkpoint": "sha256:test"}

@@ -2,44 +2,142 @@
 
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
-## Quick Start
+HumanoidToolBench evaluates whether a Unitree G1 can choose a suitable tool
+and use it to complete a task. Three scenarios (BallMove, BallRetrieve,
+IceBreak), three levels (L0 tool selection, L1 stationary use, L2 mobile use)
+and two tool-set modes (S, R) form **18 conditions**, simulated in MuJoCo with
+a whole-body controller. This repository is the evaluation toolkit: it runs
+your policy over HTTP, scores each episode and validates the recordings.
 
-On Linux, install [uv](https://docs.astral.sh/uv/), Git, [Git LFS](https://git-lfs.com/), and `zstd`. From this repository:
+Documentation: [Environments](docs/ENVIRONMENTS.md) ·
+[Evaluation and policy interface](docs/PUBLIC_EVALUATION.md) ·
+[Dataset](data/README.md)
+
+## Requirements
+
+- Linux x86_64 with an NVIDIA GPU and a driver that supports EGL headless
+  rendering. The pinned PyTorch wheels are CUDA 12.8 builds. A software
+  rendering mode for GPU-free smoke tests is described in the
+  [evaluation guide](docs/PUBLIC_EVALUATION.md#installation-scope).
+- [uv](https://docs.astral.sh/uv/), Git and `zstd`. uv provisions Python 3.10.
+- Setup downloads about 4 GB and uses about 9 GB of disk. The first `--model`
+  run downloads about 2 GB more (checkpoint and CLIP text encoder).
+- One condition at the standard 100 episodes takes about 2 hours on one GPU
+  and writes about 1 GB of videos and logs. All 18 conditions take about a
+  day and a half sequentially and about 15 GB. These figures were measured
+  with the shipped ACT checkpoint on one workstation GPU; they grow with
+  policy inference time.
+
+## Quick Start
 
 ```bash
 git clone https://github.com/SNU-PI/HumanoidToolBench.git
 cd HumanoidToolBench
 uv run --no-project scripts/setup_evaluation.py
-uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
-The setup command installs dependencies and downloads the required assets. The evaluation command loads the model and evaluates `G1BallMove-L0-S` in headless mode (no simulator window), saving scores and four camera videos per episode under `data/evals/`.
+The setup command installs the pinned Python environment, fetches the
+controller repositories at their pinned revisions, downloads the benchmark
+meshes and runs a self-check. Add `--check` to verify an existing
+installation.
 
-Use a local checkpoint, or evaluate all 18 conditions:
+Check that simulation, inference and recording work with a short diagnostic
+run on the default condition `G1BallMove-L0-S` (well under a minute of
+simulation once the model has loaded; not a benchmark score):
 
 ```bash
-uv run humanoidtoolbench-eval --model /path/to/checkpoint
+uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
+```
+
+Then run the standard protocol (100 episodes, seeds 10000 through 10099, up to
+3000 steps) on one condition, or on all 18:
+
+```bash
+uv run humanoidtoolbench-eval G1BallMove-L0-S --model snupilab/humanoidtoolbench-act-sim-3003
 uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
-The standard evaluation uses 100 episodes per condition, seeds 10000 through 10099, and up to 3000 steps. For a short connection check, add `--episodes 1 --max-steps 100`; this is a diagnostic, not a benchmark score.
+Each condition writes `data/evals/<condition>/run-<id>/benchmark_result.json`
+with the success count and four camera videos per episode. Diagnostic
+settings produce `reportable: false`. `--list-envs` prints the condition IDs
+and `--dry-run` prints the environment and episode settings without running
+anything.
 
-Automatic loading supports **HumanoidToolBench ACT and Diffusion Policy (DP) simulation checkpoints**. Other model formats need a custom policy adapter.
+`--model` loads **HumanoidToolBench ACT and Diffusion Policy simulation
+checkpoints** from a Hugging Face ID or a local path. Any other model is
+evaluated through the policy server below.
 
-## The benchmark
+## Evaluate your own policy
+
+Write a `my_policy.py` in the checkout root that loads your model once and
+exposes `predict(request)`:
+
+```python
+import numpy as np
+
+def predict(request: dict) -> np.ndarray:
+    image = request["image"]["rgb_head_stereo_left"]   # (360, 640, 3) uint8 RGB
+    state = request["state"]["states"]                 # (1, 32) float32
+    instruction = request["instruction"]               # e.g. "Pick the tool and move the ball to the target."
+    if request["history"].get("reset", False):         # first query of an episode
+        pass                                            # clear any recurrent state here
+    actions = ...                                       # your model
+    return np.asarray(actions, dtype=np.float32)        # (T, 36), one 50 Hz command per row
+```
+
+Start the server in one terminal, either from this checkout's environment or
+from your own model environment, which needs only NumPy and requests:
+
+```bash
+uv run python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
+# or, from your own environment:
+PYTHONPATH=src python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
+```
+
+Run a diagnostic in another terminal, then drop `--episodes` and
+`--max-steps` for the standard 100-episode protocol:
+
+```bash
+uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
+uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000
+```
+
+When the server runs on another machine, start it with `--host 0.0.0.0` and
+pass its address to the evaluator's `--host`. The 32-value state, the
+36-value action with joint names and limits, the image and reset semantics
+are specified in the [policy interface](docs/PUBLIC_EVALUATION.md#policy-interface).
+
+## Conditions
+
+| Scenario | Correct tool | L0 | L1 | L2 |
+| --- | --- | --- | --- | --- |
+| BallMove | Long stick | Pick the tool | Push the ball into the ring | Same, after moving along the bench |
+| BallRetrieve | Hook | Pick the tool | Pull the ball into the ring | Same, after moving along the bench |
+| IceBreak | Metal hammer | Pick the tool | Break both ice blocks | Same, after moving along the bench |
+
+Mode **S** places the correct tool beside two irrelevant objects; mode **R**
+adds one confusable tool (a short stick, a straight stick, or a light,
+compliant decoy such as a fly swatter, paint roller or plunger). Success must
+hold for one second; L0 requires lifting the correct tool by 8 cm.
+Instructions, thresholds and recorded metrics are listed in
+[docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
 
 ![Overview figure from the HumanoidToolBench paper: humanoid tool use, task structure, and real-robot evaluation.](docs/assets/paper-overview.png)
 
-**HumanoidToolBench: Benchmarking Humanoid Tool Use from Selection to Mobile Execution** studies whether a Unitree G1 can choose a suitable tool and use it to complete a task. Three scenarios (BallMove, BallRetrieve, IceBreak), three levels (selection, stationary use, mobile use), and two tool-set modes form **18 conditions**. The paper introduces 55 tool assets and ToolBook demonstrations from simulation and a real robot.
-
-This release contains the canonical environments. Near, Gap, Attach, and other Easy variants are excluded.
+**HumanoidToolBench: Benchmarking Humanoid Tool Use from Selection to Mobile
+Execution** introduces the benchmark, 55 tool assets and the ToolBook
+demonstrations from simulation and a real robot. This release contains the
+canonical environments; the easier training variants are excluded.
 
 ## Data and training
 
 **[Download ToolBook on Hugging Face](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop)**
 
-Recording downloads currently require an approved access request. See the [dataset guide](data/README.md) for layouts and observation/action formats.
+Recording downloads currently require an approved access request. See the
+[dataset guide](data/README.md) for layouts and observation/action formats.
 
-This release provides **evaluation code**. You can use the demonstrations to train in your own framework; model training pipelines are not included.
+This release provides **evaluation code**. You can use the demonstrations to
+train in your own framework; model training pipelines are not included.
 
-[MIT code license](LICENSE). Third-party assets, models, and data retain their own terms.
+[MIT code license](LICENSE). Third-party assets, models, and data retain their
+own terms.
