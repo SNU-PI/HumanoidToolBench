@@ -1,0 +1,2 @@
+include scripts/verify_runtime_assets.py
+recursive-include src/theta_bench/resources/benchmark_assets *

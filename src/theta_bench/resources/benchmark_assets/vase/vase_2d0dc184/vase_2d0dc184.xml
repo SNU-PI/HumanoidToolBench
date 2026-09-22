@@ -1,0 +1,44 @@
+<mujoco model="vase_2d0dc184">
+  <compiler angle="radian"/>
+  <asset>
+    <texture type="2d" name="vase_2d0dc184_tex" file="vase_2d0dc184_visual_0.png"/>
+    <material name="vase_2d0dc184_mat" texture="vase_2d0dc184_tex"/>
+    <mesh name="vase_2d0dc184_visual" content_type="model/obj" file="vase_2d0dc184_visual.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c0" content_type="model/obj" file="vase_2d0dc184_c0.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c1" content_type="model/obj" file="vase_2d0dc184_c1.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c2" content_type="model/obj" file="vase_2d0dc184_c2.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c3" content_type="model/obj" file="vase_2d0dc184_c3.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c4" content_type="model/obj" file="vase_2d0dc184_c4.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c5" content_type="model/obj" file="vase_2d0dc184_c5.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c6" content_type="model/obj" file="vase_2d0dc184_c6.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c7" content_type="model/obj" file="vase_2d0dc184_c7.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c8" content_type="model/obj" file="vase_2d0dc184_c8.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c9" content_type="model/obj" file="vase_2d0dc184_c9.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c10" content_type="model/obj" file="vase_2d0dc184_c10.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c11" content_type="model/obj" file="vase_2d0dc184_c11.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c12" content_type="model/obj" file="vase_2d0dc184_c12.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c13" content_type="model/obj" file="vase_2d0dc184_c13.obj" scale="-1 1.19226 1"/>
+    <mesh name="vase_2d0dc184_c14" content_type="model/obj" file="vase_2d0dc184_c14.obj" scale="-1 1.19226 1"/>
+  </asset>
+  <worldbody>
+    <body name="vase_2d0dc184">
+      <freejoint/>
+      <geom name="vase_2d0dc184_visual" type="mesh" mesh="vase_2d0dc184_visual" mass="1e-8" contype="0" conaffinity="0" group="2" material="vase_2d0dc184_mat"/>
+      <geom name="vase_2d0dc184_c0" type="mesh" mesh="vase_2d0dc184_c0" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c1" type="mesh" mesh="vase_2d0dc184_c1" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c2" type="mesh" mesh="vase_2d0dc184_c2" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c3" type="mesh" mesh="vase_2d0dc184_c3" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c4" type="mesh" mesh="vase_2d0dc184_c4" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c5" type="mesh" mesh="vase_2d0dc184_c5" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c6" type="mesh" mesh="vase_2d0dc184_c6" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c7" type="mesh" mesh="vase_2d0dc184_c7" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c8" type="mesh" mesh="vase_2d0dc184_c8" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c9" type="mesh" mesh="vase_2d0dc184_c9" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c10" type="mesh" mesh="vase_2d0dc184_c10" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c11" type="mesh" mesh="vase_2d0dc184_c11" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c12" type="mesh" mesh="vase_2d0dc184_c12" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c13" type="mesh" mesh="vase_2d0dc184_c13" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_2d0dc184_c14" type="mesh" mesh="vase_2d0dc184_c14" group="3" density="1172.3" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+    </body>
+  </worldbody>
+</mujoco>

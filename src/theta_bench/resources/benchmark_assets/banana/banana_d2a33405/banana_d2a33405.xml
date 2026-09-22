@@ -1,0 +1,20 @@
+<mujoco model="banana_d2a33405">
+  <compiler angle="radian"/>
+  <asset>
+    <texture type="2d" name="banana_d2a33405_tex" file="banana_d2a33405_visual_0.png"/>
+    <material name="banana_d2a33405_mat" texture="banana_d2a33405_tex"/>
+    <mesh name="banana_d2a33405_visual" content_type="model/obj" file="banana_d2a33405_visual.obj" scale="-2.39959 1 2.19998"/>
+    <mesh name="banana_d2a33405_c0" content_type="model/obj" file="banana_d2a33405_c0.obj" scale="-2.39959 1 2.19998"/>
+    <mesh name="banana_d2a33405_c1" content_type="model/obj" file="banana_d2a33405_c1.obj" scale="-2.39959 1 2.19998"/>
+    <mesh name="banana_d2a33405_c2" content_type="model/obj" file="banana_d2a33405_c2.obj" scale="-2.39959 1 2.19998"/>
+  </asset>
+  <worldbody>
+    <body name="banana_d2a33405">
+      <freejoint/>
+      <geom name="banana_d2a33405_visual" type="mesh" mesh="banana_d2a33405_visual" mass="1e-8" contype="0" conaffinity="0" group="2" material="banana_d2a33405_mat"/>
+      <geom name="banana_d2a33405_c0" type="mesh" mesh="banana_d2a33405_c0" group="3" density="906.438" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="banana_d2a33405_c1" type="mesh" mesh="banana_d2a33405_c1" group="3" density="906.438" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="banana_d2a33405_c2" type="mesh" mesh="banana_d2a33405_c2" group="3" density="906.438" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+    </body>
+  </worldbody>
+</mujoco>

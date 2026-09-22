@@ -1,0 +1,16 @@
+<mujoco model="vase_e22b6eb7">
+  <compiler angle="radian"/>
+  <asset>
+    <texture type="2d" name="vase_e22b6eb7_tex" file="vase_e22b6eb7_visual_0.png"/>
+    <material name="vase_e22b6eb7_mat" texture="vase_e22b6eb7_tex"/>
+    <mesh name="vase_e22b6eb7_visual" content_type="model/obj" file="vase_e22b6eb7_visual.obj" scale="-1 1.49013 1"/>
+    <mesh name="vase_e22b6eb7_c0" content_type="model/obj" file="vase_e22b6eb7_c0.obj" scale="-1 1.49013 1"/>
+  </asset>
+  <worldbody>
+    <body name="vase_e22b6eb7">
+      <freejoint/>
+      <geom name="vase_e22b6eb7_visual" type="mesh" mesh="vase_e22b6eb7_visual" mass="1e-8" contype="0" conaffinity="0" group="2" material="vase_e22b6eb7_mat"/>
+      <geom name="vase_e22b6eb7_c0" type="mesh" mesh="vase_e22b6eb7_c0" group="3" density="1084.75" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+    </body>
+  </worldbody>
+</mujoco>

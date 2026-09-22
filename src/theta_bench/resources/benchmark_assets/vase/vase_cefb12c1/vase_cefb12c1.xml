@@ -1,0 +1,18 @@
+<mujoco model="vase_cefb12c1">
+  <compiler angle="radian"/>
+  <asset>
+    <texture type="2d" name="vase_cefb12c1_tex" file="vase_cefb12c1_visual_0.png"/>
+    <material name="vase_cefb12c1_mat" texture="vase_cefb12c1_tex"/>
+    <mesh name="vase_cefb12c1_visual" content_type="model/obj" file="vase_cefb12c1_visual.obj" scale="-1 1.00674 1"/>
+    <mesh name="vase_cefb12c1_c0" content_type="model/obj" file="vase_cefb12c1_c0.obj" scale="-1 1.00674 1"/>
+    <mesh name="vase_cefb12c1_c1" content_type="model/obj" file="vase_cefb12c1_c1.obj" scale="-1 1.00674 1"/>
+  </asset>
+  <worldbody>
+    <body name="vase_cefb12c1">
+      <freejoint/>
+      <geom name="vase_cefb12c1_visual" type="mesh" mesh="vase_cefb12c1_visual" mass="1e-8" contype="0" conaffinity="0" group="2" material="vase_cefb12c1_mat"/>
+      <geom name="vase_cefb12c1_c0" type="mesh" mesh="vase_cefb12c1_c0" group="3" density="1190.58" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="vase_cefb12c1_c1" type="mesh" mesh="vase_cefb12c1_c1" group="3" density="1190.58" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+    </body>
+  </worldbody>
+</mujoco>

@@ -1,0 +1,16 @@
+<mujoco model="ball_52600d45">
+  <compiler angle="radian"/>
+  <asset>
+    <texture type="2d" name="ball_52600d45_tex" file="ball_52600d45_visual_0.png"/>
+    <material name="ball_52600d45_mat" texture="ball_52600d45_tex"/>
+    <mesh name="ball_52600d45_visual" content_type="model/obj" file="ball_52600d45_visual.obj" scale="-0.66267 0.66267 0.66267"/>
+    <mesh name="ball_52600d45_c0" content_type="model/obj" file="ball_52600d45_c0.obj" scale="-0.66267 0.66267 0.66267"/>
+  </asset>
+  <worldbody>
+    <body name="ball_52600d45">
+      <freejoint/>
+      <geom name="ball_52600d45_visual" type="mesh" mesh="ball_52600d45_visual" mass="1e-8" contype="0" conaffinity="0" group="2" material="ball_52600d45_mat"/>
+      <geom name="ball_52600d45_c0" type="mesh" mesh="ball_52600d45_c0" group="3" density="441.612" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+    </body>
+  </worldbody>
+</mujoco>

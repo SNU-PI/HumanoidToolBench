@@ -1,0 +1,102 @@
+[project]
+name = "humanoidtoolbench"
+version = "0.1.0"
+description = "HumanoidToolBench"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = "==3.10.*"
+dependencies = [
+    "mujoco==3.11.0",
+    "rich>=13.9.4",
+    "requests>=2.32",
+    "torch==2.7.0",
+    "torchvision==0.22.0",
+    "transforms3d>=0.4.2",
+    "trimesh>=4.7.1",
+    "typer-slim>=0.17.3",
+    "gymnasium>0.29.1",
+    "huggingface_hub>=0.18.3",
+    "python-dotenv>=0.9.9",
+    "numpy==1.26.4",
+    "tomli>=2; python_version < '3.11'",
+    "gear_sonic[sim]",
+    "unitree-sdk2py",
+    "decoupled-wbc",
+    "onnxruntime>=1.18,<2",
+    "opencv-python-headless>=4.9,<5",
+    "imageio-ffmpeg>=0.5,<1",
+    "av>=14.2,<18",
+    "einops==0.8.1",
+    "transformers==4.57.1",
+    "safetensors==0.6.2",
+    "diffusers==0.37.0",
+    "Pillow==11.3.0",
+]
+
+[project.optional-dependencies]
+evaluation = []
+
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["theta_bench", "theta_bench.*"]
+
+[tool.setuptools.package-data]
+theta_bench = [
+    "resources/**/*",
+    "engines/*.c",
+    "policies/_vendor/*.json",
+    "policies/_vendor/LICENSE*",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+# cu128 is the torch 2.7.0 CUDA build that ships sm_120 kernels, which Blackwell
+# (RTX 50-series) cards need. Point the torch sources below at pytorch-cpu
+# instead to rebuild the GPU-free smoke-test environment.
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "ruff>=0.12.7",
+]
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+default-groups = []
+
+# The pinned SDK only uses cv2 APIs available in the headless wheel. Keep its
+# remaining requirements unchanged without modifying the upstream checkout.
+[[tool.uv.dependency-metadata]]
+name = "unitree-sdk2py"
+version = "1.0.1"
+requires-python = ">=3.8"
+requires-dist = ["cyclonedds==0.10.2", "numpy", "opencv-python-headless"]
+
+[tool.uv.sources]
+humanoidtoolbench = {path = ".", editable = true}
+torch = {index = "pytorch-cu128"}
+torchvision = {index = "pytorch-cu128"}
+gear_sonic = {path = "third_party/gear_sonic", editable = true}
+unitree-sdk2py = {path = "third_party/unitree_sdk2_python", editable = true}
+decoupled-wbc = {path = "third_party/decoupled_wbc", editable = true}
+
+[project.scripts]
+humanoidtoolbench-eval = "theta_bench.cli.public_eval:main"
+
+[tool.ruff.lint.per-file-ignores]
+# CLI entry points configure the environment (display, GL, threads) before
+# importing heavy modules; the late imports are deliberate.
+"src/theta_bench/cli/*" = ["E402", "F401", "F811", "F841"]
+"tests/*" = ["E402"]

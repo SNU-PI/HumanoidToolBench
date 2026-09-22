@@ -1,0 +1,24 @@
+<mujoco model="banana_4eb3ba34">
+  <compiler angle="radian"/>
+  <asset>
+    <texture type="2d" name="banana_4eb3ba34_tex" file="banana_4eb3ba34_visual_0.png"/>
+    <material name="banana_4eb3ba34_mat" texture="banana_4eb3ba34_tex"/>
+    <mesh name="banana_4eb3ba34_visual" content_type="model/obj" file="banana_4eb3ba34_visual.obj" scale="-1 1.19032 1"/>
+    <mesh name="banana_4eb3ba34_c0" content_type="model/obj" file="banana_4eb3ba34_c0.obj" scale="-1 1.19032 1"/>
+    <mesh name="banana_4eb3ba34_c1" content_type="model/obj" file="banana_4eb3ba34_c1.obj" scale="-1 1.19032 1"/>
+    <mesh name="banana_4eb3ba34_c2" content_type="model/obj" file="banana_4eb3ba34_c2.obj" scale="-1 1.19032 1"/>
+    <mesh name="banana_4eb3ba34_c3" content_type="model/obj" file="banana_4eb3ba34_c3.obj" scale="-1 1.19032 1"/>
+    <mesh name="banana_4eb3ba34_c4" content_type="model/obj" file="banana_4eb3ba34_c4.obj" scale="-1 1.19032 1"/>
+  </asset>
+  <worldbody>
+    <body name="banana_4eb3ba34">
+      <freejoint/>
+      <geom name="banana_4eb3ba34_visual" type="mesh" mesh="banana_4eb3ba34_visual" mass="1e-8" contype="0" conaffinity="0" group="2" material="banana_4eb3ba34_mat"/>
+      <geom name="banana_4eb3ba34_c0" type="mesh" mesh="banana_4eb3ba34_c0" group="3" density="291.797" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="banana_4eb3ba34_c1" type="mesh" mesh="banana_4eb3ba34_c1" group="3" density="291.797" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="banana_4eb3ba34_c2" type="mesh" mesh="banana_4eb3ba34_c2" group="3" density="291.797" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="banana_4eb3ba34_c3" type="mesh" mesh="banana_4eb3ba34_c3" group="3" density="291.797" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+      <geom name="banana_4eb3ba34_c4" type="mesh" mesh="banana_4eb3ba34_c4" group="3" density="291.797" friction="0.9 0.05 0.005" condim="4" rgba="0.4 0.5 0.9 0.35"/>
+    </body>
+  </worldbody>
+</mujoco>

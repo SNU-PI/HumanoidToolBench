@@ -1,0 +1,11 @@
+<mujoco model="block_green_40">
+  <compiler angle="radian"/>
+  <asset>
+  </asset>
+  <worldbody>
+    <body name="block_green_40">
+      <freejoint/>
+      <geom name="block_green_40_g0" type="box" size="0.02 0.02 0.02" pos="0 0 0.02" rgba="0.24 0.66 0.36 1" mass="0.05" friction="0.05 0.05 0.005" condim="4"/>
+    </body>
+  </worldbody>
+</mujoco>

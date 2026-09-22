@@ -1,0 +1,11 @@
+<mujoco model="stick_prim_black_38">
+  <compiler angle="radian"/>
+  <asset>
+  </asset>
+  <worldbody>
+    <body name="stick_prim_black_38">
+      <freejoint/>
+      <geom name="stick_prim_black_38_g0" type="capsule" size="0.038" fromto="-0.287 0 0.038 0.287 0 0.038" rgba="0.16 0.17 0.19 1" mass="0.05" friction="0.05 0.05 0.005" condim="4"/>
+    </body>
+  </worldbody>
+</mujoco>

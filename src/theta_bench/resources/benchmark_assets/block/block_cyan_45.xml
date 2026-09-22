@@ -1,0 +1,11 @@
+<mujoco model="block_cyan_45">
+  <compiler angle="radian"/>
+  <asset>
+  </asset>
+  <worldbody>
+    <body name="block_cyan_45">
+      <freejoint/>
+      <geom name="block_cyan_45_g0" type="box" size="0.0225 0.0225 0.0225" pos="0 0 0.0225" rgba="0.2 0.68 0.72 1" mass="0.05" friction="0.05 0.05 0.005" condim="4"/>
+    </body>
+  </worldbody>
+</mujoco>

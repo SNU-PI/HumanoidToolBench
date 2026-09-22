@@ -1,0 +1,15 @@
+<mujoco model="dustpan_prim_wide_red">
+  <compiler angle="radian"/>
+  <asset>
+  </asset>
+  <worldbody>
+    <body name="dustpan_prim_wide_red">
+      <freejoint/>
+      <geom name="dustpan_prim_wide_red_g0" type="box" size="0.13 0.1 0.005" pos="0 0 0.005" rgba="0.82 0.22 0.2 1" mass="0.01" friction="0.05 0.05 0.005" condim="4"/>
+      <geom name="dustpan_prim_wide_red_g1" type="box" size="0.13 0.005 0.0275" pos="0 0.095 0.0275" rgba="0.82 0.22 0.2 1" mass="0.01" friction="0.05 0.05 0.005" condim="4"/>
+      <geom name="dustpan_prim_wide_red_g2" type="box" size="0.005 0.1 0.0275" pos="-0.125 0 0.0275" rgba="0.82 0.22 0.2 1" mass="0.01" friction="0.05 0.05 0.005" condim="4"/>
+      <geom name="dustpan_prim_wide_red_g3" type="box" size="0.005 0.1 0.0275" pos="0.125 0 0.0275" rgba="0.82 0.22 0.2 1" mass="0.01" friction="0.05 0.05 0.005" condim="4"/>
+      <geom name="dustpan_prim_wide_red_g4" type="box" size="0.012 0.065 0.01" pos="0 0.165 0.044" rgba="0.82 0.22 0.2 1" mass="0.01" friction="0.05 0.05 0.005" condim="4"/>
+    </body>
+  </worldbody>
+</mujoco>
