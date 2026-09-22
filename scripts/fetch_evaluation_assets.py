@@ -16,7 +16,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from theta_bench.assets.evaluation import file_matches, load_manifest  # noqa: E402
+from humanoidtoolbench.assets.evaluation import file_matches, load_manifest  # noqa: E402
 
 
 def fetch_asset(uid: str, asset: dict, destination: Path, base_url: str) -> bool:
@@ -66,7 +66,7 @@ def fetch_asset(uid: str, asset: dict, destination: Path, base_url: str) -> bool
 def main() -> int:
     manifest = load_manifest()
     destination = Path(
-        os.environ.get("THETA_BENCH_MS_ASSETS", ROOT / "data/ms_assets")
+        os.environ.get("HUMANOIDTOOLBENCH_MS_ASSETS", ROOT / "data/ms_assets")
     ).expanduser()
     base_url = (
         f"https://huggingface.co/datasets/{manifest['repository']}/resolve/"

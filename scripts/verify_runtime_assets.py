@@ -13,14 +13,14 @@ LFS_POINTER_HEADER = b"version https://git-lfs.github.com/spec/v1"
 DEFAULT_ASSET_ROOT = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "theta_bench"
+    / "humanoidtoolbench"
     / "resources"
     / "benchmark_assets"
 )
 LFS_FIX = (
     "Install Git LFS and hydrate the runtime assets:\n"
     "  git lfs install\n"
-    '  git lfs pull --include="src/theta_bench/resources/benchmark_assets/**"'
+    '  git lfs pull --include="src/humanoidtoolbench/resources/benchmark_assets/**"'
 )
 
 

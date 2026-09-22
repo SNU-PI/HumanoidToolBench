@@ -37,27 +37,27 @@ FILES = (
     "scripts/verify_evaluation_assets.py",
     "scripts/verify_mujoco_manifest.py",
     "scripts/verify_runtime_assets.py",
-    "src/theta_bench/__init__.py",
-    "src/theta_bench/instructions.py",
-    "src/theta_bench/runtime.py",
-    "src/theta_bench/scenario_names.py",
-    "src/theta_bench/utils.py",
-    "src/theta_bench/cli/public_eval.py",
-    "src/theta_bench/cli/eval_decoupled_wbc.py",
-    "src/theta_bench/cli/_eval_common.py",
-    "src/theta_bench/cli/_decoupled_wbc_recording.py",
-    "src/theta_bench/cli/_wandb_checkpoint.py",
-    "src/theta_bench/cli/slack_alerts.py",
-    "src/theta_bench/datasets/contract.py",
-    "src/theta_bench/datasets/lerobot.py",
-    "src/theta_bench/evals/__init__.py",
-    "src/theta_bench/evals/api.py",
-    "src/theta_bench/evals/tui.py",
-    "src/theta_bench/evals/trajectory.py",
-    "src/theta_bench/evals/public_validation.py",
-    "src/theta_bench/resources/evaluation_assets.json",
-    "src/theta_bench/policies/_vendor/provenance.json",
-    "src/theta_bench/resources/vMaterials_2/material_split.npy",
+    "src/humanoidtoolbench/__init__.py",
+    "src/humanoidtoolbench/instructions.py",
+    "src/humanoidtoolbench/runtime.py",
+    "src/humanoidtoolbench/scenario_names.py",
+    "src/humanoidtoolbench/utils.py",
+    "src/humanoidtoolbench/cli/public_eval.py",
+    "src/humanoidtoolbench/cli/eval_decoupled_wbc.py",
+    "src/humanoidtoolbench/cli/_eval_common.py",
+    "src/humanoidtoolbench/cli/_decoupled_wbc_recording.py",
+    "src/humanoidtoolbench/cli/_wandb_checkpoint.py",
+    "src/humanoidtoolbench/cli/slack_alerts.py",
+    "src/humanoidtoolbench/datasets/contract.py",
+    "src/humanoidtoolbench/datasets/lerobot.py",
+    "src/humanoidtoolbench/evals/__init__.py",
+    "src/humanoidtoolbench/evals/api.py",
+    "src/humanoidtoolbench/evals/tui.py",
+    "src/humanoidtoolbench/evals/trajectory.py",
+    "src/humanoidtoolbench/evals/public_validation.py",
+    "src/humanoidtoolbench/resources/evaluation_assets.json",
+    "src/humanoidtoolbench/policies/_vendor/provenance.json",
+    "src/humanoidtoolbench/resources/vMaterials_2/material_split.npy",
     "tests/test_canonical_environments.py",
     "tests/test_registries.py",
     "tests/test_public_evaluation.py",
@@ -70,7 +70,7 @@ FILES = (
     "tests/test_public_gpu_selection.py",
 )
 SOURCE_DIRS = tuple(
-    f"src/theta_bench/{name}"
+    f"src/humanoidtoolbench/{name}"
     for name in (
         "actions",
         "assets",
@@ -85,7 +85,7 @@ SOURCE_DIRS = tuple(
         "tasks",
     )
 )
-ASSET_DIR = "src/theta_bench/resources/benchmark_assets"
+ASSET_DIR = "src/humanoidtoolbench/resources/benchmark_assets"
 ASSET_SUFFIXES = {".json", ".xml", ".obj", ".mtl", ".png", ".jpg", ".jpeg"}
 LICENSE_NAMES = {"LICENSE", "COPYING", "NOTICE", "AUTHORS"}
 

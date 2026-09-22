@@ -1,2 +1,2 @@
-src/theta_bench/policies/_vendor/*.py whitespace=-blank-at-eol,-blank-at-eof linguist-vendored
-src/theta_bench/resources/benchmark_assets/** -whitespace linguist-generated
+src/humanoidtoolbench/policies/_vendor/*.py whitespace=-blank-at-eol,-blank-at-eof linguist-vendored
+src/humanoidtoolbench/resources/benchmark_assets/** -whitespace linguist-generated

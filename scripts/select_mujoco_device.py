@@ -24,7 +24,7 @@ def cuda_device_uuid(index: int) -> bytes:
         if status:
             raise RuntimeError(
                 f"{name} failed with CUDA error {status}; check "
-                "THETA_BENCH_GPU/CUDA_VISIBLE_DEVICES, or set THETA_BENCH_FORCE_CPU=1"
+                "HUMANOIDTOOLBENCH_GPU/CUDA_VISIBLE_DEVICES, or set HUMANOIDTOOLBENCH_FORCE_CPU=1"
             )
     return bytes(identifier)
 

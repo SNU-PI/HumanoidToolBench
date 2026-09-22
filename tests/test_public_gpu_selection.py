@@ -69,15 +69,15 @@ def wrapper_environment(tmp_path):
     python.write_text(
         '#!/usr/bin/env bash\n'
         '[[ "$1" == */select_mujoco_device.py ]] || exit 11\n'
-        '[[ "$2" == --device && "$3" == "${THETA_BENCH_POLICY_DEVICE:-auto}" ]] || exit 12\n'
-        '[[ "${THETA_BENCH_FORCE_CPU:-}" != 1 ]] || exit 13\n'
+        '[[ "$2" == --device && "$3" == "${HUMANOIDTOOLBENCH_POLICY_DEVICE:-auto}" ]] || exit 12\n'
+        '[[ "${HUMANOIDTOOLBENCH_FORCE_CPU:-}" != 1 ]] || exit 13\n'
         'echo 2\n'
     )
     python.chmod(0o755)
     env = {key: value for key, value in os.environ.items() if not key.startswith(
-        ("THETA_BENCH_", "CUDA_", "MUJOCO_", "__EGL_", "LIBGL_", "MESA_", "EGL_")
+        ("HUMANOIDTOOLBENCH_", "CUDA_", "MUJOCO_", "__EGL_", "LIBGL_", "MESA_", "EGL_")
     )}
-    env.update(THETA_BENCH_MUJOCO_ENV_PREFIX=str(tmp_path), THETA_BENCH_NICE="0")
+    env.update(HUMANOIDTOOLBENCH_MUJOCO_ENV_PREFIX=str(tmp_path), HUMANOIDTOOLBENCH_NICE="0")
     return env
 
 
@@ -85,11 +85,11 @@ def wrapper_environment(tmp_path):
     ("selection", "visible"),
     [
         ({}, "0"),
-        ({"THETA_BENCH_GPU": "1"}, "1"),
+        ({"HUMANOIDTOOLBENCH_GPU": "1"}, "1"),
         ({"CUDA_VISIBLE_DEVICES": "1,0"}, "1,0"),
-        ({"THETA_BENCH_GPU": f"GPU-{uuid.UUID(bytes=GPU_1)}"}, f"GPU-{uuid.UUID(bytes=GPU_1)}"),
-        ({"THETA_BENCH_GPU": "1", "CUDA_VISIBLE_DEVICES": "0"}, "1"),
-        ({"CUDA_VISIBLE_DEVICES": "1,0", "THETA_BENCH_POLICY_DEVICE": "cuda:1"}, "1,0"),
+        ({"HUMANOIDTOOLBENCH_GPU": f"GPU-{uuid.UUID(bytes=GPU_1)}"}, f"GPU-{uuid.UUID(bytes=GPU_1)}"),
+        ({"HUMANOIDTOOLBENCH_GPU": "1", "CUDA_VISIBLE_DEVICES": "0"}, "1"),
+        ({"CUDA_VISIBLE_DEVICES": "1,0", "HUMANOIDTOOLBENCH_POLICY_DEVICE": "cuda:1"}, "1,0"),
     ],
 )
 def test_wrapper_uses_selector_instead_of_copying_cuda_index(wrapper_environment, selection, visible):
@@ -103,13 +103,13 @@ def test_wrapper_uses_selector_instead_of_copying_cuda_index(wrapper_environment
 
 
 def test_force_cpu_clears_stale_gpu_renderer_and_skips_selector(wrapper_environment):
-    vendor = Path(wrapper_environment["THETA_BENCH_MUJOCO_ENV_PREFIX"]) / "share/glvnd/egl_vendor.d/50_mesa.json"
+    vendor = Path(wrapper_environment["HUMANOIDTOOLBENCH_MUJOCO_ENV_PREFIX"]) / "share/glvnd/egl_vendor.d/50_mesa.json"
     vendor.parent.mkdir(parents=True)
     vendor.write_text("{}")
     result = subprocess.run(
         ["bash", str(ROOT / "scripts/run_mujoco.sh"), "env"],
         env=wrapper_environment | {
-            "THETA_BENCH_FORCE_CPU": "1", "THETA_BENCH_GPU": "1",
+            "HUMANOIDTOOLBENCH_FORCE_CPU": "1", "HUMANOIDTOOLBENCH_GPU": "1",
             "CUDA_VISIBLE_DEVICES": "1", "MUJOCO_EGL_DEVICE_ID": "1",
         },
         text=True, capture_output=True, check=True,

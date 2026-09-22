@@ -49,11 +49,11 @@ def test_export_excludes_private_data_training_variants_and_git(source, tmp_path
         "paper/main.tex",
         "data/private_recording.parquet",
         "third_party/gear_sonic/.env",
-        "src/theta_bench/cli/train_private.py",
-        "src/theta_bench/teleop/private.py",
-        "src/theta_bench/evals/easy.py",
-        "src/theta_bench/assets/.env",
-        "src/theta_bench/assets/__pycache__/private.pyc",
+        "src/humanoidtoolbench/cli/train_private.py",
+        "src/humanoidtoolbench/teleop/private.py",
+        "src/humanoidtoolbench/evals/easy.py",
+        "src/humanoidtoolbench/assets/.env",
+        "src/humanoidtoolbench/assets/__pycache__/private.pyc",
     )
     for name in private:
         path = source / name
@@ -112,7 +112,7 @@ def test_export_rejects_symlinks_without_copying_private_content(
     (private / "secret").write_text("private")
     output = tmp_path / "release"
     if link_source:
-        link = source / "src/theta_bench/assets/linked"
+        link = source / "src/humanoidtoolbench/assets/linked"
         link.symlink_to(private, target_is_directory=True)
     else:
         output.symlink_to(private, target_is_directory=True)

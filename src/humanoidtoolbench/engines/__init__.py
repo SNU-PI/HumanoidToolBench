@@ -1,0 +1,10 @@
+"""
+HumanoidToolBench
+
+Copyright (c) 2025 Songlin Wei and Contributors
+Licensed under the terms in LICENSE file.
+"""
+
+from .mujoco import MujocoSimulator
+
+__all__ = ["MujocoSimulator"]

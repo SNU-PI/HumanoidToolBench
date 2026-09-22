@@ -3,26 +3,26 @@
 #
 # The GPU is used by default. This is still a shared lab server, so the wrapper
 # keeps the polite defaults: a single pinned GPU, reduced scheduling priority,
-# and bounded math thread pools. THETA_BENCH_FORCE_CPU=1 restores the original
+# and bounded math thread pools. HUMANOIDTOOLBENCH_FORCE_CPU=1 restores the original
 # GPU-free smoke-test envelope (see run_mujoco_cpu.sh).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_PREFIX="${THETA_BENCH_MUJOCO_ENV_PREFIX:-$ROOT_DIR/.venv}"
-FORCE_CPU="${THETA_BENCH_FORCE_CPU:-0}"
+ENV_PREFIX="${HUMANOIDTOOLBENCH_MUJOCO_ENV_PREFIX:-$ROOT_DIR/.venv}"
+FORCE_CPU="${HUMANOIDTOOLBENCH_FORCE_CPU:-0}"
 
 usage() {
     cat <<'USAGE'
 Usage: run_mujoco.sh <command> [args...]
 
 Environment:
-  THETA_BENCH_MUJOCO_ENV_PREFIX  environment created by scripts/setup_evaluation.py
-  THETA_BENCH_FORCE_CPU=1    hide every GPU and render with Mesa llvmpipe
-  THETA_BENCH_GPU=<id>       CUDA GPU index or UUID for inference and EGL (default: 0)
+  HUMANOIDTOOLBENCH_MUJOCO_ENV_PREFIX  environment created by scripts/setup_evaluation.py
+  HUMANOIDTOOLBENCH_FORCE_CPU=1    hide every GPU and render with Mesa llvmpipe
+  HUMANOIDTOOLBENCH_GPU=<id>       CUDA GPU index or UUID for inference and EGL (default: 0)
   MUJOCO_EGL_DEVICE_ID=N    optional EGL index, checked against the selected CUDA GPU
-  THETA_BENCH_CPU_THREADS=N  math thread-pool cap (default: 4 on GPU, 2 on CPU)
-  THETA_BENCH_CPUSET=<list>  taskset cpu-list (default: unpinned on GPU, 2 CPUs on CPU)
-  THETA_BENCH_NICE=N         scheduling priority, 0-19 (default: 10)
+  HUMANOIDTOOLBENCH_CPU_THREADS=N  math thread-pool cap (default: 4 on GPU, 2 on CPU)
+  HUMANOIDTOOLBENCH_CPUSET=<list>  taskset cpu-list (default: unpinned on GPU, 2 CPUs on CPU)
+  HUMANOIDTOOLBENCH_NICE=N         scheduling priority, 0-19 (default: 10)
 USAGE
 }
 
@@ -33,14 +33,14 @@ fi
 if [[ ! -x "$ENV_PREFIX/bin/python" ]]; then
     echo "[mujoco] no environment at $ENV_PREFIX" >&2
     echo "[mujoco] run uv run --no-project scripts/setup_evaluation.py, or point" >&2
-    echo "[mujoco] THETA_BENCH_MUJOCO_ENV_PREFIX at an existing one" >&2
+    echo "[mujoco] HUMANOIDTOOLBENCH_MUJOCO_ENV_PREFIX at an existing one" >&2
     exit 1
 fi
 
 export PATH="$ENV_PREFIX/bin:$PATH"
-export THETA_BENCH_MUJOCO_ONLY="${THETA_BENCH_MUJOCO_ONLY:-1}"
-export THETA_BENCH_FORCE_CPU="$FORCE_CPU"
-export THETA_BENCH_RUNTIME_WRAPPER=1
+export HUMANOIDTOOLBENCH_MUJOCO_ONLY="${HUMANOIDTOOLBENCH_MUJOCO_ONLY:-1}"
+export HUMANOIDTOOLBENCH_FORCE_CPU="$FORCE_CPU"
+export HUMANOIDTOOLBENCH_RUNTIME_WRAPPER=1
 export MUJOCO_GL="${MUJOCO_GL:-egl}"
 # Only used by windowed (glfw) rendering; EGL ignores it.
 export DISPLAY="${DISPLAY:-:1}"
@@ -55,7 +55,7 @@ if [[ "$FORCE_CPU" == "1" ]]; then
         MESA_EGL_VENDOR_JSON=/usr/share/glvnd/egl_vendor.d/50_mesa.json
         if [[ ! -f "$MESA_EGL_VENDOR_JSON" ]]; then
             echo "[mujoco] no Mesa EGL vendor file (checked the env prefix and /usr/share/glvnd)." >&2
-            echo "[mujoco] THETA_BENCH_FORCE_CPU=1 needs Mesa; install the system package (e.g. libegl-mesa0)." >&2
+            echo "[mujoco] HUMANOIDTOOLBENCH_FORCE_CPU=1 needs Mesa; install the system package (e.g. libegl-mesa0)." >&2
             exit 1
         fi
     fi
@@ -72,8 +72,8 @@ else
     # The NVIDIA EGL vendor lives in the system glvnd directory; keep it ahead
     # of the environment's Mesa build or rendering silently drops to software.
     export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$ENV_PREFIX/lib"
-    if [[ -n "${THETA_BENCH_GPU:-}" ]]; then
-        export CUDA_VISIBLE_DEVICES="$THETA_BENCH_GPU"
+    if [[ -n "${HUMANOIDTOOLBENCH_GPU:-}" ]]; then
+        export CUDA_VISIBLE_DEVICES="$HUMANOIDTOOLBENCH_GPU"
     else
         export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES-0}"
     fi
@@ -87,20 +87,20 @@ else
     # CUDA and EGL enumerate devices independently. Match their physical UUIDs
     # after configuring the EGL vendor instead of assuming their indices agree.
     EGL_DEVICE_ID="$("$ENV_PREFIX/bin/python" "$ROOT_DIR/scripts/select_mujoco_device.py" \
-        --device "${THETA_BENCH_POLICY_DEVICE:-auto}")"
+        --device "${HUMANOIDTOOLBENCH_POLICY_DEVICE:-auto}")"
     export MUJOCO_EGL_DEVICE_ID="$EGL_DEVICE_ID"
     DEFAULT_THREADS=4
     RENDERER_LABEL="nvidia-egl:$MUJOCO_EGL_DEVICE_ID"
     GPU_LABEL="${CUDA_VISIBLE_DEVICES:-none}"
 fi
 
-CPU_THREADS="${THETA_BENCH_CPU_THREADS:-$DEFAULT_THREADS}"
+CPU_THREADS="${HUMANOIDTOOLBENCH_CPU_THREADS:-$DEFAULT_THREADS}"
 if [[ ! "$CPU_THREADS" =~ ^[1-9][0-9]*$ ]]; then
-    echo "[mujoco] THETA_BENCH_CPU_THREADS must be a positive integer" >&2
+    echo "[mujoco] HUMANOIDTOOLBENCH_CPU_THREADS must be a positive integer" >&2
     exit 2
 fi
 if [[ "$FORCE_CPU" == "1" && "$CPU_THREADS" -gt 2 ]]; then
-    echo "[mujoco] THETA_BENCH_FORCE_CPU=1 caps THETA_BENCH_CPU_THREADS at 2" >&2
+    echo "[mujoco] HUMANOIDTOOLBENCH_FORCE_CPU=1 caps HUMANOIDTOOLBENCH_CPU_THREADS at 2" >&2
     exit 2
 fi
 export OMP_NUM_THREADS="$CPU_THREADS"
@@ -108,15 +108,15 @@ export MKL_NUM_THREADS="$CPU_THREADS"
 export OPENBLAS_NUM_THREADS="$CPU_THREADS"
 export NUMEXPR_NUM_THREADS="$CPU_THREADS"
 
-NICE_LEVEL="${THETA_BENCH_NICE:-10}"
+NICE_LEVEL="${HUMANOIDTOOLBENCH_NICE:-10}"
 if [[ ! "$NICE_LEVEL" =~ ^([0-9]|1[0-9])$ ]]; then
-    echo "[mujoco] THETA_BENCH_NICE must be an integer between 0 and 19" >&2
+    echo "[mujoco] HUMANOIDTOOLBENCH_NICE must be an integer between 0 and 19" >&2
     exit 2
 fi
 
 # GPU work is bounded by the GPU itself, so only the CPU-only envelope pins a
-# core pair by default. An explicit THETA_BENCH_CPUSET always wins.
-CPUSET="${THETA_BENCH_CPUSET:-}"
+# core pair by default. An explicit HUMANOIDTOOLBENCH_CPUSET always wins.
+CPUSET="${HUMANOIDTOOLBENCH_CPUSET:-}"
 if [[ -z "$CPUSET" && "$FORCE_CPU" == "1" ]]; then
     ALLOWED_CPUS="$(awk '/^Cpus_allowed_list:/ {print $2}' /proc/self/status)"
     FIRST_RANGE="${ALLOWED_CPUS%%,*}"

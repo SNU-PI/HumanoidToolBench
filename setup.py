@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent
 
 def _load_asset_guard() -> ModuleType:
     path = ROOT / "scripts" / "verify_runtime_assets.py"
-    spec = importlib.util.spec_from_file_location("theta_bench_asset_guard", path)
+    spec = importlib.util.spec_from_file_location("humanoidtoolbench_asset_guard", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"could not load runtime asset guard: {path}")
     module = importlib.util.module_from_spec(spec)
@@ -28,7 +28,7 @@ def _load_asset_guard() -> ModuleType:
 def _verify_runtime_assets() -> None:
     guard = _load_asset_guard()
     guard.verify_runtime_assets(
-        ROOT / "src" / "theta_bench" / "resources" / "benchmark_assets"
+        ROOT / "src" / "humanoidtoolbench" / "resources" / "benchmark_assets"
     )
 
 

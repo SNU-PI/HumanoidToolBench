@@ -43,10 +43,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["theta_bench", "theta_bench.*"]
+include = ["humanoidtoolbench", "humanoidtoolbench.*"]
 
 [tool.setuptools.package-data]
-theta_bench = [
+humanoidtoolbench = [
     "resources/**/*",
     "engines/*.c",
     "policies/_vendor/*.json",
@@ -93,10 +93,10 @@ unitree-sdk2py = {path = "third_party/unitree_sdk2_python", editable = true}
 decoupled-wbc = {path = "third_party/decoupled_wbc", editable = true}
 
 [project.scripts]
-humanoidtoolbench-eval = "theta_bench.cli.public_eval:main"
+humanoidtoolbench-eval = "humanoidtoolbench.cli.public_eval:main"
 
 [tool.ruff.lint.per-file-ignores]
 # CLI entry points configure the environment (display, GL, threads) before
 # importing heavy modules; the late imports are deliberate.
-"src/theta_bench/cli/*" = ["E402", "F401", "F811", "F841"]
+"src/humanoidtoolbench/cli/*" = ["E402", "F401", "F811", "F841"]
 "tests/*" = ["E402"]

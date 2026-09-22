@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_PREFIX="${THETA_BENCH_MUJOCO_ENV_PREFIX:-$ROOT_DIR/.venv}"
+ENV_PREFIX="${HUMANOIDTOOLBENCH_MUJOCO_ENV_PREFIX:-$ROOT_DIR/.venv}"
 MODE="${1:---check}"
 
 if [[ "$MODE" != "--check" && "$MODE" != "--install" ]]; then
@@ -25,7 +25,7 @@ if [[ "$MODE" == "--install" ]]; then
             echo "[evaluation] Install it from https://git-lfs.com/ and rerun setup." >&2
             exit 1
         fi
-        git lfs pull --include="src/theta_bench/resources/benchmark_assets/**"
+        git lfs pull --include="src/humanoidtoolbench/resources/benchmark_assets/**"
     fi
     # A release snapshot has no private Git history or gitlinks. Each controller
     # dependency is fetched anonymously from its pinned public repository.
@@ -44,7 +44,7 @@ if [[ "$MODE" == "--install" ]]; then
     done < <(python3 - <<'PY'
 import json
 from pathlib import Path
-manifest = json.loads(Path("src/theta_bench/resources/evaluation_assets.json").read_text())
+manifest = json.loads(Path("src/humanoidtoolbench/resources/evaluation_assets.json").read_text())
 for path, dependency in manifest["submodules"].items():
     print(path, dependency["url"], dependency["revision"], sep="\t")
 PY
@@ -66,7 +66,7 @@ PY
     UV_PROJECT_ENVIRONMENT="$ENV_PREFIX" nice -n 10 \
         uv sync --frozen --inexact --no-default-groups --project "$ROOT_DIR" \
             "${opencv_sync_args[@]}"
-    if [[ "${THETA_BENCH_FORCE_CPU:-0}" == "1" ]]; then
+    if [[ "${HUMANOIDTOOLBENCH_FORCE_CPU:-0}" == "1" ]]; then
         nice -n 10 uv pip install --python "$ENV_PREFIX/bin/python" \
             --index-url https://download.pytorch.org/whl/cpu --reinstall \
             torch==2.7.0 torchvision==0.22.0
@@ -97,8 +97,8 @@ if gui.split(":", 1)[1].strip() != "NONE":
 
 from decoupled_wbc.control.main.teleop.configs.configs import ControlLoopConfig
 from decoupled_wbc.control.robot_model.instantiation.g1 import instantiate_g1_robot_model
-from theta_bench.assets.evaluation import REPO_ROOT, load_manifest
-from theta_bench.robots.g1_sonic import G1Sonic
+from humanoidtoolbench.assets.evaluation import REPO_ROOT, load_manifest
+from humanoidtoolbench.robots.g1_sonic import G1Sonic
 
 instantiate_g1_robot_model()
 for relative in load_manifest()["wbc_weights"]:

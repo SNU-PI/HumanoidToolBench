@@ -13,11 +13,11 @@ from threading import Thread
 import numpy as np
 import pytest
 
-from theta_bench.cli import public_eval
-from theta_bench.evals import public_validation as validation
-from theta_bench.policies.http_client import HttpActionClient
-from theta_bench.policies.http_server import serve_policy
-from theta_bench.policies.remote_humanoid import make_remote_task_policy
+from humanoidtoolbench.cli import public_eval
+from humanoidtoolbench.evals import public_validation as validation
+from humanoidtoolbench.policies.http_client import HttpActionClient
+from humanoidtoolbench.policies.http_server import serve_policy
+from humanoidtoolbench.policies.remote_humanoid import make_remote_task_policy
 
 
 def config(*args):
@@ -30,7 +30,7 @@ def test_public_suite_selects_all_18_canonical_conditions():
     configs = public_eval.configurations(public_eval.parser().parse_args(["all"]))
     assert len({item.env_id for item in configs}) == 18
     assert {item.env_id for item in configs} == {
-        f"theta_bench/G1{task}-L{level}-{mode}"
+        f"humanoidtoolbench/G1{task}-L{level}-{mode}"
         for task in ("BallMove", "BallRetrieve", "IceBreak")
         for level in range(3)
         for mode in ("S", "R")
@@ -51,7 +51,7 @@ def test_public_suite_selects_all_18_canonical_conditions():
 )
 def test_public_cli_rejects_noncanonical_environments(name):
     with pytest.raises(SystemExit):
-        public_eval.main([f"theta_bench/{name}-L1-S", "--dry-run"])
+        public_eval.main([f"humanoidtoolbench/{name}-L1-S", "--dry-run"])
 
 
 @pytest.mark.parametrize(
@@ -83,7 +83,7 @@ def test_managed_server_resets_inference_seeds_and_releases_its_port():
     received = []
 
     def policy(request):
-        received.append((request["theta_episode_seed"], request["theta_request_index"]))
+        received.append((request["humanoidtoolbench_episode_seed"], request["humanoidtoolbench_request_index"]))
         return np.zeros((1, 36), dtype=np.float32)
 
     policy.metadata = {"policy": "test", "checkpoint": "sha256:test"}
@@ -299,7 +299,7 @@ def test_invalid_results_do_not_receive_a_validated_score(tmp_path, monkeypatch,
 
 
 def test_video_validator_decodes_frames_and_rejects_wrong_count(tmp_path):
-    from theta_bench.envs.video_writer import VideoWriter
+    from humanoidtoolbench.envs.video_writer import VideoWriter
 
     path = tmp_path / "camera.mp4"
     writer = VideoWriter(str(path), 50, (640, 360))
@@ -313,7 +313,7 @@ def test_video_validator_decodes_frames_and_rejects_wrong_count(tmp_path):
 
 
 def test_video_validator_rejects_black_middle_frame(tmp_path):
-    from theta_bench.envs.video_writer import VideoWriter
+    from humanoidtoolbench.envs.video_writer import VideoWriter
 
     writer = VideoWriter(str(tmp_path / "camera.mp4"), 50, (640, 360))
     for value in (100, 0, 100):

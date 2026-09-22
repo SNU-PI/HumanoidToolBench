@@ -8,7 +8,7 @@ from http.server import HTTPServer
 
 import numpy as np
 
-from theta_bench.policies.http_server import make_handler
+from humanoidtoolbench.policies.http_server import make_handler
 
 
 def predict(request: dict) -> np.ndarray:

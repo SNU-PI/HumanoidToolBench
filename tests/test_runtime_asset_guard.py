@@ -75,24 +75,24 @@ def test_rebuild_removes_packages_left_by_a_previous_release(tmp_path, monkeypat
     spec.loader.exec_module(build)
     monkeypatch.setattr(build, "_verify_runtime_assets", lambda: None)
 
-    source = tmp_path / "src/theta_bench"
+    source = tmp_path / "src/humanoidtoolbench"
     source.mkdir(parents=True)
     (source / "__init__.py").write_text("# evaluation package\n")
     distribution = setuptools.Distribution(
-        {"packages": ["theta_bench"], "package_dir": {"": str(source.parent)}}
+        {"packages": ["humanoidtoolbench"], "package_dir": {"": str(source.parent)}}
     )
     distribution.script_name = str(_SCRIPT.parents[1] / "setup.py")
     command = build.VerifiedBuildPy(distribution)
     command.ensure_finalized()
     output = tmp_path / "build/lib"
     command.build_lib = str(output)
-    old_module = output / "theta_bench_rl/train.py"
+    old_module = output / "humanoidtoolbench_rl/train.py"
     old_module.parent.mkdir(parents=True)
     old_module.write_text("# obsolete private training module\n")
 
     command.run()
 
     assert not old_module.exists()
-    assert (output / "theta_bench/__init__.py").read_bytes() == (
+    assert (output / "humanoidtoolbench/__init__.py").read_bytes() == (
         source / "__init__.py"
     ).read_bytes()

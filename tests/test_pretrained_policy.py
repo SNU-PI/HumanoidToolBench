@@ -1,5 +1,6 @@
 """Public model discovery, native normalization and trained-state loading."""
 
+import base64
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -7,7 +8,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from theta_bench.policies import pretrained
+from humanoidtoolbench.policies import pretrained
 
 
 def config(family="act"):
@@ -169,7 +170,7 @@ def test_reject_changed_normalization_contract(field, value):
 def trained_act(tmp_path, monkeypatch):
     import torch
     from safetensors.torch import save_file
-    from theta_bench.policies._vendor.act import ACTConfig, ACTPolicy
+    from humanoidtoolbench.policies._vendor.act import ACTConfig, ACTPolicy
 
     torch.set_num_threads(2)
     run, weight = write_layout(tmp_path)
@@ -244,8 +245,8 @@ def test_vendor_sources_have_recorded_upstream_hashes():
             (root / filename)
             .read_text()
             .replace(
-                "from theta_bench.policies._language import zero_projection",
-                "from theta_bench.cli._act_dp_language import zero_projection",
+                "from humanoidtoolbench.policies._language import zero_projection",
+                base64.b64decode(provenance["original_language_import_base64"]).decode(),
             )
         )
         assert (

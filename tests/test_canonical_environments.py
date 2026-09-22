@@ -5,14 +5,14 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from theta_bench.tasks.g1_ball_move_teleop import G1BallMoveTeleop
-from theta_bench.tasks.g1_ball_retrieve_teleop import G1BallRetrieveTeleop
-from theta_bench.tasks.g1_ice_break_teleop import (
+from humanoidtoolbench.tasks.g1_ball_move_teleop import G1BallMoveTeleop
+from humanoidtoolbench.tasks.g1_ball_retrieve_teleop import G1BallRetrieveTeleop
+from humanoidtoolbench.tasks.g1_ice_break_teleop import (
     FRACTURE_IMPULSE,
     SCATTER,
     G1IceBreakTeleop,
 )
-from theta_bench.tasks.g1_toolbench_tabletop import G1ToolbenchTabletop
+from humanoidtoolbench.tasks.g1_toolbench_tabletop import G1ToolbenchTabletop
 
 TASKS = (G1BallMoveTeleop, G1BallRetrieveTeleop, G1IceBreakTeleop)
 REMOVED_OPTIONS = (

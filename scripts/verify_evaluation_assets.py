@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from theta_bench.assets.evaluation import (  # noqa: E402
+from humanoidtoolbench.assets.evaluation import (  # noqa: E402
     EvaluationAssetError,
     verify_evaluation_assets,
 )

@@ -37,7 +37,7 @@ machine. Demonstration recordings are a separate download; `--model` downloads
 supported task-model checkpoints automatically.
 
 This release freezes the shipped MolmoSpaces colliders in
-[`evaluation_assets.json`](../src/theta_bench/resources/evaluation_assets.json).
+[`evaluation_assets.json`](../src/humanoidtoolbench/resources/evaluation_assets.json).
 That selection preserves the canonical asset files present when this branch
 was prepared. It does not establish parity with every historical paper run.
 Locally generated CoACD parts do not replace the frozen colliders. Asset hashes
@@ -51,7 +51,7 @@ inference uses CUDA. For software rendering, install system
 Mesa/EGL support (for example, `libegl1` and `libegl-mesa0` on Ubuntu) and run:
 
 ```bash
-THETA_BENCH_FORCE_CPU=1 uv run humanoidtoolbench-eval --model /path/to/checkpoint --device cpu
+HUMANOIDTOOLBENCH_FORCE_CPU=1 uv run humanoidtoolbench-eval --model /path/to/checkpoint --device cpu
 ```
 
 This hides CUDA devices and uses Mesa software rendering. The policy's
@@ -80,11 +80,11 @@ uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003
 uv run humanoidtoolbench-eval --model /path/to/checkpoint
 ```
 
-The default condition is `theta_bench/G1BallMove-L0-S`. Set the positional
+The default condition is `humanoidtoolbench/G1BallMove-L0-S`. Set the positional
 environment argument to any canonical ID, or use `all` for all 18 conditions:
 
 ```bash
-uv run humanoidtoolbench-eval theta_bench/G1BallRetrieve-L1-R --model /path/to/checkpoint
+uv run humanoidtoolbench-eval humanoidtoolbench/G1BallRetrieve-L1-R --model /path/to/checkpoint
 uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
@@ -133,7 +133,7 @@ uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003 \
 `--device auto` selects CUDA when available, otherwise CPU. Explicit values are
 `cpu` or `cuda:N`, where N is an index among visible CUDA devices. The runtime
 exposes GPU 0 by default. To select another physical GPU, for example GPU 1,
-use `THETA_BENCH_GPU=1 uv run humanoidtoolbench-eval --model /path/to/checkpoint --device cuda:0`.
+use `HUMANOIDTOOLBENCH_GPU=1 uv run humanoidtoolbench-eval --model /path/to/checkpoint --device cuda:0`.
 The evaluator matches the EGL renderer to the policy's physical CUDA GPU by
 UUID, including when `CUDA_VISIBLE_DEVICES` reorders devices. An explicit
 `MUJOCO_EGL_DEVICE_ID` must identify that same GPU. Both selections are recorded
@@ -204,14 +204,14 @@ after undoing training-time action normalization.
 Joint angles and angular commands use radians, base height uses metres, and
 navigation velocities use metres/second or radians/second. The flat left-hand
 order is thumb/middle/index; the right-hand order is thumb/index/middle. Use
-the definitions in [actions/g1.py](../src/theta_bench/actions/g1.py) and the
-state builder in [remote_humanoid.py](../src/theta_bench/policies/remote_humanoid.py)
+the definitions in [actions/g1.py](../src/humanoidtoolbench/actions/g1.py) and the
+state builder in [remote_humanoid.py](../src/humanoidtoolbench/policies/remote_humanoid.py)
 when adapting a model. The policy state excludes the leg joints from the raw
 43-value robot observation and includes the previous commanded height, starting
 at 0.74 for a new episode.
 
 For a custom HTTP implementation, serve `POST /act` using the NumPy-aware JSON
-encoding in [http_client.py](../src/theta_bench/policies/http_client.py).
+encoding in [http_client.py](../src/humanoidtoolbench/policies/http_client.py).
 The response contains `action` with shape `(T, 36)`. The provided server
 implements this transport so policy authors can work with decoded arrays.
 
@@ -221,7 +221,7 @@ example. That example verifies integration and does not demonstrate tool use.
 ## Evaluation protocol
 
 ```bash
-uv run humanoidtoolbench-eval theta_bench/G1BallRetrieve-L1-R \
+uv run humanoidtoolbench-eval humanoidtoolbench/G1BallRetrieve-L1-R \
   --model /path/to/checkpoint --episodes 100 --seed-start 10000 \
   --max-steps 3000 --output data/evals/my-policy
 ```
@@ -299,7 +299,7 @@ push or publication.
 ## Licenses
 
 Project code uses the [MIT license](../LICENSE). Bundled inference code retains
-its [upstream license](../src/theta_bench/policies/_vendor/LICENSE). Controller
+its [upstream license](../src/humanoidtoolbench/policies/_vendor/LICENSE). Controller
 code, controller weights, robot models, scanned meshes, and model checkpoints
 retain their own terms. The [dataset page](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop)
 specifies recording access and use conditions.

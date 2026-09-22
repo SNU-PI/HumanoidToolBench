@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from theta_bench.policies.model_source import resolve_model
+from humanoidtoolbench.policies.model_source import resolve_model
 
 
 def test_local_checkpoint_is_used_without_hub_access(tmp_path):
@@ -25,7 +25,7 @@ def test_missing_local_checkpoint_is_not_treated_as_hub_id(tmp_path):
 
 def test_hub_metadata_and_weights_use_one_immutable_revision(tmp_path, monkeypatch):
     import huggingface_hub as hub
-    from theta_bench.policies import pretrained
+    from humanoidtoolbench.policies import pretrained
 
     files = [
         "run/run_config.json",

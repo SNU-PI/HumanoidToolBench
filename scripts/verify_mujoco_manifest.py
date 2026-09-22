@@ -44,7 +44,7 @@ def main() -> int:
         )
 
     # Both Torch flavours stay declared so either runtime mode is installable
-    # without editing the manifest: GPU by default, CPU under THETA_BENCH_FORCE_CPU=1.
+    # without editing the manifest: GPU by default, CPU under HUMANOIDTOOLBENCH_FORCE_CPU=1.
     indexes = config.get("tool", {}).get("uv", {}).get("index", [])
     for name, url in TORCH_INDEXES.items():
         matching = [index for index in indexes if index.get("name") == name]

@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from theta_bench.assets import evaluation
+from humanoidtoolbench.assets import evaluation
 
 
 def _manifest(tmp_path: Path) -> dict:
@@ -74,8 +74,8 @@ def test_checker_rejects_unhydrated_controller_weight(tmp_path):
 
 
 def test_manifest_covers_exact_canonical_pools():
-    from theta_bench.assets.distractors import DISTRACTOR_POOL
-    from theta_bench.assets.tools import ASSET_POOLS
+    from humanoidtoolbench.assets.distractors import DISTRACTOR_POOL
+    from humanoidtoolbench.assets.tools import ASSET_POOLS
 
     required = {uid for pool in ASSET_POOLS.values() for uid in pool} | set(
         DISTRACTOR_POOL
@@ -182,7 +182,7 @@ def test_parallel_downloader_requires_every_asset(tmp_path, monkeypatch, capsys,
 
     monkeypatch.setattr(downloader, "load_manifest", lambda: manifest)
     monkeypatch.setattr(downloader, "fetch_asset", fetch)
-    monkeypatch.setenv("THETA_BENCH_MS_ASSETS", str(tmp_path))
+    monkeypatch.setenv("HUMANOIDTOOLBENCH_MS_ASSETS", str(tmp_path))
     if fail:
         with pytest.raises(RuntimeError, match="asset mismatch"):
             downloader.main()

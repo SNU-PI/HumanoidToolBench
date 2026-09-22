@@ -8,10 +8,10 @@ import gymnasium as gym
 import pytest
 from gymnasium import spaces
 
-from theta_bench.core.registry import RegistryMixin
-from theta_bench.envs.base_dual_env import BaseDualSim
-from theta_bench.robots.registry import RobotRegistry
-from theta_bench.tasks.registry import TaskRegistry
+from humanoidtoolbench.core.registry import RegistryMixin
+from humanoidtoolbench.envs.base_dual_env import BaseDualSim
+from humanoidtoolbench.robots.registry import RobotRegistry
+from humanoidtoolbench.tasks.registry import TaskRegistry
 
 
 def test_registry_tables_are_isolated_between_subclasses() -> None:
@@ -64,14 +64,14 @@ def test_robot_registry_bootstraps_g1_sonic_and_returns_fresh_instances(
         return SimpleNamespace(G1Sonic=TestRobot)
 
     monkeypatch.setattr(
-        "theta_bench.robots.registry.import_module", import_robot_module
+        "humanoidtoolbench.robots.registry.import_module", import_robot_module
     )
     marker = object()
 
     first = RobotRegistry.make("g1_sonic", marker=marker)
     second = RobotRegistry.make("g1_sonic", marker=marker)
 
-    assert imported == ["theta_bench.robots.g1_sonic"]
+    assert imported == ["humanoidtoolbench.robots.g1_sonic"]
     assert first is not second
     assert first.marker is marker
 
@@ -98,7 +98,7 @@ def test_base_dual_sim_creates_task_once(monkeypatch) -> None:
             pass
 
     monkeypatch.setattr(TaskRegistry, "make", make_task)
-    monkeypatch.setattr("theta_bench.engines.MujocoSimulator", FakeMujocoSimulator)
+    monkeypatch.setattr("humanoidtoolbench.engines.MujocoSimulator", FakeMujocoSimulator)
 
     env = BaseDualSim("test_task", headless=False, marker="value")
 
@@ -116,8 +116,8 @@ def test_cell_config_is_instance_local(monkeypatch) -> None:
     attribute, building an R cell would silently turn every S cell of the same
     scenario into an R one.
     """
-    from theta_bench.tasks.g1_ball_retrieve_teleop import G1BallRetrieveTeleop
-    from theta_bench.tasks.g1_toolbench_tabletop import G1ToolbenchTabletop
+    from humanoidtoolbench.tasks.g1_ball_retrieve_teleop import G1BallRetrieveTeleop
+    from humanoidtoolbench.tasks.g1_toolbench_tabletop import G1ToolbenchTabletop
 
     monkeypatch.setattr(G1ToolbenchTabletop, "__init__", lambda self, *a, **k: None)
     class_cfg = G1BallRetrieveTeleop.dr_cfgs["tools"]
@@ -135,14 +135,14 @@ def test_cell_config_is_instance_local(monkeypatch) -> None:
 
 def test_the_grid_is_three_scenarios_by_three_levels_by_two_modes() -> None:
     """Every cell exists, and each carries the arguments that define it."""
-    from theta_bench.envs import LEVEL_STEPS, SCENARIOS
+    from humanoidtoolbench.envs import LEVEL_STEPS, SCENARIOS
 
     assert set(SCENARIOS) == {"G1BallMove", "G1BallRetrieve", "G1IceBreak"}
     seen = set()
     for name, task in SCENARIOS.items():
         for level in LEVEL_STEPS:
             for mode in ("S", "R"):
-                env_id = f"theta_bench/{name}-L{level}-{mode}"
+                env_id = f"humanoidtoolbench/{name}-L{level}-{mode}"
                 spec = gym.spec(env_id)
                 assert spec.version is None
                 kwargs = spec.kwargs
@@ -152,7 +152,7 @@ def test_the_grid_is_three_scenarios_by_three_levels_by_two_modes() -> None:
                 seen.add(env_id)
 
     assert len(seen) == 18
-    registered = {i for i in gym.registry if i.startswith("theta_bench/")}
+    registered = {i for i in gym.registry if i.startswith("humanoidtoolbench/")}
     assert registered == seen, "the reasoning grid contains exactly these cells"
 
 
@@ -163,15 +163,15 @@ def test_the_grid_is_three_scenarios_by_three_levels_by_two_modes() -> None:
     [("G1BallMove", "G1StickMove"), ("G1BallRetrieve", "G1HookRetrieve")],
 )
 def test_legacy_environment_names_are_not_registered(canonical, legacy, level, mode):
-    canonical_spec = gym.spec(f"theta_bench/{canonical}-L{level}-{mode}")
+    canonical_spec = gym.spec(f"humanoidtoolbench/{canonical}-L{level}-{mode}")
     assert canonical_spec.max_episode_steps == 3000
     with pytest.raises(gym.error.NameNotFound):
-        gym.spec(f"theta_bench/{legacy}-L{level}-{mode}")
+        gym.spec(f"humanoidtoolbench/{legacy}-L{level}-{mode}")
 
 
 def test_every_cell_has_an_instruction() -> None:
-    from theta_bench.envs import SCENARIOS
-    from theta_bench.tasks.tool_reasoning import INSTRUCTIONS, LEVELS, MODE_ALIAS, MODES
+    from humanoidtoolbench.envs import SCENARIOS
+    from humanoidtoolbench.tasks.tool_reasoning import INSTRUCTIONS, LEVELS, MODE_ALIAS, MODES
 
     assert MODE_ALIAS == {"S": "R0", "R": "R1"}
     expected = {
@@ -190,7 +190,7 @@ def test_scenario_instructions_match_each_level_and_are_identical_across_modes()
     None
 ):
     """All eighteen cells use the requested scenario wording without tool hints."""
-    from theta_bench.tasks.tool_reasoning import INSTRUCTIONS, LEVELS, MODES
+    from humanoidtoolbench.tasks.tool_reasoning import INSTRUCTIONS, LEVELS, MODES
 
     scenarios = {
         "g1_ball_move_teleop": (
