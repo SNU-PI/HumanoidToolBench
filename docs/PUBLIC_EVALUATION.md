@@ -153,17 +153,26 @@ use the [dataset](../data/README.md) with your training framework.
 ## Policy interface
 
 Native ACT/DP users only need `--model`. To connect another architecture, put
-its loading and inference code in a `my_policy.py` file in the checkout root,
-then start the supplied server:
+its loading and inference code in a `my_policy.py` file in the checkout root
+that exposes `predict(request)`. If your model's dependencies can be installed
+in this environment, the evaluator loads and serves it itself:
+
+```bash
+uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict \
+  --checkpoint MODEL_ID_OR_REVISION
+```
+
+`--policy` takes `module:function`, resolved from the current directory
+first, or a file path such as `adapters/my_policy.py:predict`; `--checkpoint`
+records the provenance. When the model needs its own environment or machine,
+start the supplied server instead, with the same `--policy` forms:
 
 ```bash
 uv run python examples/serve_policy.py --port 21000 --policy my_policy:predict \
   --checkpoint MODEL_ID_OR_REVISION
 ```
 
-`--policy` takes `module:function`, resolved from the current directory
-first, or a file path such as `--policy adapters/my_policy.py:predict`. To use
-a separate model environment, run `PYTHONPATH=src python examples/serve_policy.py`
+To use a separate model environment, run `PYTHONPATH=src python examples/serve_policy.py`
 with the same arguments, NumPy, and requests installed. The source path makes
 the HTTP adapter available without installing the simulator's dependencies in
 your model environment. `my_policy.py` must provide
@@ -310,11 +319,18 @@ uv run humanoidtoolbench-eval humanoidtoolbench/G1BallRetrieve-L1-R \
 ```
 
 Use `all` as the environment argument to run all 18 conditions. They run one
-after another in a single process. If validation fails on one condition the
-command stops and the later conditions are not run; completed conditions keep
-their `benchmark_result.json`. There is no resume: rerun the remaining IDs
-from `--list-envs` individually. Use `--dry-run` to inspect the configuration
-without starting simulation or contacting the server.
+after another in a single process, and the command prints `[k/18]` before
+each. A condition whose run or validation fails is reported with its
+traceback, its run directory is kept for inspection, and the remaining
+conditions still run; the exit status is then 1. Running the same command
+again resumes: a condition that already has a validated
+`benchmark_result.json` under `--output` with the same settings and the same
+policy name and checkpoint is skipped, unless `--rerun` is given. A policy
+without a checkpoint identifier is never skipped. After a multi-condition run
+the evaluator writes `<output>/summary.json` and `summary.md` with one row per
+condition and the unweighted mean success rate once every condition has a
+result. Use `--dry-run` to inspect the configuration without starting
+simulation or contacting the server.
 
 | Setting | Standard protocol |
 | --- | --- |

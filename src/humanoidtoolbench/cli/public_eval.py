@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import time
+import traceback
 from contextlib import nullcontext
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -71,13 +72,25 @@ def parser() -> argparse.ArgumentParser:
         ),
     )
     source.add_argument(
+        "--policy",
+        help=(
+            "Your predict(request) as module:function or path/to/file.py:function, "
+            "loaded and served by the evaluator in this environment; the "
+            "alternative to --model and --host"
+        ),
+    )
+    source.add_argument(
         "--host",
         default="127.0.0.1",
         help=(
             "Address of an already running policy server such as "
-            "examples/serve_policy.py; the alternative to --model. "
+            "examples/serve_policy.py; the alternative to --model and --policy. "
             "Default: %(default)s"
         ),
+    )
+    result.add_argument(
+        "--checkpoint",
+        help="Checkpoint ID or revision recorded as provenance for --policy runs",
     )
     result.add_argument(
         "--revision",
@@ -122,11 +135,111 @@ def parser() -> argparse.ArgumentParser:
         help="Policy-control steps per episode at 50 Hz; the standard protocol is %(default)s",
     )
     result.add_argument(
+        "--rerun",
+        action="store_true",
+        help=(
+            "Evaluate a condition again even when a validated result with the same "
+            "settings and policy already exists under --output"
+        ),
+    )
+    result.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the run configuration as JSON and exit without downloading or simulating",
     )
     return result
+
+
+RESUME_FIELDS = (
+    "env_id",
+    "num_episodes",
+    "episode_start",
+    "max_episode_steps",
+    "split",
+    "controller",
+    "sim_mode",
+)
+
+
+def completed_result(config: EvalConfig, identity: dict) -> Path | None:
+    """Return an earlier validated benchmark_result.json for the same run, if any.
+
+    A result is reused only when its settings and its policy identity (name and
+    checkpoint) match; a policy without a checkpoint identifier is never reused.
+    """
+    if not identity.get("checkpoint"):
+        return None
+    for path in sorted(Path(config.eval_dir).glob("run-*/benchmark_result.json")):
+        try:
+            receipt = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        recorded = receipt.get("configuration") or {}
+        info = receipt.get("policy_info") or {}
+        if (
+            receipt.get("status") == "validated"
+            and all(recorded.get(k) == getattr(config, k) for k in RESUME_FIELDS)
+            and info.get("policy") == identity.get("policy")
+            and info.get("checkpoint") == identity.get("checkpoint")
+        ):
+            return path
+    return None
+
+
+def write_summary(output: Path, rows: list[dict]) -> Path:
+    """Write <output>/summary.json and summary.md for a multi-condition run."""
+    scored = [row for row in rows if row.get("status") in ("completed", "skipped")]
+    complete = len(scored) == len(rows) and bool(rows)
+    payload = {
+        "conditions": rows,
+        "completed": sum(row["status"] == "completed" for row in rows),
+        "skipped": sum(row["status"] == "skipped" for row in rows),
+        "failed": sum(row["status"] == "failed" for row in rows),
+        "reportable": complete and all(row.get("reportable") for row in scored),
+        # The unweighted mean over conditions, only once every condition has a result.
+        "mean_success_rate": (
+            sum(row["success_rate"] for row in scored) / len(scored)
+            if complete
+            else None
+        ),
+    }
+    output.mkdir(parents=True, exist_ok=True)
+    path = output / "summary.json"
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n")
+    temporary.replace(path)
+    lines = [
+        "| Condition | Successes | Episodes | Rate | Reportable | Status | Result |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        rate = "" if row.get("success_rate") is None else f"{row['success_rate']:.1%}"
+        lines.append(
+            f"| {row['env_id'].removeprefix(ENV_PREFIX)} | {row.get('successes', '')} | "
+            f"{row.get('episodes', '')} | {rate} | {row.get('reportable', '')} | "
+            f"{row['status']} | {row.get('result') or row.get('error', '')} |"
+        )
+    mean = payload["mean_success_rate"]
+    lines.append("")
+    lines.append(
+        "Mean success rate over conditions: "
+        + (f"{mean:.1%}" if mean is not None else "incomplete")
+    )
+    (output / "summary.md").write_text("\n".join(lines) + "\n")
+    return path
+
+
+def _summary_row(config: EvalConfig, receipt: dict, path: Path, status: str) -> dict:
+    return {
+        "env_id": config.env_id,
+        "status": status,
+        "successes": receipt["successes"],
+        "episodes": receipt["episodes"],
+        "success_rate": receipt["success_rate"],
+        "reportable": receipt["reportable"],
+        "wall_seconds": receipt.get("wall_seconds"),
+        "result": str(path),
+    }
 
 
 def policy_server_unreachable(host: str, port: int, timeout: float = 3.0) -> str | None:
@@ -170,6 +283,8 @@ def configurations(args: argparse.Namespace) -> list[EvalConfig]:
         raise ValueError("port must be between 1 and 65535")
     if args.revision and not args.model:
         raise ValueError("--revision requires --model")
+    if args.checkpoint and not args.policy:
+        raise ValueError("--checkpoint requires --policy")
     name = args.env_id.strip()
     selected = ENV_IDS if name == "all" else (canonical_env_id(name),)
     return [
@@ -207,7 +322,8 @@ def main(argv: list[str] | None = None) -> None:
         return
     # Fail in seconds, not after the simulator boots, when no server answers.
     # The re-exec below inherits the marker, so the check runs once per run.
-    if not args.model and os.environ.get("HUMANOIDTOOLBENCH_PREFLIGHT_DONE") != "1":
+    external = not args.model and not args.policy
+    if external and os.environ.get("HUMANOIDTOOLBENCH_PREFLIGHT_DONE") != "1":
         problem = policy_server_unreachable(configs[0].host, configs[0].port)
         if problem:
             cli.exit(2, problem + "\n")
@@ -256,7 +372,31 @@ def main(argv: list[str] | None = None) -> None:
             f"Model ready: HumanoidToolBench {policy.metadata['family'].upper()}",
             flush=True,
         )
-    for config in configs:
+    elif args.policy:
+        from humanoidtoolbench.policies.loader import (
+            CallablePolicy,
+            PolicyLoadError,
+            load_policy_callable,
+        )
+
+        try:
+            predict = load_policy_callable(args.policy)
+        except PolicyLoadError as exc:
+            cli.exit(2, f"{exc}\n")
+        policy = CallablePolicy(predict, name=args.policy, checkpoint=args.checkpoint)
+
+    if policy is not None:
+        identity = {
+            "policy": policy.metadata.get("policy"),
+            "checkpoint": policy.metadata.get("checkpoint"),
+        }
+    else:
+        from humanoidtoolbench.cli.eval_decoupled_wbc import _fetch_policy_info
+
+        info = _fetch_policy_info(configs[0].host, configs[0].port)
+        identity = {"policy": info.get("policy"), "checkpoint": info.get("checkpoint")}
+
+    def evaluate(config: EvalConfig) -> tuple[dict, Path]:
         source_before = source_identity()
         started = time.monotonic()
         if policy is not None:
@@ -284,10 +424,48 @@ def main(argv: list[str] | None = None) -> None:
         temporary = path.with_suffix(".json.tmp")
         temporary.write_text(json.dumps(receipt, indent=2, allow_nan=False) + "\n")
         temporary.replace(path)
+        return receipt, path
+
+    rows: list[dict] = []
+    for index, config in enumerate(configs, 1):
+        print(f"[{index}/{len(configs)}] {config.env_id}", flush=True)
+        existing = None if args.rerun else completed_result(config, identity)
+        if existing is not None:
+            receipt = json.loads(existing.read_text())
+            rows.append(_summary_row(config, receipt, existing, "skipped"))
+            print(
+                f"{config.env_id}: {receipt['successes']}/{receipt['episodes']} "
+                f"({receipt['success_rate']:.1%}), already validated; {existing} "
+                "(pass --rerun to evaluate again)",
+                flush=True,
+            )
+            continue
+        try:
+            receipt, path = evaluate(config)
+        except Exception as exc:  # noqa: BLE001 - one condition must not sink the rest
+            # A failed condition keeps its run directory for inspection; the
+            # remaining conditions still run and the exit status reports it.
+            traceback.print_exc()
+            print(f"{config.env_id}: FAILED: {exc}", file=sys.stderr, flush=True)
+            rows.append(
+                {"env_id": config.env_id, "status": "failed", "error": str(exc)}
+            )
+            continue
+        rows.append(_summary_row(config, receipt, path, "completed"))
         label = "benchmark" if receipt["reportable"] else "diagnostic"
         print(
             f"{config.env_id}: {receipt['successes']}/{receipt['episodes']} "
-            f"({receipt['success_rate']:.1%}), {label}; {path}"
+            f"({receipt['success_rate']:.1%}), {label}; {path}",
+            flush=True,
+        )
+    if len(configs) > 1:
+        summary = write_summary(args.output, rows)
+        print(f"Summary: {summary} and {summary.with_suffix('.md')}", flush=True)
+    failed = [row["env_id"] for row in rows if row["status"] == "failed"]
+    if failed:
+        cli.exit(
+            1,
+            f"{len(failed)} of {len(configs)} conditions failed: {', '.join(failed)}\n",
         )
 
 

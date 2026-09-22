@@ -59,7 +59,9 @@ uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-300
 
 조건마다 `data/evals/<condition>/run-<id>/benchmark_result.json`에 성공
 횟수가 기록되고 에피소드당 카메라 영상 네 개가 저장됩니다. 진단 설정으로
-돌린 결과는 `reportable: false`가 됩니다. `--list-envs`는 조건 ID 목록을,
+돌린 결과는 `reportable: false`가 됩니다. `all`은 `data/evals/summary.json`도
+쓰고, 같은 체크포인트로 이미 검증된 결과가 있는 조건은 건너뛰며, 조건
+하나가 실패해도 나머지를 계속 실행합니다. `--list-envs`는 조건 ID 목록을,
 `--dry-run`은 실행 없이 환경과 에피소드 설정만 출력합니다.
 
 `--model`은 **HumanoidToolBench ACT 및 Diffusion Policy 시뮬레이션
@@ -84,23 +86,22 @@ def predict(request: dict) -> np.ndarray:
     return np.asarray(actions, dtype=np.float32)        # (T, 36), 행마다 50 Hz 명령 하나
 ```
 
-터미널 하나에서 서버를 실행합니다. 이 저장소의 환경에서 실행해도 되고,
-NumPy와 requests만 있으면 되는 본인의 모델 환경에서 실행해도 됩니다.
+모델의 의존성을 이 환경에 설치할 수 있다면 명령 하나로 평가됩니다.
 
 ```bash
-uv run python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-# 또는 본인의 환경에서:
+uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
+```
+
+그렇지 않으면 터미널 하나에서 서버를 실행하고(NumPy와 requests만 있으면
+되는 본인의 모델 환경이나 이 저장소의 환경에서), 다른 터미널에서 평가기를
+실행합니다.
+
+```bash
 PYTHONPATH=src python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-```
-
-다른 터미널에서 진단 실행을 한 뒤, `--episodes`와 `--max-steps`를 빼고
-정식 100 에피소드 프로토콜을 실행합니다.
-
-```bash
 uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
-uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000
 ```
 
+정식 100 에피소드 프로토콜은 `--episodes`와 `--max-steps`를 빼면 됩니다.
 서버가 다른 머신에서 돌 때는 서버를 `--host 0.0.0.0`으로 띄우고 그 주소를
 평가기의 `--host`에 넘기세요. 32차원 state, 36차원 action(조인트 이름과
 한계 포함), 이미지, reset 의미는

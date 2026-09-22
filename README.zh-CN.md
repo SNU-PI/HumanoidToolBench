@@ -36,7 +36,7 @@ uv run humanoidtoolbench-eval G1BallMove-L0-S --model snupilab/humanoidtoolbench
 uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
-每个条件会写入 `data/evals/<condition>/run-<id>/benchmark_result.json`，包含成功次数，并保存每回合四路相机视频。诊断设置得到的结果为 `reportable: false`。`--list-envs` 打印条件 ID 列表，`--dry-run` 只打印环境和回合设置而不运行。
+每个条件会写入 `data/evals/<condition>/run-<id>/benchmark_result.json`，包含成功次数，并保存每回合四路相机视频。诊断设置得到的结果为 `reportable: false`。`all` 还会写入 `data/evals/summary.json`，跳过已用同一检查点得到验证结果的条件，并在某个条件失败时继续运行其余条件。`--list-envs` 打印条件 ID 列表，`--dry-run` 只打印环境和回合设置而不运行。
 
 `--model` 从 Hugging Face ID 或本地路径加载 **HumanoidToolBench ACT 和 Diffusion Policy 仿真检查点**。其他模型通过下面的策略服务器进行评测。
 
@@ -57,22 +57,20 @@ def predict(request: dict) -> np.ndarray:
     return np.asarray(actions, dtype=np.float32)        # (T, 36)，每行一条 50 Hz 指令
 ```
 
-在一个终端启动服务器。既可以在本仓库的环境中运行，也可以在你自己的模型环境中运行，后者只需要 NumPy 和 requests：
+如果你的模型依赖可以安装在本环境中，一条命令即可评测：
 
 ```bash
-uv run python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-# 或者在你自己的环境中：
+uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
+```
+
+否则在一个终端启动服务器（可以在只装了 NumPy 和 requests 的你自己的模型环境中，也可以在本仓库的环境中），并在另一个终端运行评测器：
+
+```bash
 PYTHONPATH=src python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-```
-
-在另一个终端先做一次诊断运行，然后去掉 `--episodes` 和 `--max-steps` 运行标准的 100 回合协议：
-
-```bash
 uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
-uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000
 ```
 
-服务器运行在另一台机器上时，用 `--host 0.0.0.0` 启动服务器，并把它的地址传给评测器的 `--host`。32 维状态、带关节名称和限位的 36 维动作、图像和 reset 语义见[策略接口](docs/PUBLIC_EVALUATION.md#policy-interface)。
+去掉 `--episodes` 和 `--max-steps` 即可运行标准的 100 回合协议。服务器运行在另一台机器上时，用 `--host 0.0.0.0` 启动服务器，并把它的地址传给评测器的 `--host`。32 维状态、带关节名称和限位的 36 维动作、图像和 reset 语义见[策略接口](docs/PUBLIC_EVALUATION.md#policy-interface)。
 
 ## 条件
 

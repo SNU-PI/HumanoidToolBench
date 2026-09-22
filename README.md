@@ -59,9 +59,11 @@ uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-300
 
 Each condition writes `data/evals/<condition>/run-<id>/benchmark_result.json`
 with the success count and four camera videos per episode. Diagnostic
-settings produce `reportable: false`. `--list-envs` prints the condition IDs
-and `--dry-run` prints the environment and episode settings without running
-anything.
+settings produce `reportable: false`. `all` also writes
+`data/evals/summary.json`, skips conditions that already have a validated
+result for the same checkpoint, and keeps going when one condition fails.
+`--list-envs` prints the condition IDs and `--dry-run` prints the environment
+and episode settings without running anything.
 
 `--model` loads **HumanoidToolBench ACT and Diffusion Policy simulation
 checkpoints** from a Hugging Face ID or a local path. Any other model is
@@ -85,23 +87,23 @@ def predict(request: dict) -> np.ndarray:
     return np.asarray(actions, dtype=np.float32)        # (T, 36), one 50 Hz command per row
 ```
 
-Start the server in one terminal, either from this checkout's environment or
-from your own model environment, which needs only NumPy and requests:
+If your model's dependencies can be installed in this environment, one
+command evaluates it:
 
 ```bash
-uv run python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-# or, from your own environment:
+uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
+```
+
+Otherwise start the server in one terminal, from your own model environment
+(which needs only NumPy and requests) or from this checkout, and run the
+evaluator in another:
+
+```bash
 PYTHONPATH=src python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-```
-
-Run a diagnostic in another terminal, then drop `--episodes` and
-`--max-steps` for the standard 100-episode protocol:
-
-```bash
 uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
-uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000
 ```
 
+Drop `--episodes` and `--max-steps` for the standard 100-episode protocol.
 When the server runs on another machine, start it with `--host 0.0.0.0` and
 pass its address to the evaluator's `--host`. The 32-value state, the
 36-value action with joint names and limits, the image and reset semantics

@@ -80,6 +80,130 @@ def test_model_and_external_server_are_mutually_exclusive():
         public_eval.parser().parse_args(["--model", "lab/model", "--host", "localhost"])
 
 
+def test_in_process_policy_is_exclusive_with_model_and_host():
+    for other in (("--model", "lab/model"), ("--host", "localhost")):
+        with pytest.raises(SystemExit):
+            public_eval.parser().parse_args(["--policy", "my_policy:predict", *other])
+    with pytest.raises(ValueError):
+        config("--checkpoint", "sha256:abc")
+
+
+def test_in_process_policy_dry_run_does_not_import_it(capsys):
+    public_eval.main(["--policy", "no_such_module:predict", "--dry-run"])
+    assert json.loads(capsys.readouterr().out)[0]["policy"] == "http"
+
+
+def test_callable_policy_serves_like_a_native_model():
+    from humanoidtoolbench.policies.loader import CallablePolicy
+
+    def predict(request):
+        return np.zeros((2, 36), dtype=np.float32)
+
+    policy = CallablePolicy(predict, name="my_policy:predict", checkpoint="rev-1")
+    assert (
+        policy.metadata["checkpoint"] == "rev-1" and not policy.metadata["diagnostic"]
+    )
+    with serve_policy(policy, seed_start=10000) as port:
+        client = HttpActionClient("127.0.0.1", port)
+        action, _, _ = client.query_action(
+            {}, "instruction", {}, {}, history={"reset": True}
+        )
+        assert action.shape == (2, 36)
+        import urllib.request
+
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/info", timeout=5
+        ) as reply:
+            info = json.loads(reply.read())
+    assert info["policy"] == "my_policy:predict" and info["checkpoint"] == "rev-1"
+
+
+def _write_receipt(
+    root, config, *, policy="p", checkpoint="c", status="validated", **overrides
+):
+    run_dir = root / "run-abc"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    receipt = {
+        "status": status,
+        "configuration": {**asdict(config), **overrides},
+        "policy_info": {"policy": policy, "checkpoint": checkpoint},
+        "successes": 3,
+        "episodes": 100,
+        "success_rate": 0.03,
+        "reportable": True,
+        "wall_seconds": 12.0,
+    }
+    (run_dir / "benchmark_result.json").write_text(json.dumps(receipt))
+    return run_dir / "benchmark_result.json"
+
+
+def test_completed_result_matches_settings_and_policy_identity(tmp_path):
+    selected = replace(config(), eval_dir=str(tmp_path / "G1BallMove-L0-S"))
+    identity = {"policy": "p", "checkpoint": "c"}
+    assert public_eval.completed_result(selected, identity) is None
+    path = _write_receipt(Path(selected.eval_dir), selected)
+    assert public_eval.completed_result(selected, identity) == path
+    assert (
+        public_eval.completed_result(selected, {"policy": "p", "checkpoint": "d"})
+        is None
+    )
+    assert (
+        public_eval.completed_result(selected, {"policy": "p", "checkpoint": None})
+        is None
+    )
+    assert (
+        public_eval.completed_result(replace(selected, num_episodes=1), identity)
+        is None
+    )
+    _write_receipt(Path(selected.eval_dir), selected, status="failed")
+    assert public_eval.completed_result(selected, identity) is None
+
+
+def test_summary_reports_mean_only_when_every_condition_has_a_result(tmp_path):
+    rows = [
+        {
+            "env_id": "humanoidtoolbench/G1BallMove-L0-S",
+            "status": "completed",
+            "successes": 10,
+            "episodes": 100,
+            "success_rate": 0.1,
+            "reportable": True,
+            "wall_seconds": 1.0,
+            "result": "a",
+        },
+        {
+            "env_id": "humanoidtoolbench/G1BallMove-L0-R",
+            "status": "skipped",
+            "successes": 30,
+            "episodes": 100,
+            "success_rate": 0.3,
+            "reportable": True,
+            "wall_seconds": 2.0,
+            "result": "b",
+        },
+    ]
+    path = public_eval.write_summary(tmp_path, rows)
+    payload = json.loads(path.read_text())
+    assert payload["mean_success_rate"] == pytest.approx(0.2) and payload["reportable"]
+    assert (
+        "| G1BallMove-L0-R | 30 | 100 | 30.0% | True | skipped | b |"
+        in (tmp_path / "summary.md").read_text()
+    )
+    rows.append(
+        {
+            "env_id": "humanoidtoolbench/G1IceBreak-L2-R",
+            "status": "failed",
+            "error": "boom",
+        }
+    )
+    payload = json.loads(public_eval.write_summary(tmp_path, rows).read_text())
+    assert (
+        payload["mean_success_rate"] is None
+        and payload["failed"] == 1
+        and not payload["reportable"]
+    )
+
+
 def test_bare_environment_ids_are_accepted(capsys):
     public_eval.main(["G1BallRetrieve-L2-R", "--dry-run"])
     recorded = json.loads(capsys.readouterr().out)
