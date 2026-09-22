@@ -38,8 +38,13 @@ import numpy as np
 from humanoidtoolbench.assets.benchmark import BenchmarkAsset, PrimitiveToolAsset
 
 # Where `msassets.py fetch` puts what it downloads.
+# Resolved against the checkout rather than the working directory, so the
+# evaluator finds the meshes the installer fetched from any directory.
 MS_ASSETS_DIR = Path(
-    os.environ.get("HUMANOIDTOOLBENCH_MS_ASSETS", "data/ms_assets")
+    os.environ.get(
+        "HUMANOIDTOOLBENCH_MS_ASSETS",
+        Path(__file__).resolve().parents[3] / "data" / "ms_assets",
+    )
 ).expanduser()
 MS_OBJAVERSE = MS_ASSETS_DIR / "objects" / "objaverse"
 

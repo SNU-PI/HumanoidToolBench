@@ -666,6 +666,8 @@ def _run_eval(
         }
     else:
         policy_info = _fetch_policy_info(config.host, config.port)
+        # Live server state (current session, idle time) is not provenance.
+        policy_info.pop("server_state", None)
     if policy_info:
         (run_dir / "policy_info.json").write_text(
             json.dumps(policy_info, indent=2) + "\n"

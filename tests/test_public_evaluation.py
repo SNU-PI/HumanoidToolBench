@@ -118,76 +118,118 @@ def test_callable_policy_serves_like_a_native_model():
     assert info["policy"] == "my_policy:predict" and info["checkpoint"] == "rev-1"
 
 
-def _write_receipt(
-    root, config, *, policy="p", checkpoint="c", status="validated", **overrides
+SOURCE = {"cli/public_eval.py": "a" * 64}
+ASSETS = {"manifest_sha256": "m" * 64}
+
+
+def _receipt(
+    config, *, name="run-abc", status="validated", source=SOURCE, assets=ASSETS, **info
 ):
-    run_dir = root / "run-abc"
+    run_dir = Path(config.eval_dir) / name
     run_dir.mkdir(parents=True, exist_ok=True)
     receipt = {
         "status": status,
-        "configuration": {**asdict(config), **overrides},
-        "policy_info": {"policy": policy, "checkpoint": checkpoint},
+        "configuration": asdict(config),
+        "policy_info": {"policy": "p", "checkpoint": "c", **info},
+        "source_sha256": source,
+        "assets": assets,
         "successes": 3,
         "episodes": 100,
         "success_rate": 0.03,
         "reportable": True,
         "wall_seconds": 12.0,
     }
-    (run_dir / "benchmark_result.json").write_text(json.dumps(receipt))
-    return run_dir / "benchmark_result.json"
+    path = run_dir / "benchmark_result.json"
+    path.write_text(json.dumps(receipt))
+    return path
 
 
-def test_completed_result_matches_settings_and_policy_identity(tmp_path):
+def _fingerprint(**info):
+    return public_eval.run_fingerprint(
+        {
+            "policy_info": {"policy": "p", "checkpoint": "c", **info},
+            "source_sha256": SOURCE,
+            "assets": ASSETS,
+        }
+    )
+
+
+def test_completed_result_requires_identical_policy_code_and_assets(tmp_path):
     selected = replace(config(), eval_dir=str(tmp_path / "G1BallMove-L0-S"))
-    identity = {"policy": "p", "checkpoint": "c"}
-    assert public_eval.completed_result(selected, identity) is None
-    path = _write_receipt(Path(selected.eval_dir), selected)
-    assert public_eval.completed_result(selected, identity) == path
+    current = _fingerprint()
+    assert public_eval.completed_result(selected, current) == (None, 0, 0)
+    path = _receipt(selected)
+    assert public_eval.completed_result(selected, current) == (path, 1, 0)
+    # Anything that changes what produced the result forces a new evaluation.
+    for changed in (
+        _fingerprint(checkpoint="d"),
+        _fingerprint(adapter_sha256="b" * 64),
+        {**current, "source_digest": public_eval.source_digest({"x": "y"})},
+        {**current, "assets_manifest_sha256": "n" * 64},
+    ):
+        assert public_eval.completed_result(selected, changed) == (None, 0, 1)
     assert (
-        public_eval.completed_result(selected, {"policy": "p", "checkpoint": "d"})
+        public_eval.completed_result(replace(selected, num_episodes=1), current)[0]
         is None
     )
+    # A policy without any checkpoint identifier is never reused.
     assert (
-        public_eval.completed_result(selected, {"policy": "p", "checkpoint": None})
-        is None
+        public_eval.completed_result(selected, _fingerprint(checkpoint=None))[0] is None
     )
-    assert (
-        public_eval.completed_result(replace(selected, num_episodes=1), identity)
-        is None
+
+
+def test_completed_result_prefers_the_newest_match_and_ignores_failed_runs(tmp_path):
+    import os
+
+    selected = replace(config(), eval_dir=str(tmp_path / "G1BallMove-L0-S"))
+    older = _receipt(selected, name="run-zzz")
+    newer = _receipt(selected, name="run-aaa")
+    os.utime(older, (1_000, 1_000))
+    _receipt(selected, name="run-failed", status="failed")
+    assert public_eval.completed_result(selected, _fingerprint()) == (newer, 2, 0)
+
+
+def test_native_checkpoints_are_identified_by_weight_hash_not_cache_path():
+    first = public_eval.policy_identity(
+        {
+            "policy": "act",
+            "checkpoint": "/home/a/cache/model.safetensors",
+            "checkpoint_sha256": "h",
+        }
     )
-    _write_receipt(Path(selected.eval_dir), selected, status="failed")
-    assert public_eval.completed_result(selected, identity) is None
+    second = public_eval.policy_identity(
+        {
+            "policy": "act",
+            "checkpoint": "/mnt/b/cache/model.safetensors",
+            "checkpoint_sha256": "h",
+        }
+    )
+    assert first == second and first["checkpoint"] is None
+
+
+def _row(env, status="completed", rate=0.1, fingerprint=None, reportable=True):
+    return {
+        "env_id": f"humanoidtoolbench/{env}",
+        "status": status,
+        "successes": int(rate * 100),
+        "episodes": 100,
+        "success_rate": rate,
+        "reportable": reportable,
+        "wall_seconds": 1.0,
+        "result": env,
+        "fingerprint": fingerprint or _fingerprint(),
+    }
 
 
 def test_summary_reports_mean_only_when_every_condition_has_a_result(tmp_path):
-    rows = [
-        {
-            "env_id": "humanoidtoolbench/G1BallMove-L0-S",
-            "status": "completed",
-            "successes": 10,
-            "episodes": 100,
-            "success_rate": 0.1,
-            "reportable": True,
-            "wall_seconds": 1.0,
-            "result": "a",
-        },
-        {
-            "env_id": "humanoidtoolbench/G1BallMove-L0-R",
-            "status": "skipped",
-            "successes": 30,
-            "episodes": 100,
-            "success_rate": 0.3,
-            "reportable": True,
-            "wall_seconds": 2.0,
-            "result": "b",
-        },
-    ]
-    path = public_eval.write_summary(tmp_path, rows)
-    payload = json.loads(path.read_text())
+    rows = [_row("G1BallMove-L0-S", rate=0.1), _row("G1BallMove-L0-R", "skipped", 0.3)]
+    payload = json.loads(public_eval.write_summary(tmp_path, rows).read_text())
     assert payload["mean_success_rate"] == pytest.approx(0.2) and payload["reportable"]
+    assert payload["fingerprint"] == _fingerprint()
+    text = (tmp_path / "summary.md").read_text()
     assert (
-        "| G1BallMove-L0-R | 30 | 100 | 30.0% | True | skipped | b |"
-        in (tmp_path / "summary.md").read_text()
+        "| G1BallMove-L0-R | 30 | 100 | 30.0% | yes | skipped | G1BallMove-L0-R |"
+        in text
     )
     rows.append(
         {
@@ -197,11 +239,37 @@ def test_summary_reports_mean_only_when_every_condition_has_a_result(tmp_path):
         }
     )
     payload = json.loads(public_eval.write_summary(tmp_path, rows).read_text())
-    assert (
-        payload["mean_success_rate"] is None
-        and payload["failed"] == 1
-        and not payload["reportable"]
-    )
+    assert payload["mean_success_rate"] is None and payload["failed"] == 1
+    assert not payload["reportable"] and payload["not_reportable_because"]
+
+
+def test_summary_is_not_reportable_when_conditions_come_from_different_runs(tmp_path):
+    rows = [
+        _row("G1BallMove-L0-S"),
+        _row("G1BallMove-L0-R", "skipped", fingerprint=_fingerprint(checkpoint="old")),
+    ]
+    payload = json.loads(public_eval.write_summary(tmp_path, rows).read_text())
+    assert payload["mean_success_rate"] == pytest.approx(0.1)
+    assert not payload["reportable"] and payload["fingerprint"] is None
+    assert "different policies" in " ".join(payload["not_reportable_because"])
+    assert "Reportable: no;" in (tmp_path / "summary.md").read_text()
+
+
+def test_code_identity_records_version_and_commit():
+    identity = public_eval.code_identity()
+    assert identity["package_version"]
+    assert identity["git_commit"] is None or len(identity["git_commit"]) == 40
+
+
+def test_mesh_directory_does_not_depend_on_the_working_directory():
+    from humanoidtoolbench.assets import tools
+
+    if "HUMANOIDTOOLBENCH_MS_ASSETS" not in __import__("os").environ:
+        assert tools.MS_ASSETS_DIR.is_absolute()
+        assert (
+            tools.MS_ASSETS_DIR
+            == Path(__file__).resolve().parents[1] / "data/ms_assets"
+        )
 
 
 def test_bare_environment_ids_are_accepted(capsys):
@@ -263,6 +331,297 @@ def test_preflight_accepts_servers_without_an_info_endpoint():
             thread.join(timeout=5)
 
 
+def _serve(handler):
+    from http.server import ThreadingHTTPServer
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server, thread
+
+
+def _post(port, session, reset=False):
+    import requests
+
+    from humanoidtoolbench.policies.http_client import _encode
+
+    payload = {
+        "image": {},
+        "instruction": "x",
+        "history": {"reset": reset},
+        "state": {"states": np.zeros((1, 32), np.float32)},
+        "session": session,
+    }
+    return requests.post(
+        f"http://127.0.0.1:{port}/act", json=_encode(payload), timeout=5
+    )
+
+
+def test_policy_server_refuses_a_second_evaluator_while_the_first_is_active():
+    from humanoidtoolbench.policies.http_server import make_handler
+
+    seen = []
+
+    def predict(request):
+        seen.append(request["session"])
+        return np.zeros((1, 36), np.float32)
+
+    server, thread = _serve(make_handler(predict, "stateful", checkpoint="c"))
+    port = server.server_port
+    try:
+        assert _post(port, "first", reset=True).status_code == 200
+        refused = _post(port, "second", reset=True)
+        assert refused.status_code == 409
+        assert "one server per evaluator" in refused.json()["error"]
+        assert _post(port, "first").status_code == 200
+        assert seen == ["first", "first"]
+        # The preflight reports the busy server before a simulator starts.
+        problem = public_eval.policy_server_unreachable("127.0.0.1", port)
+        assert problem and "serving another evaluator" in problem
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_released_session_frees_the_server_for_the_next_evaluator():
+    import requests
+
+    from humanoidtoolbench.policies.http_server import make_handler
+
+    server, thread = _serve(
+        make_handler(lambda request: np.zeros((1, 36), np.float32), "p")
+    )
+    port = server.server_port
+    try:
+        assert _post(port, "first", reset=True).status_code == 200
+        assert public_eval.policy_server_unreachable("127.0.0.1", port)
+        # Another session cannot release the first one.
+        requests.post(
+            f"http://127.0.0.1:{port}/release", json={"session": "x"}, timeout=5
+        )
+        assert _post(port, "second").status_code == 409
+        requests.post(
+            f"http://127.0.0.1:{port}/release", json={"session": "first"}, timeout=5
+        )
+        assert public_eval.policy_server_unreachable("127.0.0.1", port) is None
+        assert _post(port, "second", reset=True).status_code == 200
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_evaluator_process_releases_its_session_at_exit():
+    import subprocess
+
+    from humanoidtoolbench.policies.http_server import make_handler
+
+    server, thread = _serve(
+        make_handler(lambda request: np.zeros((1, 36), np.float32), "p")
+    )
+    port = server.server_port
+    code = (
+        "import numpy as np\n"
+        "from humanoidtoolbench.policies.http_client import HttpActionClient\n"
+        f"HttpActionClient('127.0.0.1', {port}).query_action({{}}, 'x', "
+        "{'states': np.zeros((1, 32), np.float32)}, {}, history={'reset': True})\n"
+    )
+    try:
+        subprocess.run([sys.executable, "-c", code], check=True, timeout=60)
+        assert public_eval.policy_server_unreachable("127.0.0.1", port) is None
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_requests_without_a_session_are_one_anonymous_evaluator():
+    from humanoidtoolbench.policies.http_server import make_handler
+
+    server, thread = _serve(
+        make_handler(lambda request: np.zeros((1, 36), np.float32), "p")
+    )
+    try:
+        assert _post(server.server_port, None).status_code == 200
+        assert _post(server.server_port, "new").status_code == 409
+        assert _post(server.server_port, None).status_code == 200
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_malformed_requests_get_http_400():
+    import requests
+
+    from humanoidtoolbench.policies.http_server import make_handler
+
+    server, thread = _serve(make_handler(lambda request: None, "p"))
+    try:
+        for body in ("[1, 2]", "not json"):
+            reply = requests.post(
+                f"http://127.0.0.1:{server.server_port}/act", data=body, timeout=5
+            )
+            assert reply.status_code == 400 and "Malformed" in reply.json()["error"]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_preflight_accepts_a_custom_server_whose_info_is_not_json():
+    class PlainInfo(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"ok")
+
+        def log_message(self, *args):
+            pass
+
+    server, thread = _serve(PlainInfo)
+    try:
+        assert (
+            public_eval.policy_server_unreachable("127.0.0.1", server.server_port)
+            is None
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_shared_policy_server_can_be_allowed_for_stateless_policies():
+    from humanoidtoolbench.policies.http_server import make_handler
+
+    handler = make_handler(
+        lambda request: np.zeros((1, 36), np.float32), "stateless", exclusive=False
+    )
+    server, thread = _serve(handler)
+    try:
+        assert _post(server.server_port, "first").status_code == 200
+        assert _post(server.server_port, "second").status_code == 200
+        assert (
+            public_eval.policy_server_unreachable("127.0.0.1", server.server_port)
+            is None
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_evaluator_requests_carry_one_session_per_process():
+    from humanoidtoolbench.policies import http_client
+
+    sessions = []
+
+    def policy(request):
+        sessions.append(request["session"])
+        return np.zeros((1, 36), np.float32)
+
+    policy.metadata = {"policy": "t", "checkpoint": "c"}
+    with serve_policy(policy, seed_start=10000) as port:
+        for _ in range(2):
+            HttpActionClient("127.0.0.1", port).query_action(
+                {}, "x", {}, {}, history={"reset": True}
+            )
+    assert sessions == [http_client.EVALUATOR_SESSION] * 2
+
+
+@pytest.mark.parametrize(
+    ("action", "expected"),
+    [
+        (np.zeros((2, 32), np.float32), "shape (T, 36) with T >= 1; got shape (2, 32)"),
+        (np.full((3, 36), np.nan, np.float32), "NaN or infinite values in 3 of 3 rows"),
+    ],
+)
+def test_policy_errors_name_the_problem_and_the_failing_line(action, expected):
+    def predict(request):
+        return action
+
+    predict.metadata = {"policy": "broken"}
+    with serve_policy(predict, seed_start=10000) as port:
+        with pytest.raises(RuntimeError) as caught:
+            HttpActionClient("127.0.0.1", port).query_action({}, "x", {}, {})
+    assert expected in str(caught.value)
+
+    def raising(request):
+        raise KeyError("rgb_head_stereo_right")
+
+    raising.metadata = {"policy": "broken"}
+    with serve_policy(raising, seed_start=10000) as port:
+        with pytest.raises(RuntimeError) as caught:
+            HttpActionClient("127.0.0.1", port).query_action({}, "x", {}, {})
+    assert "KeyError" in str(caught.value) and "test_public_evaluation.py:" in str(
+        caught.value
+    )
+
+
+def test_policy_thread_keeps_thread_local_state_from_import(tmp_path, monkeypatch):
+    from humanoidtoolbench.policies.loader import (
+        CallablePolicy,
+        PolicyThread,
+        load_policy_callable,
+    )
+
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    adapter = tmp_path / "thread_local_adapter_xyz.py"
+    adapter.write_text(
+        "import threading\n"
+        "_state = threading.local()\n"
+        "_state.ready = True\n"
+        "def predict(request):\n"
+        "    return getattr(_state, 'ready', False)\n"
+    )
+    try:
+        runner = PolicyThread()
+        predict, _ = runner.submit(
+            load_policy_callable, f"{adapter}:predict", with_digest=True
+        )
+        policy = CallablePolicy(predict, name="t", runner=runner)
+        results = []
+        worker = Thread(target=lambda: results.append(policy({})))
+        worker.start()
+        worker.join(timeout=10)
+        assert results == [True]  # called from another thread, run on the import thread
+        assert predict({}) is False  # a direct call from this thread would not be
+    finally:
+        sys.modules.pop("thread_local_adapter_xyz", None)
+
+
+def test_adapter_digest_covers_helper_modules_and_partials(tmp_path, monkeypatch):
+    from humanoidtoolbench.policies.loader import CallablePolicy, load_policy_callable
+
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    (tmp_path / "digest_helper_xyz.py").write_text("SCALE = 1.0\n")
+    adapter = tmp_path / "digest_adapter_xyz.py"
+    adapter.write_text(
+        "import functools\n"
+        "from digest_helper_xyz import SCALE\n"
+        "def _predict(request, scale):\n"
+        "    return scale * SCALE\n"
+        "predict = functools.partial(_predict, scale=2.0)\n"
+    )
+    names = ("digest_helper_xyz", "digest_adapter_xyz")
+
+    def digest():
+        for name in names:
+            sys.modules.pop(name, None)
+        return load_policy_callable(f"{adapter}:predict", with_digest=True)
+
+    try:
+        predict, first = digest()
+        assert predict({}) == 2.0 and first
+        assert (
+            CallablePolicy(predict, name="a", adapter_digest=first).metadata[
+                "adapter_sha256"
+            ]
+            == first
+        )
+        assert digest()[1] == first  # stable for unchanged files
+        (tmp_path / "digest_helper_xyz.py").write_text("SCALE = 3.0\n")
+        assert digest()[1] != first  # an imported helper module is covered
+    finally:
+        for name in names:
+            sys.modules.pop(name, None)
+
+
 def test_example_server_loads_policies_from_cwd_and_file_paths(
     tmp_path, monkeypatch, capsys
 ):
@@ -289,9 +648,9 @@ def test_example_server_loads_policies_from_cwd_and_file_paths(
     for name in loaded:
         assert name not in sys.modules
     try:
-        assert example.load_policy("cwd_policy:predict")({"a": 1}) == {"a": 1}
-        by_path = example.load_policy(f"{tmp_path / 'cwd_policy.py'}:predict")
-        assert by_path({"b": 2}) == {"b": 2}
+        assert example.load_policy("cwd_policy:predict")[0]({"a": 1}) == {"a": 1}
+        by_path, digest = example.load_policy(f"{tmp_path / 'cwd_policy.py'}:predict")
+        assert by_path({"b": 2}) == {"b": 2} and digest
         assert "cwd_policy" in capsys.readouterr().out
         # A file whose name is already importable loads under a private name.
         assert (
@@ -300,7 +659,9 @@ def test_example_server_loads_policies_from_cwd_and_file_paths(
         )
         # Otherwise it is registered under its own name and its directory is
         # importable, so spawned worker processes can unpickle its functions.
-        assert example.load_policy(f"{elsewhere / 'file_policy.py'}:predict")({}) == 3
+        assert (
+            example.load_policy(f"{elsewhere / 'file_policy.py'}:predict")[0]({}) == 3
+        )
         assert sys.modules["file_policy"].__file__ == str(elsewhere / "file_policy.py")
         assert str(elsewhere) in sys.path
         for bad in ("cwd_policy", "cwd_policy:missing", "no_such_module:predict"):

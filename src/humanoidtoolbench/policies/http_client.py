@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import atexit
+import uuid
 from base64 import b64decode, b64encode
 from datetime import datetime
 from typing import Any
@@ -40,6 +42,32 @@ def _decode(value: Any) -> Any:
     return value
 
 
+# One identifier per evaluator process, shared by every condition it runs, so
+# a policy server can tell two evaluators apart and refuse to interleave them.
+EVALUATOR_SESSION = uuid.uuid4().hex
+_SERVERS_USED: set[str] = set()
+
+
+def release_sessions() -> None:
+    """Tell every policy server this process used that its session has ended.
+
+    Runs at interpreter exit, so the next evaluator can use the server at once
+    instead of waiting for the server's idle timeout. Servers without a
+    /release route ignore it.
+    """
+    for base in sorted(_SERVERS_USED):
+        try:
+            requests.post(
+                f"{base}/release", json={"session": EVALUATOR_SESSION}, timeout=2
+            )
+        except requests.RequestException:
+            pass
+    _SERVERS_USED.clear()
+
+
+atexit.register(release_sessions)
+
+
 class HttpActionClient:
     """Call the benchmark policy server's ``/act`` endpoint."""
 
@@ -65,7 +93,9 @@ class HttpActionClient:
             "gt_action": [] if gt_action is None else gt_action,
             "dataset_name": dataset,
             "timestamp": datetime.now().isoformat(),
+            "session": EVALUATOR_SESSION,
         }
+        _SERVERS_USED.add(self.url.removesuffix("/act"))
         try:
             response = requests.post(
                 self.url, json=_encode(payload), timeout=(5.0, 1200.0)
@@ -80,7 +110,9 @@ class HttpActionClient:
                 except ValueError:
                     body = None
                 error = body.get("error") if isinstance(body, dict) else None
-                detail = f"HTTP {failed.status_code} {failed.reason}: {error or failed.text}"
+                detail = (
+                    f"HTTP {failed.status_code} {failed.reason}: {error or failed.text}"
+                )
             detail = " ".join(detail.split())
             if len(detail) > 1000:
                 detail = detail[:1000] + "..."
@@ -97,4 +129,4 @@ class HttpActionClient:
         return action, error, trajectory
 
 
-__all__ = ["HttpActionClient"]
+__all__ = ["EVALUATOR_SESSION", "HttpActionClient", "release_sessions"]

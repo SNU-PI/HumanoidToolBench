@@ -36,9 +36,24 @@ uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3
 uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
-每个条件会写入 `data/evals/<condition>/run-<id>/benchmark_result.json`，包含成功次数，并保存每回合四路相机视频。诊断设置得到的结果为 `reportable: false`。`all` 还会写入 `data/evals/summary.json`，跳过已用同一检查点得到验证结果的条件，并在某个条件失败时继续运行其余条件。`--list-envs` 打印条件 ID 列表，`--dry-run` 只打印环境和回合设置而不运行。
+每个条件会写入 `data/evals/<condition>/run-<id>/benchmark_result.json`，包含成功次数，并保存每回合四路相机视频。诊断设置得到的结果为 `reportable: false`。`all` 还会写入 `data/evals/summary.json`，并在某个条件失败时继续运行其余条件。再次运行同一命令时，已由相同策略、代码、资源和运行环境得到验证结果的条件会被跳过。`--list-envs` 打印条件 ID 列表，`--dry-run` 只打印环境和回合设置而不运行。在多块 GPU 上分配条件的方法见[并行运行条件](docs/PUBLIC_EVALUATION.md#running-conditions-in-parallel)。
 
-`--model` 从 Hugging Face ID 或本地路径加载 **HumanoidToolBench ACT 和 Diffusion Policy 仿真检查点**。其他模型通过下面的策略服务器进行评测。
+`--model` 从 Hugging Face ID 或本地路径加载 **HumanoidToolBench ACT 和 Diffusion Policy 仿真检查点**，例如 `snupilab/humanoidtoolbench-act-sim-3003` 和 `snupilab/humanoidtoolbench-dp-sim-3003`。其他模型通过 `--policy` 或下面的策略服务器进行评测。
+
+### 参考结果
+
+| 策略 | 条件 | 成功 |
+| --- | --- | --- |
+| `snupilab/humanoidtoolbench-act-sim-3003` | `G1BallMove-L0-S` | 2 / 100 |
+| 未经训练、随机初始化的 ACT | `G1BallMove-L0-S` | 0 / 100 |
+
+两行都使用标准协议和本版本附带的资源清单（`assets.manifest_sha256` 以 `d2e1c39c` 开头）。ACT 一行使用 SHA-256 以 `1e6459cb` 开头的权重（发布于模型版本 `ffd733de`），用时约 100 分钟。第二行使用已发布的 ACT 配置和重新初始化的权重（SHA-256 以 `66788a3b` 开头，未发布）。随附的 ACT 检查点是接近下限的参考点，而不是强基线，因此新策略得分低本身并不说明安装有问题。上面的单回合诊断运行预期输出 0/1。DP 检查点和其他条件尚未测量。
+
+## 基准简介
+
+![HumanoidToolBench 论文概览图：人形机器人工具使用、任务结构和真实机器人评测。](docs/assets/paper-overview.png)
+
+**HumanoidToolBench: Benchmarking Humanoid Tool Use from Selection to Mobile Execution** 介绍了该基准、55 个工具资源以及包含仿真和真实机器人示范的 ToolBook 数据集。本版本只包含标准环境，不包含用于训练的简化变体。
 
 ## 评测你自己的策略
 
@@ -57,20 +72,20 @@ def predict(request: dict) -> np.ndarray:
     return np.asarray(actions, dtype=np.float32)        # (T, 36)，每行一条 50 Hz 指令
 ```
 
-如果你的模型依赖可以安装在本环境中，一条命令即可评测：
+如果你的模型依赖可以用 `uv pip install` 安装到本环境中，且不改变 `uv.lock` 中锁定的任何版本（例如 torch、numpy 和 transformers），一条命令即可评测：
 
 ```bash
 uv run htb-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
 ```
 
-否则在一个终端启动服务器（可以在只装了 NumPy 和 requests 的你自己的模型环境中，也可以在本仓库的环境中），并在另一个终端运行评测器：
+否则在一个终端中，于仓库根目录用你自己的模型环境（Python 3.10 或更高版本，并安装 NumPy 和 requests）启动服务器，并在另一个终端运行评测器：
 
 ```bash
 PYTHONPATH=src python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
 uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
 ```
 
-去掉 `--episodes` 和 `--max-steps` 即可运行标准的 100 回合协议。服务器运行在另一台机器上时，用 `--host 0.0.0.0` 启动服务器，并把它的地址传给评测器的 `--host`。32 维状态、带关节名称和限位的 36 维动作、图像和 reset 语义见[策略接口](docs/PUBLIC_EVALUATION.md#policy-interface)。
+`--episodes` 和 `--max-steps` 的默认值就是标准协议，因此去掉这两个选项即可进行可报告的 100 回合运行。服务器运行在另一台机器上时，用 `--host 0.0.0.0` 启动服务器，并把它的地址传给评测器的 `--host`。每个评测器使用一个独立的服务器；服务器在一个评测器使用期间会拒绝第二个评测器。32 维状态、带关节名称和限位的 36 维动作、图像和 reset 语义见[策略接口](docs/PUBLIC_EVALUATION.md#policy-interface)。
 
 ## 条件
 
@@ -81,10 +96,6 @@ uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max
 | IceBreak | 金属锤 | 拿起工具 | 敲碎两块冰 | 同上，先沿工作台移动 |
 
 模式 **S** 把正确工具与两个无关物体放在一起；模式 **R** 再加入一个易混淆工具（短杆、直杆，或苍蝇拍、油漆滚筒、马桶搋子这类轻而柔软的干扰工具）。成功状态需保持一秒；L0 要求把正确工具抬起 8 cm。指令、阈值和记录的指标见 [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md)。
-
-![HumanoidToolBench 论文概览图：人形机器人工具使用、任务结构和真实机器人评测。](docs/assets/paper-overview.png)
-
-**HumanoidToolBench: Benchmarking Humanoid Tool Use from Selection to Mobile Execution** 介绍了该基准、55 个工具资源以及包含仿真和真实机器人示范的 ToolBook 数据集。本版本只包含标准环境，不包含用于训练的简化变体。
 
 ## 数据与训练
 

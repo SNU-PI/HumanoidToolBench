@@ -41,13 +41,13 @@ Controller weights are required even when the task policy runs on another
 machine. Demonstration recordings are a separate download; `--model` downloads
 supported task-model checkpoints automatically.
 
-This release freezes the shipped MolmoSpaces colliders in
+This release freezes the MolmoSpaces meshes and colliders listed in
 [`evaluation_assets.json`](../src/humanoidtoolbench/resources/evaluation_assets.json).
-That selection preserves the canonical asset files present when this branch
-was prepared. It does not establish parity with every historical paper run.
-Locally generated CoACD parts do not replace the frozen colliders. Asset hashes
-are checked before evaluation and the selected geometry is recorded with the
-result, so compare scores only across matching geometry protocols.
+Locally generated CoACD parts do not replace the frozen colliders. Asset
+hashes are checked before evaluation, and `benchmark_result.json` records the
+manifest hash as `assets.manifest_sha256`. This asset selection does not
+establish parity with the paper's historical runs. Compare scores only between
+reportable results whose `assets.manifest_sha256` and `source_digest` match.
 
 Run evaluation with `uv run htb-eval`. The command configures headless EGL
 rendering and bounded CPU thread pools automatically. MuJoCo's headless GPU
@@ -164,27 +164,38 @@ uv run htb-eval G1BallMove-L0-S --policy my_policy:predict \
 
 `--policy` takes `module:function`, resolved from the current directory
 first, or a file path such as `adapters/my_policy.py:predict`; `--checkpoint`
-records the provenance. When the model needs its own environment or machine,
-start the supplied server instead, with the same `--policy` forms:
+records the provenance. Install extra packages your model needs with
+`uv pip install`. They must not change any version locked in `uv.lock` (for
+example torch 2.7.0, numpy 1.26.4, transformers 4.57.1 and huggingface_hub):
+`uv run` restores the locked versions before every run. After installing,
+`uv sync --inexact --dry-run` lists what the next `uv run` would change.
+
+When the model needs other versions or its own environment, start the
+supplied server from the checkout root in that environment instead, with the
+same `--policy` forms. It needs Python 3.10 or newer with NumPy and requests:
 
 ```bash
-uv run python examples/serve_policy.py --port 21000 --policy my_policy:predict \
+PYTHONPATH=src python examples/serve_policy.py --port 21000 --policy my_policy:predict \
   --checkpoint MODEL_ID_OR_REVISION
 ```
 
-To use a separate model environment, run `PYTHONPATH=src python examples/serve_policy.py`
-with the same arguments, NumPy, and requests installed. The source path makes
-the HTTP adapter available without installing the simulator's dependencies in
-your model environment. `my_policy.py` must provide
-`predict(request)`. The server decodes the HTTP payload into Python objects
+The source path makes the HTTP adapter available without installing the
+simulator's dependencies in your model environment; to keep your own
+`PYTHONPATH`, use `PYTHONPATH=src:$PYTHONPATH`. From this checkout's
+environment, for example on another machine with a GPU for the model, the
+same server runs as `uv run python examples/serve_policy.py ...`.
+`my_policy.py` must provide `predict(request)`. The server decodes the HTTP payload into Python objects
 and NumPy arrays before calling your function. Load your checkpoint once in
 your module, then perform inference in `predict`. Use an immutable model
 revision or checkpoint content hash for `--checkpoint`. The server reports
 this identifier as provenance; it does not load or verify the weights on your
-behalf. The flag is optional, but a run started without it records
-`checkpoint: null` and is still marked reportable, so always pass it for
-results you intend to publish. Server metadata is retained with the
-evaluation result.
+behalf. The server also records `adapter_sha256`, a hash of the file that
+defines your `predict` and of the other files of yours it imports while
+loading. The flag is optional, but a run started without it records
+`checkpoint: null`, is never resumed, and is still marked reportable, so
+always pass it for results you intend to publish; the evaluator prints a
+warning when it is missing. Server metadata is retained with the evaluation
+result.
 
 In another terminal, connect the evaluator to that server:
 
@@ -194,12 +205,33 @@ uv run htb-eval --host 127.0.0.1 --port 21000
 
 Use the server's address with `--host` when it runs on another machine, and
 start the server with `--host 0.0.0.0` so that it accepts remote connections.
-`--model` and `--host` are alternative policy sources. Before loading the
-simulator, the evaluator checks that something is listening at
+`--model`, `--policy` and `--host` are alternative policy sources. Before
+loading the simulator, the evaluator checks that something is listening at
 `http://HOST:PORT/info` and exits with instructions if the connection fails;
-a server without an `/info` route still passes, with empty `policy_info`. A
-`predict` exception is returned to the evaluator as an HTTP 500 with its
-message, and the full traceback is printed on the server's terminal.
+a server without an `/info` route still passes, with empty `policy_info`.
+
+The supplied server serves one evaluator at a time, because a shared server
+would let one evaluator's episode reset clear another's history. Each
+evaluator process sends a `session` identifier with its requests and releases
+it with `POST /release` when it exits, so the next evaluator can start at
+once. While a session is active, the server refuses requests from another
+session with HTTP 409, and the evaluator's pre-check reports this before the
+simulator starts. A session that was never released, for example after a
+crash, expires 60 seconds after its last request. Start one server per
+evaluator on its own `--port`, or pass `--allow-shared` to
+`examples/serve_policy.py` only for a stateless policy. Calls to `predict`
+never overlap and run on the thread that imported your module: the main
+thread of `examples/serve_policy.py`, or one dedicated thread inside
+`htb-eval --policy`. Thread-local setup done at import, such as
+`torch.set_grad_enabled(False)`, therefore stays in effect.
+
+A `predict` exception is returned to the evaluator as an HTTP 500 whose
+message names the exception, the innermost line of your own code (library
+frames are skipped) and the message. A wrong action shape or a NaN is reported
+by describing the returned array. The full traceback is printed by the
+server: on its terminal for `examples/serve_policy.py`, and in the run's
+`eval_latest.log` for `--policy`, whose path the evaluator prints when a
+condition fails.
 
 | Request field | Value |
 | --- | --- |
@@ -304,8 +336,14 @@ scenario and with L0 versus L1/L2, not with the mode.
 
 For a custom HTTP implementation, serve `POST /act` using the NumPy-aware JSON
 encoding in [http_client.py](../src/humanoidtoolbench/policies/http_client.py).
-The response contains `action` with shape `(T, 36)`. The provided server
-implements this transport so policy authors can work with decoded arrays.
+The response contains `action` with shape `(T, 36)`. Requests also carry a
+`session` string that identifies the evaluator process, and an evaluator
+sends `POST /release` with that `session` when it exits; a custom server may
+ignore both. `GET /info` is optional: return a JSON object with at least
+`policy` and `checkpoint` to have them recorded, and a `server_state` object
+with `exclusive` and `active_session` to take part in the evaluator's busy
+check. The provided server implements this transport so policy authors can
+work with decoded arrays.
 
 Running `examples/serve_policy.py` without `--policy` selects its pose-holding
 example. That example verifies integration and does not demonstrate tool use.
@@ -324,13 +362,50 @@ each. A condition whose run or validation fails is reported with its
 traceback, its run directory is kept for inspection, and the remaining
 conditions still run; the exit status is then 1. Running the same command
 again resumes: a condition that already has a validated
-`benchmark_result.json` under `--output` with the same settings and the same
-policy name and checkpoint is skipped, unless `--rerun` is given. A policy
-without a checkpoint identifier is never skipped. After a multi-condition run
-the evaluator writes `<output>/summary.json` and `summary.md` with one row per
-condition and the unweighted mean success rate once every condition has a
-result. Use `--dry-run` to inspect the configuration without starting
-simulation or contacting the server.
+`benchmark_result.json` under `--output` is skipped, unless `--rerun` is
+given. A result is reused only when the settings match and so do all of the
+following: the policy name; for `--model`, the weight and configuration
+hashes, and otherwise the `--checkpoint` string; `adapter_sha256` for
+`--policy` and the supplied server; the evaluation source hashes; the asset
+manifest; and the Python, MuJoCo, NumPy and PyAV versions and the `uv.lock`
+hash. If any of these changed, the command says so and evaluates the
+condition again; when several results match, the newest is used. A policy
+without a checkpoint identifier is never skipped. Weights, environment
+variables and files your adapter imports only after loading are not hashed:
+change `--checkpoint` whenever they change, or pass `--rerun`. This applies to
+single conditions as well as `all`. After a multi-condition run the evaluator writes
+`<output>/summary.json` and `summary.md` with one row per condition and the
+unweighted mean success rate once every condition has a result. The summary
+is reportable only when every condition has a reportable result from the
+same policy, code, assets and runtime; otherwise it lists the reasons. Use `--dry-run`
+to inspect the configuration without starting simulation or contacting the
+server.
+
+### Running conditions in parallel
+
+`all` runs conditions one after another. To use several GPUs, run one
+evaluator per GPU, each working through its share of the conditions with the
+same `--output`, then run `all` once more to write the summary; it skips the
+finished conditions:
+
+```bash
+MODEL=snupilab/humanoidtoolbench-act-sim-3003
+OUT=data/evals/act
+GPUS=(${GPUS:-$(nvidia-smi --query-gpu=index --format=csv,noheader)})
+mapfile -t ENVS < <(uv run htb-eval --list-envs)
+for ((g = 0; g < ${#GPUS[@]}; g++)); do
+  (for ((i = g; i < ${#ENVS[@]}; i += ${#GPUS[@]})); do
+     HUMANOIDTOOLBENCH_GPU=${GPUS[g]} uv run htb-eval "${ENVS[i]}" --model "$MODEL" --output "$OUT"
+   done) &
+done
+wait
+uv run htb-eval all --model "$MODEL" --output "$OUT"
+```
+
+Set `GPUS="0 1"` to use only some devices. With `--model` or `--policy` each
+evaluator starts its own policy server on a free port. With `--host`, start
+one `examples/serve_policy.py` per GPU loop, each on its own `--port`; the
+conditions in one loop run one after another, so they can share that server.
 
 | Setting | Standard protocol |
 | --- | --- |
@@ -348,6 +423,8 @@ Success must hold for 50 consecutive control steps. The predicates, thresholds
 and recorded metrics are listed in [ENVIRONMENTS.md](ENVIRONMENTS.md#success-criteria).
 The evaluator preserves the task's success timing and termination rules.
 
+The defaults of `--episodes`, `--seed-start` and `--max-steps` are the
+standard protocol, so a run without these options is a standard run.
 Anything other than exactly 100 episodes, seed start 10000 and 3000 steps is
 a diagnostic setting and produces `reportable=false`. The supplied pose-holder
 identifies itself as diagnostic, and its runs remain non-reportable even with
@@ -366,10 +443,14 @@ exact environment IDs, code revision, asset/controller versions, model
 checkpoint identity, action-chunk length, and evaluation settings. Present
 the 18 conditions as the 3 by 3 by 2 table; if you summarize with one number,
 state that it is the unweighted mean of the 18 condition success rates. Native
-`--model` runs record the chunk length as `chunk_size` in `policy_info`; for a
-custom server it is not recorded, so note the `T` your `predict` returns. Record wall
-time and the CPU/GPU/rendering configuration so runtime measurements can be
-interpreted. A process exit or a visible video alone does not establish a
+`--model` runs record the chunk length as `chunk_size` in `policy_info`; for
+`--policy` and custom servers it is not recorded, so note the `T` your
+`predict` returns. Each `benchmark_result.json` records the package version,
+Git commit and whether tracked files were modified (`code`), the evaluation
+source hashes (`source_sha256`, summarized as `source_digest`), the asset
+manifest (`assets`), the policy identity (`policy_info`), the completion time
+(`finished_at`), the wall time and the GPU and rendering selection. Paths
+inside it are absolute paths on the evaluating machine. A process exit or a visible video alone does not establish a
 complete benchmark result.
 
 ## Source distribution
