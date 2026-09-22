@@ -1,7 +1,7 @@
 # Public evaluation
 
 Run your own task policy in the 18 canonical HumanoidToolBench environments through
-`humanoidtoolbench-eval`. MuJoCo simulates the G1 and tools, the supplied whole-body
+`htb-eval`. MuJoCo simulates the G1 and tools, the supplied whole-body
 controller executes your policy's commands, and the evaluator records task
 outcomes and four camera streams.
 
@@ -49,14 +49,14 @@ Locally generated CoACD parts do not replace the frozen colliders. Asset hashes
 are checked before evaluation and the selected geometry is recorded with the
 result, so compare scores only across matching geometry protocols.
 
-Run evaluation with `uv run humanoidtoolbench-eval`. The command configures headless EGL
+Run evaluation with `uv run htb-eval`. The command configures headless EGL
 rendering and bounded CPU thread pools automatically. MuJoCo's headless GPU
 camera rendering requires an NVIDIA driver with EGL support. GPU policy
 inference uses CUDA. For software rendering, install system
 Mesa/EGL support (for example, `libegl1` and `libegl-mesa0` on Ubuntu) and run:
 
 ```bash
-HUMANOIDTOOLBENCH_FORCE_CPU=1 uv run humanoidtoolbench-eval --model /path/to/checkpoint --device cpu
+HUMANOIDTOOLBENCH_FORCE_CPU=1 uv run htb-eval --model /path/to/checkpoint --device cpu
 ```
 
 This hides CUDA devices and uses Mesa software rendering. The policy's
@@ -81,8 +81,8 @@ Pass a Hugging Face model ID or a local path. The evaluator loads the policy
 and manages its local server automatically:
 
 ```bash
-uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003
-uv run humanoidtoolbench-eval --model /path/to/checkpoint
+uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval --model /path/to/checkpoint
 ```
 
 The default condition is `humanoidtoolbench/G1BallMove-L0-S`. Set the positional
@@ -91,8 +91,8 @@ environment argument to any canonical ID, with or without the
 prints the IDs; [ENVIRONMENTS.md](ENVIRONMENTS.md) describes each condition.
 
 ```bash
-uv run humanoidtoolbench-eval G1BallRetrieve-L1-R --model /path/to/checkpoint
-uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval G1BallRetrieve-L1-R --model /path/to/checkpoint
+uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
 For a short diagnostic, add `--episodes 1 --max-steps 100`; `--max-steps`
@@ -134,14 +134,14 @@ commit and weight/configuration hashes are recorded in the result. Local paths
 do not accept `--revision`.
 
 ```bash
-uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003 \
+uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 \
   --revision 6449611a81229e271104b3ab4f41d4873c1b9d4e --device auto
 ```
 
 `--device auto` selects CUDA when available, otherwise CPU. Explicit values are
 `cpu` or `cuda:N`, where N is an index among visible CUDA devices. The runtime
 exposes GPU 0 by default. To select another physical GPU, for example GPU 1,
-use `HUMANOIDTOOLBENCH_GPU=1 uv run humanoidtoolbench-eval --model /path/to/checkpoint --device cuda:0`.
+use `HUMANOIDTOOLBENCH_GPU=1 uv run htb-eval --model /path/to/checkpoint --device cuda:0`.
 The evaluator matches the EGL renderer to the policy's physical CUDA GPU by
 UUID, including when `CUDA_VISIBLE_DEVICES` reorders devices. An explicit
 `MUJOCO_EGL_DEVICE_ID` must identify that same GPU. Both selections are recorded
@@ -158,7 +158,7 @@ that exposes `predict(request)`. If your model's dependencies can be installed
 in this environment, the evaluator loads and serves it itself:
 
 ```bash
-uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict \
+uv run htb-eval G1BallMove-L0-S --policy my_policy:predict \
   --checkpoint MODEL_ID_OR_REVISION
 ```
 
@@ -189,7 +189,7 @@ evaluation result.
 In another terminal, connect the evaluator to that server:
 
 ```bash
-uv run humanoidtoolbench-eval --host 127.0.0.1 --port 21000
+uv run htb-eval --host 127.0.0.1 --port 21000
 ```
 
 Use the server's address with `--host` when it runs on another machine, and
@@ -313,7 +313,7 @@ example. That example verifies integration and does not demonstrate tool use.
 ## Evaluation protocol
 
 ```bash
-uv run humanoidtoolbench-eval humanoidtoolbench/G1BallRetrieve-L1-R \
+uv run htb-eval humanoidtoolbench/G1BallRetrieve-L1-R \
   --model /path/to/checkpoint --episodes 100 --seed-start 10000 \
   --max-steps 3000 --output data/evals/my-policy
 ```

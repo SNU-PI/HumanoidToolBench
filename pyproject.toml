@@ -93,6 +93,8 @@ unitree-sdk2py = {path = "third_party/unitree_sdk2_python", editable = true}
 decoupled-wbc = {path = "third_party/decoupled_wbc", editable = true}
 
 [project.scripts]
+htb-eval = "humanoidtoolbench.cli.public_eval:main"
+# Long name kept so existing scripts keep working.
 humanoidtoolbench-eval = "humanoidtoolbench.cli.public_eval:main"
 
 [tool.ruff.lint.per-file-ignores]

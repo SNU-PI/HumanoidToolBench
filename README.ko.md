@@ -46,15 +46,16 @@ uv run --no-project scripts/setup_evaluation.py
 않으며, 벤치마크 점수가 아닙니다).
 
 ```bash
-uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
+uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
 ```
 
-그다음 정식 프로토콜(100 에피소드, 시드 10000~10099, 최대 3000스텝)을 조건
-하나 또는 18개 전체에 실행합니다.
+그다음 정식 프로토콜(100 에피소드, 시드 10000~10099, 최대 3000스텝)을
+실행합니다. 첫 인자로 조건을 고르며, 아래 예시는 헷갈리는 도구가 있는(R)
+BallRetrieve L1입니다. `all`은 18개 조건 전체를 실행합니다.
 
 ```bash
-uv run humanoidtoolbench-eval G1BallMove-L0-S --model snupilab/humanoidtoolbench-act-sim-3003
-uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
 조건마다 `data/evals/<condition>/run-<id>/benchmark_result.json`에 성공
@@ -89,7 +90,7 @@ def predict(request: dict) -> np.ndarray:
 모델의 의존성을 이 환경에 설치할 수 있다면 명령 하나로 평가됩니다.
 
 ```bash
-uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
+uv run htb-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
 ```
 
 그렇지 않으면 터미널 하나에서 서버를 실행하고(NumPy와 requests만 있으면
@@ -98,7 +99,7 @@ uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict --check
 
 ```bash
 PYTHONPATH=src python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
+uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
 ```
 
 정식 100 에피소드 프로토콜은 `--episodes`와 `--max-steps`를 빼면 됩니다.

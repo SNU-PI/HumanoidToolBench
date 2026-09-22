@@ -46,15 +46,16 @@ run on the default condition `G1BallMove-L0-S` (well under a minute of
 simulation once the model has loaded; not a benchmark score):
 
 ```bash
-uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
+uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
 ```
 
 Then run the standard protocol (100 episodes, seeds 10000 through 10099, up to
-3000 steps) on one condition, or on all 18:
+3000 steps). The first argument picks the condition, here BallRetrieve at L1
+with the confusable tool (R); `all` runs the 18 conditions:
 
 ```bash
-uv run humanoidtoolbench-eval G1BallMove-L0-S --model snupilab/humanoidtoolbench-act-sim-3003
-uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
 Each condition writes `data/evals/<condition>/run-<id>/benchmark_result.json`
@@ -91,7 +92,7 @@ If your model's dependencies can be installed in this environment, one
 command evaluates it:
 
 ```bash
-uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
+uv run htb-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
 ```
 
 Otherwise start the server in one terminal, from your own model environment
@@ -100,7 +101,7 @@ evaluator in another:
 
 ```bash
 PYTHONPATH=src python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
+uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
 ```
 
 Drop `--episodes` and `--max-steps` for the standard 100-episode protocol.

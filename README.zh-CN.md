@@ -26,14 +26,14 @@ uv run --no-project scripts/setup_evaluation.py
 先在默认条件 `G1BallMove-L0-S` 上用一次简短的诊断运行确认仿真、推理和录像正常（模型加载后仿真用时远少于一分钟，不是基准得分）：
 
 ```bash
-uv run humanoidtoolbench-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
+uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
 ```
 
-然后在单个条件或全部 18 个条件上运行标准协议（100 回合，随机种子 10000 至 10099，每回合最多 3000 步）：
+然后运行标准协议（100 回合，随机种子 10000 至 10099，每回合最多 3000 步）。第一个参数选择条件，下例为带易混淆工具（R）的 BallRetrieve L1；`all` 运行全部 18 个条件：
 
 ```bash
-uv run humanoidtoolbench-eval G1BallMove-L0-S --model snupilab/humanoidtoolbench-act-sim-3003
-uv run humanoidtoolbench-eval all --model snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
 每个条件会写入 `data/evals/<condition>/run-<id>/benchmark_result.json`，包含成功次数，并保存每回合四路相机视频。诊断设置得到的结果为 `reportable: false`。`all` 还会写入 `data/evals/summary.json`，跳过已用同一检查点得到验证结果的条件，并在某个条件失败时继续运行其余条件。`--list-envs` 打印条件 ID 列表，`--dry-run` 只打印环境和回合设置而不运行。
@@ -60,14 +60,14 @@ def predict(request: dict) -> np.ndarray:
 如果你的模型依赖可以安装在本环境中，一条命令即可评测：
 
 ```bash
-uv run humanoidtoolbench-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
+uv run htb-eval G1BallMove-L0-S --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION --episodes 1 --max-steps 100
 ```
 
 否则在一个终端启动服务器（可以在只装了 NumPy 和 requests 的你自己的模型环境中，也可以在本仓库的环境中），并在另一个终端运行评测器：
 
 ```bash
 PYTHONPATH=src python examples/serve_policy.py --policy my_policy:predict --checkpoint MODEL_ID_OR_REVISION
-uv run humanoidtoolbench-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
+uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max-steps 100
 ```
 
 去掉 `--episodes` 和 `--max-steps` 即可运行标准的 100 回合协议。服务器运行在另一台机器上时，用 `--host 0.0.0.0` 启动服务器，并把它的地址传给评测器的 `--host`。32 维状态、带关节名称和限位的 36 维动作、图像和 reset 语义见[策略接口](docs/PUBLIC_EVALUATION.md#policy-interface)。

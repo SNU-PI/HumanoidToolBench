@@ -9,7 +9,7 @@ contract described in the
 [policy interface](PUBLIC_EVALUATION.md#policy-interface).
 
 Environment IDs have the form `humanoidtoolbench/G1<Scenario>-L<level>-<mode>`.
-`humanoidtoolbench-eval` accepts them with or without the `humanoidtoolbench/`
+`htb-eval` accepts them with or without the `humanoidtoolbench/`
 prefix. `--list-envs` prints them in the order that `all` runs them: the nine
 S conditions first, then the nine R conditions. The default condition is
 `G1BallMove-L0-S`.

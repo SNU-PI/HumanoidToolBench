@@ -329,7 +329,7 @@ def main(argv: list[str] | None = None) -> None:
             cli.exit(2, problem + "\n")
         os.environ["HUMANOIDTOOLBENCH_PREFLIGHT_DONE"] = "1"
 
-    # Plain `uv run humanoidtoolbench-eval` uses the bounded rendering environment of
+    # Plain `uv run htb-eval` uses the bounded rendering environment of
     # the existing shell entry point. Re-exec before importing the simulator.
     if os.environ.get("HUMANOIDTOOLBENCH_RUNTIME_WRAPPER") != "1":
         wrapper = Path(__file__).resolve().parents[3] / "scripts/run_mujoco.sh"
