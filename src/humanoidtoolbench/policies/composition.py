@@ -108,16 +108,6 @@ class HumanoidPolicyAgent(Generic[GoalT]):
         self._last_pred_action = action
         return action
 
-    def invalidate_policy_plan(self) -> None:
-        """Invalidate changed-instruction history at a completed chunk boundary."""
-
-        if self._goal_queue:
-            raise RuntimeError("Wait for the action chunk boundary before replanning")
-        invalidate = getattr(self.task_policy, "invalidate_instruction_history", None)
-        if callable(invalidate):
-            invalidate()
-        self._last_action_chunk = None
-
     def reset(self, **kwargs: Any) -> None:
         """Clear queued actions and reset both halves of the composition."""
 

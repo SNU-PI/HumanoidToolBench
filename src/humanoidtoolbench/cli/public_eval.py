@@ -455,7 +455,6 @@ def configurations(args: argparse.Namespace) -> list[EvalConfig]:
             num_episodes=args.episodes,
             episode_start=args.seed_start,
             save_video=True,
-            num_workers=1,
         )
         for env_id in selected
     ]
@@ -591,7 +590,7 @@ def main(argv: list[str] | None = None) -> None:
             config = replace(
                 config, host="127.0.0.1" if policy else config.host, port=port
             )
-            result = run_eval(config, show_progress=True, notify=False)
+            result = run_eval(config)
         receipt = validate_run(Path(result.eval_dir), config)
         if receipt["source_sha256"] != start_source:
             raise RuntimeError(

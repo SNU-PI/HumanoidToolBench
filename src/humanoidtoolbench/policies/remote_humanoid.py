@@ -387,12 +387,6 @@ class OpenPiTaskPolicy(RemoteChunkPolicy):
             )
         self.client = client
 
-    def invalidate_instruction_history(self) -> None:
-        """Use the next prompt without resetting server torso/base-height state."""
-
-        # The pinned server processes each prompt afresh. Its reset flag also
-        # resets physical command state, so it is reserved for episode resets.
-
     def predict(
         self,
         observation: dict[str, Any],
@@ -736,7 +730,9 @@ def make_remote_task_policy(
             f"{', '.join(SUPPORTED_TASK_POLICIES)}"
         )
     if normalized == "groot" and action_schema != DECOUPLED_SCHEMA_ID:
-        raise ValueError("HUMANOIDTOOLBENCH GR00T N1.7 requires the decoupled_v1 action schema")
+        raise ValueError(
+            "HUMANOIDTOOLBENCH GR00T N1.7 requires the decoupled_v1 action schema"
+        )
     if normalized == "pi05":
         return OpenPiTaskPolicy(
             host,

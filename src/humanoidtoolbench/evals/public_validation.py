@@ -133,9 +133,6 @@ def validate_run(root: Path, config: EvalConfig) -> dict:
             and config.data_format == "seeds"
             and config.controller == "decoupled_wbc"
             and config.sim_mode == "mujoco"
-            and config.reasoner is None
-            and config.instruction_override is None
-            and config.success_criteria is None
             and policy_info.get("diagnostic") is not True
         ),
         "env_id": config.env_id,

@@ -44,7 +44,7 @@ def test_public_suite_selects_all_18_canonical_conditions():
             10000,
             3000,
         )
-        assert item.save_video and item.num_workers == 1 and item.headless
+        assert item.save_video and item.headless
 
 
 @pytest.mark.parametrize(

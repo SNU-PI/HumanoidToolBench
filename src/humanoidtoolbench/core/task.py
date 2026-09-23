@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
@@ -18,34 +17,6 @@ from humanoidtoolbench.dr.scene import TabletopSceneDR
 from humanoidtoolbench.robots.protocols import HeadCamMountable
 from humanoidtoolbench.sensors.config import CameraCfg, SensorCfg
 from humanoidtoolbench.tasks.compat import normalize_task_state_uid
-
-
-def _validate_task_success_criteria(task: Any, value: float, source: str) -> float:
-    try:
-        valid = math.isfinite(value) and 0.0 <= value <= 1.0
-    except (TypeError, ValueError, OverflowError):
-        valid = False
-    if not valid:
-        raise ValueError(f"{source} must be a finite value between 0 and 1")
-    fixed = getattr(task, "fixed_success_criteria", None)
-    if fixed is not None and value != fixed:
-        raise ValueError(
-            f"{source} must be {fixed} for {task.uid}: "
-            "this task uses a fixed success predicate"
-        )
-    return float(value)
-
-
-def set_task_success_criteria(task: Any, value: float | None) -> None:
-    """Remember an explicit threshold override for this task's future episodes."""
-    if value is None:
-        return
-    value = _validate_task_success_criteria(task, value, "--success-criteria")
-    if not hasattr(task, "_configured_success_criteria"):
-        task._configured_success_criteria = task.metadata.get("success_criteria")
-    task._success_criteria_override = value
-    task.success_criteria = value
-    task.metadata = {**task.metadata, "success_criteria": value}
 
 
 class Task(ABC):
@@ -64,10 +35,6 @@ class Task(ABC):
     sensor_cfgs: dict[str, SensorCfg]
 
     dr_cfgs: dict[str, RandomizerCfg]
-
-    # None permits a reward threshold override. Geometric tasks declare the
-    # fixed value that their success predicate and recording metadata use.
-    fixed_success_criteria: float | None = None
 
     # Stable semantic columns used by dataset recorders. Concrete tasks map
     # each slot to the MuJoCo object name for the current episode.
@@ -200,14 +167,12 @@ class Task(ABC):
             and options["state_dict"] is not None
         ):
             state_dict = normalize_task_state_uid(options["state_dict"], self.uid)
-            self._restore_success_criteria(state_dict)
             dr_level = options.get("dr_level", None)
             # Seed before loading so any domains omitted by a DR-level replay
             # are redrawn reproducibly.
             self.dr.reset(seed=seed)
             self.dr.load_state_dict(state_dict, dr_level=dr_level)
         else:
-            self._restore_success_criteria(None)
             self.dr.reset(seed=seed)
 
         self._layout = Layout()
@@ -246,30 +211,6 @@ class Task(ABC):
                         cam_cfg.pose["quaternion"] = self.robot.head_camera_orientation
 
                     self._layout.add_camera(cam_id, cam_cfg)
-
-    def _restore_success_criteria(self, state_dict: dict[str, Any] | None) -> None:
-        """Resolve each episode independently without turning replay into an override."""
-        configured = getattr(
-            self, "_configured_success_criteria", self.metadata.get("success_criteria")
-        )
-        value = getattr(self, "_success_criteria_override", None)
-        source = "--success-criteria"
-        if value is None:
-            value = (state_dict or {}).get("metadata", {}).get("success_criteria")
-            source = "recorded success_criteria"
-        if value is None:
-            value = configured
-            source = "configured success_criteria"
-        if value is not None:
-            value = _validate_task_success_criteria(self, value, source)
-
-        self._configured_success_criteria = configured
-        self.success_criteria = value
-        self.metadata = dict(self.metadata)
-        if value is None:
-            self.metadata.pop("success_criteria", None)
-        else:
-            self.metadata["success_criteria"] = value
 
     def state_dict(self) -> dict[str, Any]:
         """Dump the current state of the task.

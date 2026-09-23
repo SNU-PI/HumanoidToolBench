@@ -48,7 +48,6 @@ class WorkerProgress:
     current_step: int = 0
     max_episode_steps: int | None = None
     status: str = "pending"
-    error: str | None = None
     setup_seconds: float | None = None
     last_episode_seconds: float | None = None
     last_steps_per_second: float | None = None
@@ -144,12 +143,12 @@ def restore_terminal(console: Console) -> None:
 def ensure_cursor_restored_at_exit(console: Console) -> None:
     """Restore cursor *and* line settings at interpreter exit.
 
-    The parent stops its Live display -- and restores the cursor -- while worker
-    processes are still being joined, and a worker may write to the same
-    terminal as it tears down. Anything that hides the cursor or disables echo during that
-    shutdown would otherwise win, leaving the terminal cursorless or silent when
-    typed into. Registering here gives us the last word on every exit path:
-    normal return, typer.Exit, an unhandled exception, or Ctrl-C.
+    The Live display restores the cursor when it stops, but the simulator,
+    renderers and policy can still write to the same terminal until the
+    interpreter exits. Anything that hides the cursor or disables echo during
+    that shutdown would otherwise win, leaving the terminal cursorless or silent
+    when typed into. Registering here gives us the last word on every exit path:
+    normal return, an unhandled exception, or Ctrl-C.
     """
     _snapshot_tty_attrs()
     # Keep exactly one registration even if run_eval is invoked repeatedly.
@@ -204,9 +203,6 @@ def update_progress(
         state.completed_episodes = int(payload["completed_episodes"])
         state.successes = int(payload["successes"])
         state.status = "done"
-    elif event == "worker_error":
-        state.status = "error"
-        state.error = str(payload["message"])
 
 
 def render_progress(
@@ -214,17 +210,9 @@ def render_progress(
     policy: str,
     worker_states: dict[int, WorkerProgress],
     log_path: str,
-    total_target: int | None = None,
 ) -> Panel:
     total_completed = sum(state.completed_episodes for state in worker_states.values())
-    # Under dynamic dispatch a worker's `total_episodes` only counts what it has
-    # claimed so far, so summing them understates the run until the queue drains.
-    # Callers that know the real episode count pass it as `total_target`.
-    total_assigned = (
-        total_target
-        if total_target is not None
-        else sum(state.total_episodes for state in worker_states.values())
-    )
+    total_assigned = sum(state.total_episodes for state in worker_states.values())
     total_successes = sum(state.successes for state in worker_states.values())
     success_rate = (
         f"{(total_successes / total_completed):.2%}" if total_completed else "n/a"
@@ -316,7 +304,6 @@ def render_progress(
         "running": ("dots", "cyan", "run  "),
         "closing": ("dots", "yellow", "close"),
         "done": ("dots", "green", "done "),
-        "error": ("dots", "red", "error"),
     }
 
     for worker_id in sorted(worker_states):
@@ -355,5 +342,7 @@ def render_progress(
         )
 
     return Panel(
-        Group(summary, workers), title=Text("HumanoidToolBench Eval"), border_style="cyan"
+        Group(summary, workers),
+        title=Text("HumanoidToolBench Eval"),
+        border_style="cyan",
     )
