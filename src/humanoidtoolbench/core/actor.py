@@ -50,45 +50,15 @@ class ObjectActor(Actor):
         self.asset = asset
         self.pose = Pose()
         self.material: dict[str, Any] = {}
-        self.isaac_shaders: dict[str, float] = {}
 
     def set_material(self, material: dict[str, Any]) -> None:
         self.material = material
-
-    def set_isaac_shaders(self, shaders: dict[str, float]) -> None:
-        """PBR constants for the Isaac renderer, kept apart from `material`."""
-        self.isaac_shaders = shaders
 
 
 class RobotActor(Actor):
     def __init__(self, robot: Robot) -> None:
         self.robot = robot
         self.pose = Pose()
-        self.shaders: dict[str, float] = {}
-
-    def set_shaders(self, shaders: dict[str, float]) -> None:
-        """PBR constants the Isaac renderer pushes into the robot's shaders."""
-        self.shaders = shaders
-
-
-class Light(Entity):
-    """A light in the Isaac renderer's terms, not MuJoCo's.
-
-    MuJoCo's light model has no notion of an emitter's size or its colour
-    temperature, so a rig authored for RTX cannot be expressed as `mujoco_lights`
-    and is kept separately. The MuJoCo engine ignores these entirely.
-    """
-
-    def __init__(self, uid: str, type: str) -> None:
-        self.uid = uid
-        self.type = type
-        self.pose = Pose()
-        self.light_radius: float = 0.0
-        self.light_length: float = 0.0
-        self.light_intensity: float = 0.0
-        self.light_color_temperature: float = 6500.0
-        self.center_light_position: list[float] = [0.0, 0.0, 0.0]
-        self.center_light_orientation: list[float] = [1.0, 0.0, 0.0, 0.0]
 
 
 class CameraEntity(Entity):

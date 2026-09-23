@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import tempfile
 import time
 from contextlib import contextmanager
@@ -16,7 +15,7 @@ import humanoidtoolbench.envs as _  # noqa: F401
 from humanoidtoolbench.cli._decoupled_wbc_recording import validate_recording_timing
 from humanoidtoolbench.cli._eval_common import _execute_run, _rollout_episode
 from humanoidtoolbench.evals.api import EvalConfig, EvalResult
-from humanoidtoolbench.runtime import ISAAC_RENDER_SIM_MODES, validate_sim_mode
+from humanoidtoolbench.runtime import validate_sim_mode
 
 # Allow 30 seconds at 50 Hz; seed 10069 first stabilizes at step 1044.
 _MAX_STABILIZATION_STEPS = 1500
@@ -176,22 +175,11 @@ def _run_episodes(
                 # SONIC owns the equivalent episode state inside its decoder runtime.
 
                 # --- Wait for robot to stabilize (velocity-based) ---
-                isaac_renderer = getattr(sonic_env, "isaac", None)
                 realtime_stabilization = (
                     not headless
                     or getattr(agent, "controller_name", controller) != "decoupled_wbc"
                     or getattr(sonic_env, "viewer", None) is not None
                     or getattr(sonic_env, "_mjviser", None) is not None
-                    or (
-                        isaac_renderer is not None
-                        and (
-                            not isaac_renderer.headless
-                            or os.getenv("HUMANOIDTOOLBENCH_ISAAC_WEBRTC", "0")
-                            .strip()
-                            .lower()
-                            not in {"0", "false", "no", "off"}
-                        )
-                    )
                 )
                 stabilization_start = time.perf_counter()
                 stabilization_sleep_seconds = 0.0
@@ -200,12 +188,7 @@ def _run_episodes(
                 with _stabilization_images(
                     sonic_env,
                     agent,
-                    enabled=(
-                        headless
-                        and not realtime_stabilization
-                        and sim_mode == "mujoco"
-                        and isaac_renderer is None
-                    ),
+                    enabled=not realtime_stabilization,
                 ) as images_suppressed:
                     while not stabilized and sim_cnt < _MAX_STABILIZATION_STEPS:
                         if realtime_stabilization:
@@ -315,33 +298,6 @@ def _run_episodes(
 
 def run_eval(config: EvalConfig) -> EvalResult:
     config = replace(config, sim_mode=validate_sim_mode(config.sim_mode))
-    isaac = config.sim_mode in ISAAC_RENDER_SIM_MODES
-    previous_defer = os.environ.get("HUMANOIDTOOLBENCH_ISAAC_DEFER_CLOSE")
-    if isaac:
-        # Kit may exit from app.close(). Keep it alive until the episodes and
-        # the final evaluation result have been written.
-        os.environ["HUMANOIDTOOLBENCH_ISAAC_DEFER_CLOSE"] = "1"
-    try:
-        result = _run_eval(config)
-    finally:
-        if isaac:
-            if previous_defer is None:
-                os.environ.pop("HUMANOIDTOOLBENCH_ISAAC_DEFER_CLOSE", None)
-            else:
-                os.environ["HUMANOIDTOOLBENCH_ISAAC_DEFER_CLOSE"] = previous_defer
-    # Leave failed runs to propagate their exception, since Kit shutdown can
-    # terminate Python with a successful exit status and hide that failure.
-    if isaac and (
-        previous_defer is None
-        or previous_defer.strip().lower() in {"0", "false", "no", "off"}
-    ):
-        from humanoidtoolbench.engines.isaac_app import close_simulation_app
-
-        close_simulation_app()
-    return result
-
-
-def _run_eval(config: EvalConfig) -> EvalResult:
     sonic_config = _make_sonic_config()
 
     eval_root = Path(config.eval_dir).expanduser().resolve()

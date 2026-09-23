@@ -141,11 +141,6 @@ class SonicLocoManipEnv(BaseDualSim):
                 self._mjviser = MjviserViewer(self._mjviser_port)
             self._mjviser.reset(self.mujoco)
 
-        if self.isaac is not None:
-            # Every reset compiles a new MuJoCo model, so the USD mirror of it
-            # has to be rebuilt before the first frame is drawn.
-            self.isaac.update_layout(self.mujoco)
-
         self.control_decimal = int((1 / self.mujoco.physics_dt) / self.task.render_hz)
         self.step_count = 0
         obs = self._get_obs()
@@ -181,13 +176,7 @@ class SonicLocoManipEnv(BaseDualSim):
         return self._render_frame()
 
     def _render_frame(self):
-        if self.isaac is None:
-            return self.mujoco.render()
-        # Isaac draws the same cameras under the same names, so the images
-        # reaching the headset and the recorder swap engine without anything
-        # downstream knowing. MuJoCo is not rendered at all in this mode.
-        self.isaac.step(self.mujoco)
-        return self.isaac.render()
+        return self.mujoco.render()
 
     def close(self):
         if self.viewer is not None:

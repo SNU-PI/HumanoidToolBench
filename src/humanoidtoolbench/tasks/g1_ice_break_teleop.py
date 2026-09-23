@@ -245,7 +245,6 @@ class G1IceBreakTeleop(ToolReasoningTask):
         self._closing = {}
         self._reset_pick_state()
         self.reward = 0.0
-        self.apply_isaac_dr(split)
         self.robot.reset(spawn_pose=self.layout.robot.pose)
 
     # -- the blow ---------------------------------------------------------

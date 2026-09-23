@@ -22,7 +22,6 @@ import transforms3d as t3d
 from humanoidtoolbench.core.object import SemanticAnnotated
 from humanoidtoolbench.core.simulator import Simulator
 from humanoidtoolbench.robots.protocols import Controllable
-from humanoidtoolbench.utils import resolve_data_path
 
 
 def apply_hand_contact_overrides(robot_spec: mujoco.MjSpec) -> None:
@@ -399,9 +398,13 @@ class MujocoSimulator(Simulator):
 
     def _build_robot(self, mjSpec, mjWorld, actor: RobotActor):
         """Build the robot in the Mujoco simulator."""
-        robot_mjcf = mujoco.MjSpec.from_file(
-            resolve_data_path(actor.robot.mjcf_path, auto_download=True)
-        )
+        mjcf_path = actor.robot.mjcf_path
+        if not os.path.isfile(mjcf_path):
+            raise FileNotFoundError(
+                f"Robot model not found: {mjcf_path}. It ships with the gear_sonic "
+                "package; rerun `uv run --no-project scripts/setup_evaluation.py`."
+            )
+        robot_mjcf = mujoco.MjSpec.from_file(mjcf_path)
         apply_hand_contact_overrides(robot_mjcf)
 
         frame = mjWorld.add_frame(pos=actor.pose.position, quat=actor.pose.quaternion)
@@ -580,7 +583,7 @@ class MujocoSimulator(Simulator):
                 ),
             )
         elif camera.mount == "eye_in_hand":
-            # Which hand: the camera's own name says so, as it does in Isaac.
+            # Which hand: the camera's own name says so.
             side = "left" if "left" in cname else "right"
             link = self.task.robot.wrist_cam_link(side)
             wrist_body = None
@@ -602,10 +605,7 @@ class MujocoSimulator(Simulator):
             # Unitree's own mount, copied rather than invented, structure and
             # all. Their Isaac Lab sim hangs the camera off a link named
             # `{side}_hand_camera_base_link`, so that link is built here too
-            # rather than folded into the camera's own offset: SIMPLE addresses
-            # a wrist camera by that name (`wrist_cam_link`), and the Isaac
-            # renderer builds its prim path from it, so the two engines line up
-            # when the name exists in both.
+            # rather than folded into the camera's own offset.
             #
             # Where it sits comes from the USD they ship with
             # unitree_sim_isaaclab; the offset on top of it is what their

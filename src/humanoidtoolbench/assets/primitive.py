@@ -14,7 +14,6 @@ from humanoidtoolbench.core.types import Pose
 
 class Primitive(Asset, Actor):
     material: dict
-    isaac_material: dict | None = None
 
 
 class Box(Primitive):
@@ -28,15 +27,6 @@ class Box(Primitive):
 
     def set_material(self, material: dict) -> None:
         self.material = material
-
-    def set_isaac_material(self, material: dict | None) -> None:
-        """An MDL material for the Isaac renderer.
-
-        Kept apart from `material`, which is MuJoCo's and holds a texture file
-        and rgba. The two describe the same surface to renderers that share no
-        vocabulary, so neither may overwrite the other.
-        """
-        self.isaac_material = material
 
     def __repr__(self) -> str:
         return f"Box(size={self.size}, position={self.pose.position}, quaternion={self.pose.quaternion})"

@@ -29,19 +29,10 @@ def main() -> int:
     config = tomllib.loads((ROOT / "pyproject.toml").read_text())
     project = config["project"]
     base_names = {dependency_name(item) for item in project["dependencies"]}
-    optional = project.get("optional-dependencies", {})
 
     errors: list[str] = []
-    if "isaacsim" in base_names:
-        errors.append("isaacsim must not be a default dependency")
     if "openpi-client" in base_names:
         errors.append("openpi-client must remain opt-in for the core smoke test")
-    if "isaac" in optional or any(
-        "isaacsim" in item for items in optional.values() for item in items
-    ):
-        errors.append(
-            "Isaac packages must not appear in any extra (the Isaac backend was removed)"
-        )
 
     # Both Torch flavours stay declared so either runtime mode is installable
     # without editing the manifest: GPU by default, CPU under HUMANOIDTOOLBENCH_FORCE_CPU=1.
@@ -83,7 +74,6 @@ def main() -> int:
             print(f"[mujoco-manifest] ERROR: {error}", file=sys.stderr)
         return 1
 
-    print("[mujoco-manifest] PASS: default dependencies contain no Isaac package")
     print(
         "[mujoco-manifest] PASS: Torch sources resolve to "
         f"{pinned['torch']} ({TORCH_INDEXES[pinned['torch']]})"

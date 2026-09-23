@@ -12,8 +12,6 @@ from humanoidtoolbench.core.actor import Actor
 from humanoidtoolbench.core.layout import Layout
 from humanoidtoolbench.core.task import Task
 from humanoidtoolbench.dr.camera import CameraDRCfg
-from humanoidtoolbench.dr.isaac_lighting import IsaacLightingDRCfg
-from humanoidtoolbench.dr.isaac_material import IsaacMaterialDRCfg
 from humanoidtoolbench.dr.manager import ToolbenchDRManager
 from humanoidtoolbench.dr.mujoco_lighting import MujocoLightingDR, MujocoLightingDRCfg
 from humanoidtoolbench.dr.room import RoomDRCfg, ToolbenchSceneDRCfg
@@ -137,20 +135,6 @@ class G1ToolbenchTabletop(Task):
         "scene": ToolbenchSceneDRCfg(),
         "lighting": MujocoLightingDRCfg(),
         "room": RoomDRCfg(room_mode="random", centre=(0.4, 0.0)),
-        # Read only by the Isaac renderer. Present in every episode so that a
-        # recording made under MuJoCo can be replayed under Isaac and get the
-        # same rig back out of its state dict.
-        "isaac_lighting": IsaacLightingDRCfg(
-            light_mode="random",
-            light_num=(2, 3),
-            light_color_temperature=Box(low=4500.0, high=7500.0),
-            light_intensity=Box(low=4000.0, high=9000.0),
-            light_radius=Box(low=0.12, high=0.30),
-            light_length=Box(low=1.4, high=2.6),
-            light_spacing=Box(low=[1.6, 1.6], high=[2.6, 2.6]),
-            light_position=Box(low=[-0.3, -0.3, 2.3], high=[0.3, 0.3, 2.9]),
-        ),
-        "isaac_material": IsaacMaterialDRCfg(material_mode="rand_all"),
     }
 
     def __init__(
@@ -235,26 +219,3 @@ class G1ToolbenchTabletop(Task):
         light_dr = self.dr.get_randomizer("lighting")
         if isinstance(light_dr, MujocoLightingDR):
             self.mujoco_lights = light_dr.apply(self.layout, split)
-
-    def apply_isaac_dr(self, split: str) -> None:
-        """Draw the Isaac renderer's light rig and materials.
-
-        Called at the end of a task's reset rather than from `apply_scene_dr`,
-        because the material randomizer assigns a shader to every object and
-        the objects are placed after the room is. The MuJoCo engine ignores
-        everything drawn here.
-        """
-        # These draws are recorded even in MuJoCo mode so the episode can be
-        # replayed with RTX later. Preserve NumPy's global stream so render-only
-        # domains never change the next episode's physical scene randomization.
-        rng_state = np.random.get_state()
-        try:
-            lighting_dr = self.dr.get_randomizer("isaac_lighting")
-            if lighting_dr is not None:
-                self.layout.set_lights(lighting_dr.apply(split))
-
-            material_dr = self.dr.get_randomizer("isaac_material")
-            if material_dr is not None:
-                material_dr.apply(split, self.layout)
-        finally:
-            np.random.set_state(rng_state)

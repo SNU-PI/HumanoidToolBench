@@ -5,7 +5,6 @@ Copyright (c) 2025 Songlin Wei and Contributors
 Licensed under the terms in LICENSE file.
 """
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -121,36 +120,11 @@ class G1Sonic(Robot, Controllable, HeadCamMountable, WristCamMountable):
     wholebody_dof: int = 43
     dof: int = 29
 
-    # Reuse Gear Sonic's bundled MuJoCo model. This avoids downloading HumanoidToolBench's
-    # robot archive for the MuJoCo-only path.
+    # Gear Sonic's bundled MuJoCo model, so the robot needs no separate download.
     mjcf_path: str = str(
         Path(gear_sonic.__file__).resolve().parent
         / "data/robot_model/model_data/g1/g1_29dof_with_hand.xml"
     )
-    # The Isaac renderer draws a USD instead of the MJCF's meshes, so the robot
-    # looks the part. Downloaded on first use; the MuJoCo path never touches it.
-    #
-    # Two builds of the same robot are available and HUMANOIDTOOLBENCH_G1_USD picks
-    # between them. They differ in one thing that matters here: SIMPLE's build
-    # has no `{side}_hand_camera_base_link`, so a wrist camera has nothing to
-    # hang off under Isaac, while Unitree's own build carries that link and
-    # lines up with the mount this repo now builds in MuJoCo. SIMPLE's stays
-    # the default because it is what the rest of the asset release was drawn
-    # against; Unitree's has to be fetched separately, see the docs.
-    usd_builds: dict[str, str] = {
-        "simple": "robots/g1/g1_29dof_wholebody_dex3.usd",
-        "unitree": "robots/g1/unitree/g1_29dof_with_dex3_rev_1_0.usd",
-    }
-
-    @property
-    def usd_path(self) -> str:
-        build = os.environ.get("HUMANOIDTOOLBENCH_G1_USD", "simple").strip().lower()
-        if build not in self.usd_builds:
-            raise ValueError(
-                f"HUMANOIDTOOLBENCH_G1_USD must be one of {sorted(self.usd_builds)}, "
-                f"got {build!r}"
-            )
-        return self.usd_builds[build]
 
     head_camera_orientation: list[float] = [1, 0, 0, 0]
     joint_names = WHOLE_BODY_JOINTS

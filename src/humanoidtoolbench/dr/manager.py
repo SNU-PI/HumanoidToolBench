@@ -55,15 +55,14 @@ class DRManager:
         """Restore recorded draws, optionally re-randomizing selected domains."""
         recorded = dict(state_dict["dr_state_dict"])
         # Retired render-only randomizers may still appear in old recordings.
-        recorded.pop("material", None)
+        for retired in ("material", "isaac_lighting", "isaac_material"):
+            recorded.pop(retired, None)
         if dr_level is not None:
             if dr_level not in (0, 1, 2):
                 raise ValueError(f"Invalid DR level {dr_level}")
             recorded.pop("distractors", None)
             if dr_level >= 1:
                 recorded.pop("lighting", None)
-                recorded.pop("isaac_lighting", None)
-                recorded.pop("isaac_material", None)
             if dr_level == 2 and "spatial" in recorded:
                 spatial = recorded["spatial"]
                 robot_state = next(
@@ -116,8 +115,6 @@ class ToolbenchDRManager(DRManager):
             return
 
         self._replace_cfg("lighting", "light_mode", "fixed")
-        self._replace_cfg("isaac_lighting", "light_mode", "fixed")
-        self._replace_cfg("isaac_material", "material_mode", "fixed")
         self._replace_cfg("scene", "scene_mode", "fixed")
 
         if dr_level > 1:

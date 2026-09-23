@@ -197,7 +197,6 @@ class G1BallRetrieveTeleop(ToolReasoningTask):
         self._start_distance = None
         self._reset_pick_state()
         self.reward = 0.0
-        self.apply_isaac_dr(split)
         self.robot.reset(spawn_pose=self.layout.robot.pose)
 
     # -- scoring ----------------------------------------------------------

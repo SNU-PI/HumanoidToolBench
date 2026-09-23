@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import transforms3d as t3d
 
-from humanoidtoolbench.core.actor import Actor, CameraEntity, Light, ObjectActor, RobotActor
+from humanoidtoolbench.core.actor import Actor, CameraEntity, ObjectActor, RobotActor
 
 if TYPE_CHECKING:
     from humanoidtoolbench.core.asset import Asset
@@ -20,8 +20,6 @@ class Layout:
     def __init__(self) -> None:
         self.actors: dict[str, Actor] = {}
         self.cameras: dict[str, CameraEntity] = {}
-        # Only the Isaac renderer reads these; MuJoCo has its own light rig.
-        self.lights: list[Light] = []
         self.scene: Scene
 
     def _require_new_actor(self, name: str) -> None:
@@ -61,9 +59,6 @@ class Layout:
         else:
             raise TypeError(f"Unsupported camera config type: {type(cam_cfg)}")
 
-    def set_lights(self, lights: list[Light]) -> None:
-        self.lights = list(lights)
-
     @property
     def robot(self) -> RobotActor:
         actor = self.actors["robot"]
@@ -82,6 +77,5 @@ class Layout:
                 camera_id: camera.to_dict()
                 for camera_id, camera in self.cameras.items()
             },
-            "lights": [light.to_dict() for light in self.lights],
             "scene": self.scene.to_dict(),
         }

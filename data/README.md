@@ -40,6 +40,9 @@ The dataset currently exposes `raw/`, `hardware/`, `trimmed/`, `rendered/`,
 | `rendered/`, `rendered_images/` | Additional rendering products; consult their release metadata |
 | `viewer/` | Episode-level indexes for browsing, rather than frame-level action data |
 
+Some releases under `rendered/`, such as `rendered/isaac/`, were produced with
+an internal rendering pipeline that is not included in this toolkit.
+
 Simulation recordings use LeRobot files with per-frame Parquet data, videos,
 and metadata such as `meta/info.json`, `meta/episodes.jsonl`, and
 `meta/simple_contract.json`. Read each recording's metadata to determine its
