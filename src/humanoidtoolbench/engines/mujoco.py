@@ -201,31 +201,16 @@ class MujocoSimulator(Simulator):
         mujoco.mjv_defaultOption(self.render_option)  # type: ignore
 
         # in case of forgetting to close the env before reset
-        if self.renderers or getattr(self, "_render_client", None):
+        if self.renderers:
             self.close()
 
         self.renderers = {}
-        self._render_client = None
-        render_socket = os.environ.get("HUMANOIDTOOLBENCH_MUJOCO_RENDER_SOCKET")
-        if render_socket:
-            from humanoidtoolbench.engines._mujoco_render_client import RenderClient
-
-            self._render_client = RenderClient(
-                render_socket,
+        for cname, camera in self.task.layout.cameras.items():
+            self.renderers[cname] = mujoco.Renderer(
                 self.mjModel,
-                {
-                    camera.name: self.task.layout.cameras[camera.name].resolution
-                    for camera in self.mj_worldbody.find_all("camera")
-                    if camera.name in self.task.layout.cameras
-                },
-            )
-        else:
-            for cname, camera in self.task.layout.cameras.items():
-                self.renderers[cname] = mujoco.Renderer(
-                    self.mjModel,
-                    height=camera.resolution[1],
-                    width=camera.resolution[0],
-                )  # type: ignore
+                height=camera.resolution[1],
+                width=camera.resolution[0],
+            )  # type: ignore
 
         self.render_step = 0
 
@@ -644,8 +629,6 @@ class MujocoSimulator(Simulator):
         self.task.robot.apply_action(action_cmd)
 
     def render(self) -> dict[str, np.ndarray]:
-        if getattr(self, "_render_client", None):
-            return self._render_client.render(self.mjData, self.render_option)
         image_observations: dict[str, np.ndarray] = {}
         for camera in self.mj_worldbody.find_all("camera"):
             renderer = self.renderers.get(camera.name)
@@ -663,9 +646,6 @@ class MujocoSimulator(Simulator):
         return image_observations
 
     def close(self):
-        if getattr(self, "_render_client", None):
-            self._render_client.close()
-            self._render_client = None
         if hasattr(self, "renderers") and self.renderers:
             for renderer in self.renderers.values():
                 renderer.close()
