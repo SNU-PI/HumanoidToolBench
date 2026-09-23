@@ -7,8 +7,6 @@ Licensed under the terms in LICENSE file.
 
 from humanoidtoolbench.core.actor import Actor
 from humanoidtoolbench.core.asset import Asset
-
-# import os
 from humanoidtoolbench.core.types import Pose
 
 
@@ -21,8 +19,6 @@ class Box(Primitive):
         self.uid = "box"
 
         self.size = size
-        # self.position = position
-        # self.quaternion = quaternion
         self.pose = Pose(position, quaternion)
 
     def set_material(self, material: dict) -> None:

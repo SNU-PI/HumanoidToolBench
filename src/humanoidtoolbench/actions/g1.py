@@ -26,8 +26,8 @@ Float32Vector = NDArray[np.float32]
 
 
 # These names duplicate the dependency-free metadata from robots/g1_sonic.py.
-# Importing that robot module here would pull in MuJoCo and GEAR-SONIC merely to
-# decode a policy response, preventing dataset tooling from staying lightweight.
+# Importing that robot module here would pull in MuJoCo and the gear_sonic
+# package merely to decode a policy response.
 G1_LEFT_ARM_JOINTS = (
     "left_shoulder_pitch_joint",
     "left_shoulder_roll_joint",

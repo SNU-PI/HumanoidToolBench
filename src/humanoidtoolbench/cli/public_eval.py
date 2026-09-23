@@ -350,8 +350,8 @@ def code_identity() -> dict:
         ).stdout.strip()
 
     try:
-        # A release snapshot copied into another repository is not that
-        # repository's commit.
+        # When this tree sits inside another Git repository (copied or
+        # vendored there), that repository's commit does not identify it.
         if Path(git("rev-parse", "--show-toplevel")).resolve() != root:
             return identity
         identity["git_commit"] = git("rev-parse", "HEAD")

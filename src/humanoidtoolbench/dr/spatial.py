@@ -13,8 +13,8 @@ from humanoidtoolbench.dr.types import Box
 class SpatialDR(Randomizer):
     """Place the robot at a sampled pose.
 
-    Push, sweep, and mop objects are placed by their task-specific randomizers,
-    so the shared spatial randomizer only owns the robot spawn.
+    The tools, targets and irrelevant objects are placed by the scenario's tool
+    randomizer, so the shared spatial randomizer only owns the robot spawn.
     """
 
     def __init__(self, cfg: "SpatialDRCfg") -> None:

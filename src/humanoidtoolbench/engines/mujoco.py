@@ -239,9 +239,9 @@ class MujocoSimulator(Simulator):
     def _build_primitive_object(self, mjWorld, actor: ObjectActor):
         """An object whose asset declares `geoms` instead of collider meshes.
 
-        The benchmark's blocks, balls and dustpans are procedural (Objaverse has
-        no tabletop wooden block and exactly one dustpan) and a primitive is
-        also the only way to vary colour independently of shape. Everything else
+        The benchmark's ball, ice block and shards, and goal ring are
+        procedural: their geometry has to be exact, and a primitive is also
+        the only way to vary colour independently of shape. Everything else
         about the object (pose, free joint, friction) works as it does for a
         mesh, so tasks never branch on which kind they were handed.
 

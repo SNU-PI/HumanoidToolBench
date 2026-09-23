@@ -1,8 +1,9 @@
 """Break an ice block. Physical.
 
 Reasoning mode adds a fly swatter, paint roller, or plunger beside the metal
-hammer. These decoys reuse the former foam hammer's low mass and whole-tool
-compliance. Their visible structure cues striking suitability, while the
+hammer. The decoys share one low mass and whole-tool compliance (the
+FOAM_HAMMER_* values in `humanoidtoolbench.assets.tools`). Their visible
+structure cues striking suitability, while the
 declared physical properties are a benchmark abstraction of weak tools.
 
 MuJoCo does not fracture bodies, so the block is one solid cube that a hard
@@ -45,8 +46,8 @@ from humanoidtoolbench.tasks.tool_reasoning import ToolReasoningTask
 
 # Benchmark fracture score: peak qualifying normal contact force times the
 # physics step, in newton seconds. This is not a full impact integral or a
-# measured material constant. Keep the existing threshold when replacing the
-# foam meshes; sufficiently driven compliant tools can still exceed it.
+# measured material constant. The decoys take the compliance the threshold
+# was set against; sufficiently driven compliant tools can still exceed it.
 FRACTURE_IMPULSE = 0.042
 # Once broken, the shards have to actually come apart, not merely be released.
 SCATTER = 0.03
@@ -164,10 +165,6 @@ class G1IceBreakTeleop(ToolReasoningTask):
         "Fracture a block of ice with a tool that delivers enough impact."
     )
 
-    reasoning_axis: str = "physical"
-    phrase: str = "break the ice block"
-    target_name: str = "ice block"
-
     dr_cfgs: dict[str, RandomizerCfg] = {
         **ToolReasoningTask.dr_cfgs,
         "tools": ToolReasoningDRCfg(
@@ -207,7 +204,7 @@ class G1IceBreakTeleop(ToolReasoningTask):
         self._closing = {}
         self._reset_pick_state()
         self.reward = 0.0
-        self.robot.reset(spawn_pose=self.layout.robot.pose)
+        self.robot.reset()
 
     # -- the blow ---------------------------------------------------------
 
@@ -318,7 +315,7 @@ class G1IceBreakTeleop(ToolReasoningTask):
         """Per block, the largest impulse a struck tool-on-ice contact delivered.
 
         Read off the contacts rather than from the tool's velocity, because
-        what fractures ice is what arrives through the contact: a foam head
+        what fractures ice is what arrives through the contact: a compliant head
         moving just as fast spreads the same momentum over a longer, softer
         push and delivers far less. But a contact force on its own cannot tell
         a blow from a lean, so a contact only counts when the tool was already

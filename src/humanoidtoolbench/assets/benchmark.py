@@ -10,14 +10,8 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
-import transforms3d as t3d
-
 from humanoidtoolbench.core.asset import Asset
 from humanoidtoolbench.core.object import SemanticAnnotated
-
-_Y_UP_FIX = t3d.euler.euler2quat(np.pi / 2, 0.0, 0.0)
-_X_UP_FIX = t3d.euler.euler2quat(0.0, -np.pi / 2, 0.0)
 
 
 class BenchmarkAsset(Asset, SemanticAnnotated):
@@ -45,7 +39,6 @@ class BenchmarkAsset(Asset, SemanticAnnotated):
         self.extent = list(entry["extent"])
         self.height = float(entry["height"])
         self.footprint = float(entry["footprint"])
-        self._rest_offset = float(entry["rest_offset"])
         self.n_convex_parts = int(entry["n_convex_parts"])
         self.role = entry["role"]
         self.kind = entry["kind"]
@@ -54,28 +47,6 @@ class BenchmarkAsset(Asset, SemanticAnnotated):
         self.colour = entry.get("colour")
         self.holds = entry.get("holds")
         self.interior = entry.get("interior")
-
-    @property
-    def upright_quat(self) -> list[float]:
-        if self.up_axis == "y":
-            return [float(value) for value in _Y_UP_FIX]
-        if self.up_axis == "x":
-            return [float(value) for value in _X_UP_FIX]
-        return [1.0, 0.0, 0.0, 0.0]
-
-    def pose_on(
-        self,
-        x: float,
-        y: float,
-        surface_z: float,
-        yaw: float = 0.0,
-        clearance: float = 0.0,
-    ) -> tuple[list[float], list[float]]:
-        quaternion = t3d.quaternions.qmult(
-            t3d.euler.euler2quat(0.0, 0.0, yaw), self.upright_quat
-        )
-        position = [float(x), float(y), surface_z + self._rest_offset + clearance]
-        return position, [float(value) for value in quaternion]
 
     def __repr__(self) -> str:
         return (
@@ -87,8 +58,8 @@ class BenchmarkAsset(Asset, SemanticAnnotated):
 class PrimitiveToolAsset(BenchmarkAsset):
     """An object made of primitive geoms rather than meshes.
 
-    Carries the same placement interface as a mesh asset (`pose_on`,
-    `rest_offset`, `footprint`) so a task never has to care which it got. The
+    Carries the same placement fields as a mesh asset (`height`, `footprint`,
+    `extent`) so a task never has to care which it got. The
     engine branches on `geoms` being present.
     """
 

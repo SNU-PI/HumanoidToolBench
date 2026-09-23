@@ -173,14 +173,11 @@ def test_legacy_environment_names_are_not_registered(canonical, legacy, level, m
 
 def test_every_cell_has_an_instruction() -> None:
     from humanoidtoolbench.envs import SCENARIOS
-    from humanoidtoolbench.tasks.tool_reasoning import (
-        INSTRUCTIONS,
-        LEVELS,
-        MODE_ALIAS,
-        MODES,
-    )
+    from humanoidtoolbench.tasks.tool_reasoning import INSTRUCTIONS, LEVELS, MODES
 
-    assert MODE_ALIAS == {"S": "R0", "R": "R1"}
+    # The reasoning_mode metric is MODES.index(mode): 0 for S (the paper's R0),
+    # 1 for R (R1).
+    assert tuple(MODES) == ("S", "R")
     expected = {
         (uid, level, mode)
         for uid in SCENARIOS.values()

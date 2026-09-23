@@ -52,16 +52,12 @@ MOVE_TRIGGER = 0.15
 STAND_RADIUS = 0.40
 
 # How long the outcome has to stand before the episode is called. The
-# environment terminates the moment `check_success` is true, so a single frame
-# of the ball crossing the ring, or of the block letting go, ended the
-# recording before the camera had seen the result. 50 steps is 1 s at the
-# 50 Hz render rate, which also asks that the ball come to rest inside the
-# area rather than roll through it.
+# environment terminates the moment `check_success` is true, so without a hold
+# a single frame of the ball crossing the ring, or of the block letting go,
+# would end the episode before the camera had seen the result. 50 steps is
+# 1 s at the 50 Hz render rate, which also asks that the ball come to rest
+# inside the area rather than roll through it.
 SUCCESS_HOLD = 50
-
-# The paper writes the modes as R0 and R1; the code uses S and R so the mode
-# never reads as a level. This is the bridge between the two.
-MODE_ALIAS: dict[str, str] = {"S": "R0", "R": "R1"}
 
 # The bench slots a hand can touch, and the role each reports as: 0 the
 # correct tool, 1 the confusable one, 2 an object that is no tool at all.
@@ -82,15 +78,10 @@ TASK_OPTIONS = frozenset({"split", "physics_dt", "sonic_config"})
 class ToolReasoningTask(G1ToolbenchTabletop):
     """Shared level and mode machinery for a reasoning scenario.
 
-    A scenario supplies its tools, its phrasing, and what counts as the job
-    being done. Everything about the axis lives here so the six scenarios
-    cannot drift apart in how they are scored.
+    A scenario supplies its tools and what counts as the job being done; its
+    wording comes from `INSTRUCTIONS`. Everything about the axis lives here so
+    the three scenarios cannot drift apart in how they are scored.
     """
-
-    # Filled in by the scenario.
-    phrase: str = ""
-    target_name: str = ""
-    reasoning_axis: str = ""
 
     metadata: dict[str, Any] = {
         **G1ToolbenchTabletop.metadata,
@@ -142,11 +133,6 @@ class ToolReasoningTask(G1ToolbenchTabletop):
         super().__init__(**kwargs)
 
     # -- identity ---------------------------------------------------------
-
-    @property
-    def cell(self) -> str:
-        """`L1-S (R0)`: the name this cell goes by in a table."""
-        return f"L{self.level}-{self.mode} ({MODE_ALIAS[self.mode]})"
 
     @property
     def instruction(self) -> str:
@@ -338,7 +324,7 @@ class ToolReasoningTask(G1ToolbenchTabletop):
         report = {
             "metrics": {
                 "level": self.level,
-                # 0 for S, 1 for R: the paper's R0 and R1.
+                # 0 for S, 1 for R: the paper writes the modes as R0 and R1.
                 "reasoning_mode": MODES.index(self.mode),
                 "tool_lift": float(self._pick_height),
                 "picked_correct_tool": bool(picked),

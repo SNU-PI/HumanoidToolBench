@@ -21,9 +21,8 @@ class HumanoidPolicyAgent(Generic[GoalT]):
 
     The class intentionally implements the small ``get_action``/``reset``
     protocol used by the humanoid evaluation loop; it does not depend on
-    a concrete robot class or inherit the legacy ``BaseAgent``.  One prediction
-    request fills a FIFO queue, which is consumed before the policy is queried
-    again.
+    a concrete robot class.  One prediction request fills a FIFO queue, which
+    is consumed before the policy is queried again.
     """
 
     def __init__(

@@ -1,22 +1,18 @@
 {
   "repository": "https://github.com/physical-superintelligence-lab/Psi0",
   "revision": "a02199482b11b61262b0276d0dc08fc52bf59483",
-  "humanoidtoolbench_patches": [
-    "act_dp",
-    "act_dp_language",
-    "dp_inference"
-  ],
   "files": {
     "act.py": {
       "upstream_path": "src/act/models/act.py",
-      "upstream_sha256": "e5afeaec36b101d9792bd74d6628f358ca1359da3b234a6ab9f3fa51a9558016",
-      "modification": "Import the bundled language projection helper."
+      "upstream_sha256": "512585a90550ffd93c39e9c398e512471477866c6a264e4383b7c8eebf97c2e4",
+      "vendored_sha256": "3f4413e4753839e7178872d7568470240fa573258c3d835177dabd0cd2dfceb1",
+      "modifications": "Modified by HumanoidToolBench: optional language conditioning (ACTConfig.language_dim; a zero-initialized projection of the text embedding is added to the robot-state token, using zero_projection from humanoidtoolbench.policies._language), per-sample losses in eval mode, and loss values returned as detached tensors instead of Python floats."
     },
     "diffusion_policy.py": {
       "upstream_path": "src/dp/models/diffusion_policy.py",
-      "upstream_sha256": "71015fc1586e89297601026ee860160721cc34762cf8ecf967702c014d18b9f2",
-      "modification": "Import the bundled language projection helper."
+      "upstream_sha256": "e2784589e73ceaff7f511b10ff662df0cfef8207bf7245c842da29e04d2db15b",
+      "vendored_sha256": "6b65821a0bb5945ccd57bd9919c30fd04af8d253c0b91c1502df4d162ed4af05",
+      "modifications": "Modified by HumanoidToolBench: optional language conditioning (language_dim; a zero-initialized projection of the text embedding is added to the image features, using zero_projection from humanoidtoolbench.policies._language), per-sample losses in eval mode, and denoising timesteps moved to the model device once per call while the scheduler stays on the CPU."
     }
-  },
-  "original_language_import_base64": "ZnJvbSB0aGV0YV9iZW5jaC5jbGkuX2FjdF9kcF9sYW5ndWFnZSBpbXBvcnQgemVyb19wcm9qZWN0aW9u"
+  }
 }

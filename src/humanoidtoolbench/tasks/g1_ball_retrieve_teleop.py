@@ -148,10 +148,6 @@ class G1BallRetrieveTeleop(ToolReasoningTask):
         "area, with a tool that can pull."
     )
 
-    reasoning_axis: str = "affordance"
-    phrase: str = "retrieve the object"
-    target_name: str = "object"
-
     dr_cfgs: dict[str, RandomizerCfg] = {
         **ToolReasoningTask.dr_cfgs,
         "tools": ToolReasoningDRCfg(
@@ -179,7 +175,7 @@ class G1BallRetrieveTeleop(ToolReasoningTask):
         self._start_distance = None
         self._reset_pick_state()
         self.reward = 0.0
-        self.robot.reset(spawn_pose=self.layout.robot.pose)
+        self.robot.reset()
 
     # -- scoring ----------------------------------------------------------
 

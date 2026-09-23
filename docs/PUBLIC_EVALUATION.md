@@ -5,7 +5,7 @@ Run your own task policy in the 18 canonical HumanoidToolBench environments thro
 controller executes your policy's commands, and the evaluator records task
 outcomes and four camera streams.
 
-The [dataset](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) and
+The [ToolBook dataset](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) and
 [dataset/model collection](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
 are on Hugging Face. Read [data/README.md](../data/README.md) for access, source
 revisions, and the difference between simulation and real G1 recordings.

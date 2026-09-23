@@ -1,6 +1,5 @@
 """Public model discovery, native normalization and trained-state loading."""
 
-import base64
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -235,20 +234,24 @@ def test_hardware_checkpoint_contract_is_rejected(trained_act):
         pretrained.load_policy(run, "cpu")
 
 
-def test_vendor_sources_have_recorded_upstream_hashes():
+def test_vendor_sources_match_their_recorded_provenance():
+    import hashlib
+    import re
+
     root = Path(pretrained.__file__).parent / "_vendor"
     provenance = json.loads((root / "provenance.json").read_text())
+    assert provenance["repository"] == (
+        "https://github.com/physical-superintelligence-lab/Psi0"
+    )
+    assert re.fullmatch(r"[0-9a-f]{40}", provenance["revision"])
+    vendored = {path.name for path in root.glob("*.py")} - {"__init__.py"}
+    assert set(provenance["files"]) == vendored
     for filename, record in provenance["files"].items():
-        import hashlib
-
-        original = (
-            (root / filename)
-            .read_text()
-            .replace(
-                "from humanoidtoolbench.policies._language import zero_projection",
-                base64.b64decode(provenance["original_language_import_base64"]).decode(),
-            )
-        )
+        assert record["upstream_path"].endswith("/" + filename)
+        assert re.fullmatch(r"[0-9a-f]{64}", record["upstream_sha256"])
+        assert record["modifications"]
+        # The shipped file is exactly the one recorded, byte for byte.
         assert (
-            hashlib.sha256(original.encode()).hexdigest() == record["upstream_sha256"]
+            hashlib.sha256((root / filename).read_bytes()).hexdigest()
+            == record["vendored_sha256"]
         )
