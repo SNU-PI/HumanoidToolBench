@@ -2122,10 +2122,6 @@
     "third_party/decoupled_wbc": {
       "url": "https://github.com/SNU-PI/decoupled_wbc.git",
       "revision": "c073fa3169a945f3bb1e37012ecdc215a7bcc324"
-    },
-    "third_party/unitree_sdk2_python": {
-      "url": "https://github.com/songlin/unitree_sdk2_python.git",
-      "revision": "cf26ccef0e615c9509140322bec154adc391c052"
     }
   }
 }

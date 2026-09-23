@@ -12,7 +12,6 @@ import gear_sonic
 import mujoco
 import numpy as np
 from gear_sonic.utils.mujoco_sim.robot import Robot as GearSonicRobot
-from gear_sonic.utils.mujoco_sim.unitree_sdk2py_bridge import ElasticBand
 
 from humanoidtoolbench.core.action import ActionCmd
 from humanoidtoolbench.core.controller import ControllerCfg
@@ -217,23 +216,6 @@ class G1Sonic(Robot, Controllable, HeadCamMountable, WristCamMountable):
             mjModel.joint(i).name for i in range(mjModel.njnt)
         ]
 
-        # Enable the elastic band. It stays None when disabled rather than being
-        # left unset, so callers can test it for truthiness.
-        self.elastic_band = None
-        if self.sonic_config["ENABLE_ELASTIC_BAND"] and self.use_floating_root_link:
-            self.elastic_band = ElasticBand(
-                point=np.array(self.spawn_pose.position[:2] + [1.0])
-            )
-            if "g1" in self.sonic_config["ROBOT_TYPE"]:
-                if self.sonic_config["enable_waist"]:
-                    self.band_attached_link = mjModel.body("pelvis").id
-                else:
-                    self.band_attached_link = mjModel.body("torso_link").id
-            elif "h1" in self.sonic_config["ROBOT_TYPE"]:
-                self.band_attached_link = mjModel.body("torso_link").id
-            else:
-                self.band_attached_link = mjModel.body("base_link").id
-
         # MuJoCo qpos/qvel arrays start with root DOFs before joint DOFs:
         # floating base has 7 qpos (pos + quat) and 6 qvel (lin + ang velocity)
         if self.use_floating_root_link:
@@ -382,27 +364,6 @@ class G1Sonic(Robot, Controllable, HeadCamMountable, WristCamMountable):
         assert isinstance(self.controller, WholeBodyEEFController)
 
         match action_cmd.type:
-            case "elastic_band":
-                pose = np.concatenate(
-                    [
-                        self.mjData.xpos[self.band_attached_link],
-                        self.mjData.xquat[self.band_attached_link],
-                        np.zeros(6),
-                    ]
-                )
-                mujoco.mj_objectVelocity(
-                    self.mjModel,
-                    self.mjData,
-                    mujoco.mjtObj.mjOBJ_BODY,
-                    self.band_attached_link,
-                    pose[7:13],
-                    0,
-                )
-                pose[7:10], pose[10:13] = pose[10:13], pose[7:10].copy()
-                self.mjData.xfrc_applied[self.band_attached_link] = (
-                    self.elastic_band.Advance(pose)
-                )
-
             case "decoupled_wbc":
                 target_q = action_cmd["target_q"]  # 29 body joints in actuator order
                 # PD position control using per-joint gains from decoupled_wbc config

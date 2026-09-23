@@ -19,7 +19,6 @@ dependencies = [
     "numpy==1.26.4",
     "tomli>=2; python_version < '3.11'",
     "gear_sonic[sim]",
-    "unitree-sdk2py",
     "decoupled-wbc",
     "onnxruntime>=1.18,<2",
     "opencv-python-headless>=4.9,<5",
@@ -71,20 +70,11 @@ dev = [
 index-strategy = "unsafe-best-match"
 default-groups = []
 
-# The pinned SDK only uses cv2 APIs available in the headless wheel. Keep its
-# remaining requirements unchanged without modifying the upstream checkout.
-[[tool.uv.dependency-metadata]]
-name = "unitree-sdk2py"
-version = "1.0.1"
-requires-python = ">=3.8"
-requires-dist = ["cyclonedds==0.10.2", "numpy", "opencv-python-headless"]
-
 [tool.uv.sources]
 humanoidtoolbench = {path = ".", editable = true}
 torch = {index = "pytorch-cu128"}
 torchvision = {index = "pytorch-cu128"}
 gear_sonic = {path = "third_party/gear_sonic", editable = true}
-unitree-sdk2py = {path = "third_party/unitree_sdk2_python", editable = true}
 decoupled-wbc = {path = "third_party/decoupled_wbc", editable = true}
 
 [project.scripts]

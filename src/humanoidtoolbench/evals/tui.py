@@ -16,22 +16,6 @@ from rich.text import Text
 _ACTIVE_STATUSES = {"creating_env", "ready", "running", "closing"}
 
 
-def _shorten_video_path(path: str) -> str:
-    """Shorten a video path for display only.
-
-    Truncates at the "<policy>-<timestamp>" checkpoint prefix, e.g.
-    "data/evals/psi0_decoupled_wbc/psi0-2606192151.G1.../level-0"
-    -> "data/evals/psi0_decoupled_wbc/psi0-2606192151...".
-    Paths without that prefix (no "." in any component) are returned unchanged.
-    """
-    parts = path.split(os.sep)
-    for i, part in enumerate(parts):
-        head, sep, _ = part.partition(".")
-        if sep and "-" in head:
-            return os.sep.join(parts[:i] + [head]) + "..."
-    return path
-
-
 # Persistent spinner per worker row so the animation frame (derived from each
 # spinner's start_time) advances on Live auto-refresh instead of resetting to
 # frame 0 on every render.
@@ -276,7 +260,7 @@ def render_progress(
     summary.add_row(
         f"[dim]setup[/dim] {avg_setup}  [dim]ep[/dim] {avg_episode}  [dim]step/s[/dim] {avg_sps}",
         (
-            f"[dim]video[/dim] {_shorten_video_path(video_path)}"
+            f"[dim]video[/dim] {video_path}"
             if video_path
             else f"[dim]log[/dim] {log_path}"
         ),
