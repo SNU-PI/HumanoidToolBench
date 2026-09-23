@@ -1,9 +1,9 @@
-"""Stable policy-action schemas for the Unitree G1 with Dex3 hands.
+"""Stable policy-action schema for the Unitree G1 with Dex3 hands.
 
-The dataclasses in this module describe controller goals, while the codecs own
+The dataclass in this module describes a controller goal, while the codec owns
 the flat arrays exchanged with policy servers and stored in training datasets.
-Keeping the two concepts separate lets ACT, pi, Psi, and world-action models use
-the same action contract without depending on a particular controller package.
+Keeping the two concepts separate lets any policy use the action contract
+without depending on the controller package.
 
 ``DecoupledActionCodec`` deliberately preserves the existing HumanoidToolBench 36-D
 layout.  In that legacy flat layout the left hand is ordered
@@ -104,21 +104,6 @@ DECOUPLED_ACTION_ORDER = (
     "navigate_vy",
     "navigate_vyaw",
     "navigate_target_yaw",
-)
-
-SONIC_LATENT_SCHEMA_ID = "sonic_latent_v1"
-SONIC_LATENT_ACTION_DIM = 78
-SONIC_LATENT_ACTION_SLICES: Mapping[str, slice] = MappingProxyType(
-    {
-        "motion_latent": slice(0, 64),
-        "left_hand_q": slice(64, 71),
-        "right_hand_q": slice(71, 78),
-    }
-)
-SONIC_LATENT_ACTION_ORDER = (
-    *(f"motion_latent_{index}" for index in range(64)),
-    *G1_LEFT_HAND_JOINTS,
-    *G1_RIGHT_HAND_JOINTS,
 )
 
 # Moving between natural thumb/index/middle order and the historical
@@ -258,50 +243,6 @@ class DecoupledGoal:
         return DecoupledActionCodec.decode(action)
 
 
-@dataclass(frozen=True, eq=False)
-class SonicLatentGoal:
-    """One unified SONIC goal: 64-D motion latent and two Dex3 hands.
-
-    The two hand vectors use ``G1_LEFT_HAND_JOINTS`` and
-    ``G1_RIGHT_HAND_JOINTS`` order (thumb, index, middle).
-    """
-
-    motion_latent: Float32Vector
-    left_hand_q: Float32Vector
-    right_hand_q: Float32Vector
-
-    schema_id: ClassVar[str] = SONIC_LATENT_SCHEMA_ID
-    action_dim: ClassVar[int] = SONIC_LATENT_ACTION_DIM
-    left_hand_joint_order: ClassVar[tuple[str, ...]] = G1_LEFT_HAND_JOINTS
-    right_hand_joint_order: ClassVar[tuple[str, ...]] = G1_RIGHT_HAND_JOINTS
-
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "motion_latent",
-            _validated_vector("motion_latent", self.motion_latent, 64),
-        )
-        object.__setattr__(
-            self, "left_hand_q", _validated_vector("left_hand_q", self.left_hand_q, 7)
-        )
-        object.__setattr__(
-            self,
-            "right_hand_q",
-            _validated_vector("right_hand_q", self.right_hand_q, 7),
-        )
-
-    def to_array(self) -> Float32Vector:
-        """Encode this goal in the stable 78-D policy/dataset layout."""
-
-        return SonicLatentActionCodec.encode(self)
-
-    @classmethod
-    def from_array(cls, action: ArrayLike) -> "SonicLatentGoal":
-        """Decode one stable 78-D policy/dataset action."""
-
-        return SonicLatentActionCodec.decode(action)
-
-
 class DecoupledActionCodec:
     """Codec for ``decoupled_v1`` flat actions and action chunks."""
 
@@ -356,53 +297,6 @@ class DecoupledActionCodec:
 
     @classmethod
     def decode_chunk(cls, actions: object) -> tuple[DecoupledGoal, ...]:
-        chunk = _validated_flat_chunk(
-            actions, schema_id=cls.schema_id, dimension=cls.dimension
-        )
-        return tuple(cls.decode(action) for action in chunk)
-
-
-class SonicLatentActionCodec:
-    """Codec for ``sonic_latent_v1`` flat actions and action chunks."""
-
-    schema_id = SONIC_LATENT_SCHEMA_ID
-    dimension = SONIC_LATENT_ACTION_DIM
-    action_order = SONIC_LATENT_ACTION_ORDER
-    action_slices = SONIC_LATENT_ACTION_SLICES
-
-    @staticmethod
-    def encode(goal: SonicLatentGoal) -> Float32Vector:
-        if not isinstance(goal, SonicLatentGoal):
-            raise TypeError(f"goal must be SonicLatentGoal, got {type(goal).__name__}")
-
-        action = np.empty(SONIC_LATENT_ACTION_DIM, dtype=np.float32)
-        action[SONIC_LATENT_ACTION_SLICES["motion_latent"]] = goal.motion_latent
-        action[SONIC_LATENT_ACTION_SLICES["left_hand_q"]] = goal.left_hand_q
-        action[SONIC_LATENT_ACTION_SLICES["right_hand_q"]] = goal.right_hand_q
-        return action
-
-    @staticmethod
-    def decode(action: ArrayLike) -> SonicLatentGoal:
-        flat = _validated_flat_action(
-            action,
-            schema_id=SONIC_LATENT_SCHEMA_ID,
-            dimension=SONIC_LATENT_ACTION_DIM,
-        )
-        return SonicLatentGoal(
-            motion_latent=flat[SONIC_LATENT_ACTION_SLICES["motion_latent"]],
-            left_hand_q=flat[SONIC_LATENT_ACTION_SLICES["left_hand_q"]],
-            right_hand_q=flat[SONIC_LATENT_ACTION_SLICES["right_hand_q"]],
-        )
-
-    @classmethod
-    def encode_chunk(cls, goals: Iterable[SonicLatentGoal]) -> NDArray[np.float32]:
-        encoded = [cls.encode(goal) for goal in goals]
-        if not encoded:
-            return np.empty((0, cls.dimension), dtype=np.float32)
-        return np.stack(encoded, axis=0)
-
-    @classmethod
-    def decode_chunk(cls, actions: object) -> tuple[SonicLatentGoal, ...]:
         chunk = _validated_flat_chunk(
             actions, schema_id=cls.schema_id, dimension=cls.dimension
         )

@@ -21,18 +21,10 @@ TORCH_INDEXES = {
 }
 
 
-def dependency_name(requirement: str) -> str:
-    return requirement.split("[", 1)[0].split(";", 1)[0].split("=", 1)[0].strip()
-
-
 def main() -> int:
     config = tomllib.loads((ROOT / "pyproject.toml").read_text())
-    project = config["project"]
-    base_names = {dependency_name(item) for item in project["dependencies"]}
 
     errors: list[str] = []
-    if "openpi-client" in base_names:
-        errors.append("openpi-client must remain opt-in for the core smoke test")
 
     # Both Torch flavours stay declared so either runtime mode is installable
     # without editing the manifest: GPU by default, CPU under HUMANOIDTOOLBENCH_FORCE_CPU=1.

@@ -105,9 +105,7 @@ def test_callable_policy_serves_like_a_native_model():
     )
     with serve_policy(policy, seed_start=10000) as port:
         client = HttpActionClient("127.0.0.1", port)
-        action, _, _ = client.query_action(
-            {}, "instruction", {}, {}, history={"reset": True}
-        )
+        action = client.query_action({}, "instruction", {}, history={"reset": True})
         assert action.shape == (2, 36)
         import urllib.request
 
@@ -423,7 +421,7 @@ def test_evaluator_process_releases_its_session_at_exit():
         "import numpy as np\n"
         "from humanoidtoolbench.policies.http_client import HttpActionClient\n"
         f"HttpActionClient('127.0.0.1', {port}).query_action({{}}, 'x', "
-        "{'states': np.zeros((1, 32), np.float32)}, {}, history={'reset': True})\n"
+        "{'states': np.zeros((1, 32), np.float32)}, history={'reset': True})\n"
     )
     try:
         subprocess.run([sys.executable, "-c", code], check=True, timeout=60)
@@ -519,7 +517,7 @@ def test_evaluator_requests_carry_one_session_per_process():
     with serve_policy(policy, seed_start=10000) as port:
         for _ in range(2):
             HttpActionClient("127.0.0.1", port).query_action(
-                {}, "x", {}, {}, history={"reset": True}
+                {}, "x", {}, history={"reset": True}
             )
     assert sessions == [http_client.EVALUATOR_SESSION] * 2
 
@@ -538,7 +536,7 @@ def test_policy_errors_name_the_problem_and_the_failing_line(action, expected):
     predict.metadata = {"policy": "broken"}
     with serve_policy(predict, seed_start=10000) as port:
         with pytest.raises(RuntimeError) as caught:
-            HttpActionClient("127.0.0.1", port).query_action({}, "x", {}, {})
+            HttpActionClient("127.0.0.1", port).query_action({}, "x", {})
     assert expected in str(caught.value)
 
     def raising(request):
@@ -547,7 +545,7 @@ def test_policy_errors_name_the_problem_and_the_failing_line(action, expected):
     raising.metadata = {"policy": "broken"}
     with serve_policy(raising, seed_start=10000) as port:
         with pytest.raises(RuntimeError) as caught:
-            HttpActionClient("127.0.0.1", port).query_action({}, "x", {}, {})
+            HttpActionClient("127.0.0.1", port).query_action({}, "x", {})
     assert "KeyError" in str(caught.value) and "test_public_evaluation.py:" in str(
         caught.value
     )
@@ -693,8 +691,8 @@ def test_managed_server_resets_inference_seeds_and_releases_its_port():
         with serve_policy(policy, seed_start=start) as port:
             client = HttpActionClient("127.0.0.1", port)
             for reset in (True, False, True):
-                action, _, _ = client.query_action(
-                    {}, "instruction", {}, {}, history={"reset": reset}
+                action = client.query_action(
+                    {}, "instruction", {}, history={"reset": reset}
                 )
                 assert action.shape == (1, 36)
         with socket.socket() as connection:
@@ -710,7 +708,7 @@ def test_policy_exception_is_visible_to_the_evaluation_client():
     with serve_policy(policy, seed_start=10000) as port:
         client = HttpActionClient("127.0.0.1", port)
         with pytest.raises(RuntimeError) as caught:
-            client.query_action({}, "instruction", {}, {})
+            client.query_action({}, "instruction", {})
 
     message = str(caught.value)
     assert f"http://127.0.0.1:{port}/act" in message
@@ -735,7 +733,7 @@ def test_non_json_http_error_includes_bounded_response_details():
         client = HttpActionClient("127.0.0.1", server.server_port)
         try:
             with pytest.raises(RuntimeError) as caught:
-                client.query_action({}, "instruction", {}, {})
+                client.query_action({}, "instruction", {})
         finally:
             server.shutdown()
             thread.join(timeout=5)
@@ -751,7 +749,7 @@ def test_unreachable_policy_server_preserves_connection_failure():
         reserved_port.bind(("127.0.0.1", 0))
         client = HttpActionClient("127.0.0.1", reserved_port.getsockname()[1])
         with pytest.raises(RuntimeError) as caught:
-            client.query_action({}, "instruction", {}, {})
+            client.query_action({}, "instruction", {})
 
     message = str(caught.value)
     assert client.url in message
@@ -778,10 +776,7 @@ def test_example_server_supports_custom_http_policy_and_episode_reset():
         thread.start()
         try:
             policy = make_remote_task_policy(
-                "http",
-                host="127.0.0.1",
-                port=server.server_port,
-                action_schema="decoupled_v1",
+                "http", host="127.0.0.1", port=server.server_port
             )
             observation = {
                 "joint_qpos": np.zeros(43),
@@ -797,6 +792,13 @@ def test_example_server_supports_custom_http_policy_and_episode_reset():
                 False,
                 True,
             ]
+            assert set(requests[0]) == {
+                "image",
+                "instruction",
+                "history",
+                "state",
+                "session",
+            }
             assert requests[0]["instruction"] == "Pick the tool."
             assert requests[0]["state"]["states"].shape == (1, 32)
             np.testing.assert_array_equal(

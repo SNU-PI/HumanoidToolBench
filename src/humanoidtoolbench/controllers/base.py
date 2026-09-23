@@ -3,8 +3,7 @@
 A body controller owns the robot-specific, low-level control loop.  It accepts
 one goal in its declared action schema and turns that goal into the
 ``ActionCmd`` consumed by a HumanoidToolBench environment.  Task policies therefore
-do not need to know whether the selected backend is decoupled WBC, GEAR-SONIC,
-or a test double.
+do not need to know whether the backend is the decoupled WBC or a test double.
 """
 
 from __future__ import annotations

@@ -5,7 +5,6 @@ from __future__ import annotations
 import atexit
 import uuid
 from base64 import b64decode, b64encode
-from datetime import datetime
 from typing import Any
 
 import numpy as np
@@ -79,20 +78,13 @@ class HttpActionClient:
         image_dict: dict[str, Any],
         instruction: str,
         state_dict: dict[str, Any],
-        condition_dict: dict[str, Any],
         history: dict[str, Any] | None = None,
-        dataset: str = "simple",
-        gt_action: np.ndarray | None = None,
-    ) -> tuple[np.ndarray, Any, np.ndarray | None]:
+    ) -> np.ndarray:
         payload = {
             "image": image_dict,
             "instruction": instruction,
             "history": history or {key: [] for key in image_dict},
             "state": state_dict,
-            "condition": condition_dict,
-            "gt_action": [] if gt_action is None else gt_action,
-            "dataset_name": dataset,
-            "timestamp": datetime.now().isoformat(),
             "session": EVALUATOR_SESSION,
         }
         _SERVERS_USED.add(self.url.removesuffix("/act"))
@@ -120,13 +112,7 @@ class HttpActionClient:
                 f"Policy server request failed at {self.url}: {detail}"
             ) from exc
 
-        decoded = _decode(response.json())
-        action = np.asarray(decoded["action"])
-        error = decoded.get("err", 0.0)
-        trajectory = decoded.get("traj_image")
-        if not isinstance(trajectory, np.ndarray) or trajectory.ndim != 3:
-            trajectory = None
-        return action, error, trajectory
+        return np.asarray(_decode(response.json())["action"])
 
 
 __all__ = ["EVALUATOR_SESSION", "HttpActionClient", "release_sessions"]

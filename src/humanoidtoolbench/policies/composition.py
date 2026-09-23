@@ -87,11 +87,6 @@ class HumanoidPolicyAgent(Generic[GoalT]):
         """Return one simulator action, requesting a new chunk only if needed."""
 
         self._last_observation = observation
-        observe = getattr(self.task_policy, "observe", None)
-        if callable(observe):
-            # World-action models such as DreamZero condition their next query
-            # on frames collected while the current chunk is executing.
-            observe(observation, **kwargs)
         if not self._goal_queue:
             self._request_chunk(observation, instruction, **kwargs)
 

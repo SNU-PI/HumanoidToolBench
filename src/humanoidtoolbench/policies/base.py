@@ -1,4 +1,4 @@
-"""Task-policy contract shared by ACT, pi, psi, and world-action models."""
+"""Task-policy contract shared by the policy transport and the controller."""
 
 from __future__ import annotations
 
@@ -16,8 +16,8 @@ class ActionChunk(Generic[GoalT]):
 
     A model adapter is responsible for decoding model output into controller
     goals before constructing the chunk.  Keeping the schema tag on the chunk
-    prevents, for example, a 36D decoupled goal from being sent to a 78D SONIC
-    controller merely because both happen to be represented by arrays.
+    prevents a goal from being sent to a controller that accepts a different
+    schema merely because both happen to be represented by arrays.
     """
 
     schema: str
@@ -81,15 +81,3 @@ class TaskPolicy(Protocol[_PolicyGoalT_co]):
 
     def reset(self, **kwargs: Any) -> None:
         """Reset recurrent/history state at an episode boundary."""
-
-
-@runtime_checkable
-class ObservingTaskPolicy(Protocol):
-    """Optional capability for policies that retain every control-step frame."""
-
-    def observe(
-        self,
-        observation: dict[str, Any],
-        **kwargs: Any,
-    ) -> None:
-        """Observe one control step even while a cached action chunk is running."""

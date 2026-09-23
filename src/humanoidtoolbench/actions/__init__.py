@@ -9,14 +9,8 @@ from .g1 import (
     G1_LEFT_HAND_JOINTS,
     G1_RIGHT_ARM_JOINTS,
     G1_RIGHT_HAND_JOINTS,
-    SONIC_LATENT_ACTION_DIM,
-    SONIC_LATENT_ACTION_ORDER,
-    SONIC_LATENT_ACTION_SLICES,
-    SONIC_LATENT_SCHEMA_ID,
     DecoupledActionCodec,
     DecoupledGoal,
-    SonicLatentActionCodec,
-    SonicLatentGoal,
 )
 
 __all__ = [
@@ -28,12 +22,6 @@ __all__ = [
     "G1_LEFT_HAND_JOINTS",
     "G1_RIGHT_ARM_JOINTS",
     "G1_RIGHT_HAND_JOINTS",
-    "SONIC_LATENT_ACTION_DIM",
-    "SONIC_LATENT_ACTION_ORDER",
-    "SONIC_LATENT_ACTION_SLICES",
-    "SONIC_LATENT_SCHEMA_ID",
     "DecoupledActionCodec",
     "DecoupledGoal",
-    "SonicLatentActionCodec",
-    "SonicLatentGoal",
 ]

@@ -22,15 +22,9 @@ _MAX_STABILIZATION_STEPS = 1500
 
 
 @contextmanager
-def _stabilization_images(sonic_env, agent, *, enabled):
-    """Skip unused images only for the known proprioceptive WBC backend."""
-    from humanoidtoolbench.controllers.decoupled_wbc import DecoupledWbcBackend
-
-    suppress = (
-        enabled
-        and type(getattr(agent, "body_controller", None)) is DecoupledWbcBackend
-        and getattr(sonic_env, "render_obs", False) is True
-    )
+def _stabilization_images(sonic_env, *, enabled):
+    """Skip images while the proprioceptive WBC stabilizes; nothing reads them."""
+    suppress = enabled and getattr(sonic_env, "render_obs", False) is True
     if suppress:
         sonic_env.render_obs = False
     try:
@@ -77,7 +71,6 @@ def _run_episodes(
 ) -> dict[str, bool]:
     """Evaluate every episode of ``config`` in this process."""
     env_id = config.env_id
-    controller = config.controller
     sim_mode = config.sim_mode
     headless = config.headless
     eval_dir = config.eval_dir
@@ -117,8 +110,7 @@ def _run_episodes(
         # There is no dataset to read a frame rate from, so the task's own
         # declaration is the source of truth.
         render_hz = task.metadata.get("render_hz", 30)
-        if controller == "decoupled_wbc":
-            control_dt = validate_recording_timing(render_hz, sim_dt)
+        control_dt = validate_recording_timing(render_hz, sim_dt)
 
         max_episode_steps = config.max_episode_steps
         raw_env = TimeLimit(raw_env, max_episode_steps=max_episode_steps)
@@ -130,7 +122,7 @@ def _run_episodes(
         agent = make_humanoid_policy_agent(
             robot=task.robot,
             policy=config.policy,
-            controller=controller,
+            controller=config.controller,
             host=config.host,
             port=config.port,
             sonic_config=sonic_config,
@@ -171,13 +163,11 @@ def _run_episodes(
                 # default pose on every episode (not just the first).
                 agent.reset()
 
-                # DecoupledWbcBackend.reset() engages its lower-body policy.  Unified
-                # SONIC owns the equivalent episode state inside its decoder runtime.
+                # DecoupledWbcBackend.reset() engages its lower-body policy.
 
                 # --- Wait for robot to stabilize (velocity-based) ---
                 realtime_stabilization = (
                     not headless
-                    or getattr(agent, "controller_name", controller) != "decoupled_wbc"
                     or getattr(sonic_env, "viewer", None) is not None
                     or getattr(sonic_env, "_mjviser", None) is not None
                 )
@@ -187,13 +177,11 @@ def _run_episodes(
                 stabilized = robot.stabilized
                 with _stabilization_images(
                     sonic_env,
-                    agent,
                     enabled=not realtime_stabilization,
                 ) as images_suppressed:
                     while not stabilized and sim_cnt < _MAX_STABILIZATION_STEPS:
                         if realtime_stabilization:
                             step_start = time.monotonic()
-                        # Unified SONIC retains its usual observation and info.
                         action = agent.get_stabilize_action(observation, info=info)
                         # Bypass TimeLimit so startup keeps the full policy budget.
                         observation, _reward, _terminated, _truncated, info = (
@@ -248,13 +236,7 @@ def _run_episodes(
                     f"Robot stabilized after {sim_cnt} simulation steps. Engaging Policy Now!"
                 )
 
-                finish_stabilization = getattr(
-                    getattr(agent, "body_controller", None),
-                    "finish_stabilization",
-                    None,
-                )
-                if callable(finish_stabilization):
-                    finish_stabilization()
+                agent.body_controller.finish_stabilization()
 
                 _rollout_episode(
                     env,
