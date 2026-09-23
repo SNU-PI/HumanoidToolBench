@@ -14,14 +14,12 @@ from humanoidtoolbench.assets.evaluation import (  # noqa: E402
     EvaluationAssetError,
     verify_evaluation_assets,
 )
-from verify_runtime_assets import RuntimeAssetError, verify_runtime_assets  # noqa: E402
 
 
 def main() -> int:
     try:
-        verify_runtime_assets()
         receipt = verify_evaluation_assets()
-    except (EvaluationAssetError, RuntimeAssetError) as exc:
+    except EvaluationAssetError as exc:
         print(f"[evaluation-assets] ERROR: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(receipt, indent=2))

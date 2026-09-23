@@ -19,14 +19,6 @@ if [[ "$MODE" == "--install" ]]; then
             exit 1
         fi
     done
-    if ! python3 "$ROOT_DIR/scripts/verify_runtime_assets.py" >/dev/null 2>&1; then
-        if ! git lfs version >/dev/null 2>&1; then
-            echo "[evaluation] Git LFS is required to download benchmark assets." >&2
-            echo "[evaluation] Install it from https://git-lfs.com/ and rerun setup." >&2
-            exit 1
-        fi
-        git lfs pull --include="src/humanoidtoolbench/resources/benchmark_assets/**"
-    fi
     # A release snapshot has no private Git history or gitlinks. Each controller
     # dependency is fetched anonymously from its pinned public repository.
     while IFS=$'\t' read -r path url revision; do

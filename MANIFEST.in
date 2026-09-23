@@ -1,2 +1,0 @@
-include scripts/verify_runtime_assets.py
-recursive-include src/humanoidtoolbench/resources/benchmark_assets *

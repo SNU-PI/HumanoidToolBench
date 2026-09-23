@@ -4,7 +4,7 @@
 # The GPU is used by default. This is still a shared lab server, so the wrapper
 # keeps the polite defaults: a single pinned GPU, reduced scheduling priority,
 # and bounded math thread pools. HUMANOIDTOOLBENCH_FORCE_CPU=1 restores the original
-# GPU-free smoke-test envelope (see run_mujoco_cpu.sh).
+# GPU-free smoke-test envelope.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

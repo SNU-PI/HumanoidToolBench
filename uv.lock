@@ -757,7 +757,6 @@ requires-dist = [
     { name = "trimesh", specifier = ">=4.7.1" },
     { name = "unitree-sdk2py", editable = "third_party/unitree_sdk2_python" },
 ]
-provides-extras = ["evaluation"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -35,9 +35,7 @@ Every mesh in the scene, the tools and the irrelevant household objects, is
 downloaded by the installer from the pinned MolmoSpaces release into
 `data/ms_assets`, which is why `zstd` is required, and verified by SHA-256
 against `resources/evaluation_assets.json` together with the controller
-weights. The installer also checks that the packaged
-`resources/benchmark_assets` directory is hydrated; the evaluator does not
-read it. Controller weights are required even when the task policy runs on another
+weights. Controller weights are required even when the task policy runs on another
 machine. Demonstration recordings are a separate download; `--model` downloads
 supported task-model checkpoints automatically.
 
@@ -452,37 +450,6 @@ manifest (`assets`), the policy identity (`policy_info`), the completion time
 (`finished_at`), the wall time and the GPU and rendering selection. Paths
 inside it are absolute paths on the evaluating machine. A process exit or a visible video alone does not establish a
 complete benchmark result.
-
-## Source distribution
-
-The release branch contains the same evaluation sources as the source snapshot.
-Training, teleoperation, RL, and Easy configuration modules are excluded from
-both. Controller repositories are downloaded by setup at their pinned revisions.
-
-Create a standalone release snapshot:
-
-```bash
-uv run --no-project scripts/export_public_evaluation.py ../humanoidtoolbench-public
-```
-
-The destination must not exist or must be empty. The exporter refuses symlinks
-and writes `export_manifest.json` with relative file names, sizes, and SHA256
-hashes. It selects evaluation runtime code and omits Git history, local
-credentials/configuration, experiment artifacts, paper sources, recordings,
-training modules, and third-party working trees. The README's paper overview
-image and required third-party inference code/licenses are included.
-
-Install directly from the snapshot directory:
-
-```bash
-cd ../humanoidtoolbench-public
-uv run --no-project scripts/setup_evaluation.py
-```
-
-The installer retrieves the exact public controller dependency revisions from
-the release manifest. The exported directory does not require a development
-branch checkout. Creating this directory is a local export, with no repository
-push or publication.
 
 ## Licenses
 
