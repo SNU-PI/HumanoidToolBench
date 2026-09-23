@@ -29,7 +29,7 @@ def apply_hand_contact_overrides(robot_spec: mujoco.MjSpec) -> None:
 
     The solimp and solref values come from the Shadow Hand xml. They generate
     larger force with smaller penetration, so the fingers read as rigid rather
-    than soft. Shared with the RL robot entity so both simulators grasp alike.
+    than soft.
     """
     for g in robot_spec.geoms:
         if "hand" in (g.name or g.meshname) or "gripper" in (g.name or g.meshname):
@@ -56,16 +56,11 @@ class MujocoSimulator(Simulator):
         render_hz: int = 30,
         physics_dt: float = 0.002,
         headless=True,
-        make_renderers: bool = True,
     ) -> None:
         # Keep the constructor keywords compatible; cadence belongs to the task
         # and the Sonic environment owns its on-screen viewer.
         del render_hz, headless
         self.task = task
-        # A policy that reads the simulator rather than pixels wants no camera
-        # at all. Building one is not free even unused: the offscreen
-        # framebuffer fails to complete on a card that is running MuJoCo-Warp.
-        self.make_renderers = make_renderers
         self.physics_dt = (
             task.metadata["physics_dt"]
             if "physics_dt" in self.task.metadata
@@ -217,27 +212,26 @@ class MujocoSimulator(Simulator):
 
         self.renderers = {}
         self._render_client = None
-        if getattr(self, "make_renderers", True):
-            render_socket = os.environ.get("HUMANOIDTOOLBENCH_MUJOCO_RENDER_SOCKET")
-            if render_socket:
-                from humanoidtoolbench.engines._mujoco_render_client import RenderClient
+        render_socket = os.environ.get("HUMANOIDTOOLBENCH_MUJOCO_RENDER_SOCKET")
+        if render_socket:
+            from humanoidtoolbench.engines._mujoco_render_client import RenderClient
 
-                self._render_client = RenderClient(
-                    render_socket,
+            self._render_client = RenderClient(
+                render_socket,
+                self.mjModel,
+                {
+                    camera.name: self.task.layout.cameras[camera.name].resolution
+                    for camera in self.mj_worldbody.find_all("camera")
+                    if camera.name in self.task.layout.cameras
+                },
+            )
+        else:
+            for cname, camera in self.task.layout.cameras.items():
+                self.renderers[cname] = mujoco.Renderer(
                     self.mjModel,
-                    {
-                        camera.name: self.task.layout.cameras[camera.name].resolution
-                        for camera in self.mj_worldbody.find_all("camera")
-                        if camera.name in self.task.layout.cameras
-                    },
-                )
-            else:
-                for cname, camera in self.task.layout.cameras.items():
-                    self.renderers[cname] = mujoco.Renderer(
-                        self.mjModel,
-                        height=camera.resolution[1],
-                        width=camera.resolution[0],
-                    )  # type: ignore
+                    height=camera.resolution[1],
+                    width=camera.resolution[0],
+                )  # type: ignore
 
         self.render_step = 0
 
@@ -569,9 +563,9 @@ class MujocoSimulator(Simulator):
             is_identity_quat = np.allclose(q[1:], 0.0, atol=1e-6) and np.isclose(
                 abs(float(q[0])), 1.0, atol=1e-6
             )
-            assert (
-                is_identity_quat
-            ), "Expected eye_in_head camera quaternion to be identity (wxyz)"
+            assert is_identity_quat, (
+                "Expected eye_in_head camera quaternion to be identity (wxyz)"
+            )
 
             self._add_mujoco_camera(
                 torso_body,

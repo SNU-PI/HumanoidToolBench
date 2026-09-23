@@ -13,21 +13,6 @@ class Scene:
     data_dir: str
     name: str
 
-    def to_dict(self):
-        def _convert(obj):
-            if isinstance(obj, dict):
-                return {k: _convert(v) for k, v in obj.items()}
-            elif hasattr(obj, "__dict__"):
-                return {k: _convert(v) for k, v in vars(obj).items()}
-            elif isinstance(obj, list):
-                return [_convert(v) for v in obj]
-            elif isinstance(obj, tuple):
-                return tuple(_convert(v) for v in obj)
-            else:
-                return obj
-
-        return _convert(self)
-
 
 class TabletopScene(Scene):
     def __init__(

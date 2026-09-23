@@ -15,29 +15,8 @@ if TYPE_CHECKING:
     from humanoidtoolbench.sensors.config import CameraCfg
 
 
-def _to_plain(value: Any) -> Any:
-    if hasattr(value, "to_dict"):
-        return value.to_dict()
-    if hasattr(value, "__dict__"):
-        return {
-            key: _to_plain(item)
-            for key, item in vars(value).items()
-            if not key.startswith("_")
-        }
-    if isinstance(value, dict):
-        return {key: _to_plain(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_to_plain(item) for item in value]
-    return value
-
-
 class Entity:
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            key: _to_plain(value)
-            for key, value in vars(self).items()
-            if not key.startswith("_")
-        }
+    """Something placed in the scene layout."""
 
 
 class Actor(Entity):

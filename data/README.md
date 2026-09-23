@@ -47,8 +47,21 @@ Simulation recordings use LeRobot files with per-frame Parquet data, videos,
 and metadata such as `meta/info.json`, `meta/episodes.jsonl`, and
 `meta/simple_contract.json`. Read each recording's metadata to determine its
 frame rate, image dimensions, recorded cameras, environment, and outcome.
-Historical source names can differ from current canonical environment names.
-Keep the original paths as provenance and use versionless IDs for new runs.
+Historical source names can differ from current canonical environment names:
+`G1StickMove` is now `G1BallMove` and `G1HookRetrieve` is now `G1BallRetrieve`
+(task UIDs `g1_stick_move_teleop` and `g1_hook_retrieve_teleop` likewise), and
+recorded IDs may carry a `-v0` suffix. Keep the original paths as provenance
+and use versionless IDs for new runs.
+
+A recording's `meta/simple_contract.json` (`simple-lerobot-contract-v1`)
+states its frame conventions. Each row is (observation at t, action at t,
+outcome at t+1): `observation.*` is the state the action was chosen from,
+`action` and `teleop.*` are the command issued at that step, and `next.*` and
+`metric.*` are measured after it, so an episode's terminal observation is not
+recorded. `next.success` and the episode's `episode_success` in
+`meta/episodes.jsonl` are what the task reported, never a threshold on the
+reward. Quaternions are scalar-first `[w, x, y, z]`, lengths are in metres
+and joint values in radians.
 
 Treat slices and rerendered views of the same trajectory as related samples
 when splitting data. A render-validation result concerns the generated images;

@@ -90,7 +90,7 @@ def test_base_dual_sim_creates_task_once(monkeypatch) -> None:
         return task
 
     class FakeMujocoSimulator:
-        def __init__(self, received_task, headless: bool, make_renderers=True) -> None:
+        def __init__(self, received_task, headless: bool) -> None:
             self.task = received_task
             self.headless = headless
 
@@ -98,7 +98,9 @@ def test_base_dual_sim_creates_task_once(monkeypatch) -> None:
             pass
 
     monkeypatch.setattr(TaskRegistry, "make", make_task)
-    monkeypatch.setattr("humanoidtoolbench.engines.MujocoSimulator", FakeMujocoSimulator)
+    monkeypatch.setattr(
+        "humanoidtoolbench.engines.MujocoSimulator", FakeMujocoSimulator
+    )
 
     env = BaseDualSim("test_task", headless=False, marker="value")
 
@@ -171,7 +173,12 @@ def test_legacy_environment_names_are_not_registered(canonical, legacy, level, m
 
 def test_every_cell_has_an_instruction() -> None:
     from humanoidtoolbench.envs import SCENARIOS
-    from humanoidtoolbench.tasks.tool_reasoning import INSTRUCTIONS, LEVELS, MODE_ALIAS, MODES
+    from humanoidtoolbench.tasks.tool_reasoning import (
+        INSTRUCTIONS,
+        LEVELS,
+        MODE_ALIAS,
+        MODES,
+    )
 
     assert MODE_ALIAS == {"S": "R0", "R": "R1"}
     expected = {

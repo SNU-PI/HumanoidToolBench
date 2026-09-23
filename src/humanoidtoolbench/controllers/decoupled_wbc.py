@@ -29,8 +29,8 @@ class DecoupledWbcBackend:
     action_schema = DecoupledGoal.schema_id
 
     def __init__(self, robot: Any, sonic_config: Mapping[str, Any]) -> None:
-        # Imports stay local so dataset/schema tooling remains usable without
-        # the optional ``toolbench`` dependency group.
+        # Imports stay local so this module imports without the controller
+        # runtime installed.
         from decoupled_wbc.control.main.teleop.configs.configs import ControlLoopConfig
         from decoupled_wbc.control.policy.wbc_policy_factory import get_wbc_policy
         from decoupled_wbc.control.robot_model.instantiation.g1 import (

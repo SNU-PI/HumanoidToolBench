@@ -47,12 +47,7 @@ class BaseDualSim(gym.Env):
 
         from humanoidtoolbench.engines import MujocoSimulator
 
-        make_renderers = kwargs.pop("make_renderers", True)
-        self.mujoco = MujocoSimulator(
-            self.task,
-            headless=headless,
-            make_renderers=make_renderers,
-        )
+        self.mujoco = MujocoSimulator(self.task, headless=headless)
 
         self.action_space = self.task.action_space
 

@@ -218,10 +218,7 @@ class G1Sonic(Robot, Controllable, HeadCamMountable, WristCamMountable):
         ]
 
         # Enable the elastic band. It stays None when disabled rather than being
-        # left unset: QuestDecoupledAgent reads `robot.elastic_band` unguarded
-        # (`if self.robot.elastic_band and ...`), so it already expects a falsy
-        # value here: an absent attribute is an AttributeError the moment the
-        # robot stabilises and the agent reaches that branch.
+        # left unset, so callers can test it for truthiness.
         self.elastic_band = None
         if self.sonic_config["ENABLE_ELASTIC_BAND"] and self.use_floating_root_link:
             self.elastic_band = ElasticBand(

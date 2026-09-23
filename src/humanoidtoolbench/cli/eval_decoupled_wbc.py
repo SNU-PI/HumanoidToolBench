@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import tempfile
 import time
 from contextlib import contextmanager
@@ -12,13 +13,34 @@ import gymnasium as gym
 from gymnasium.wrappers import TimeLimit
 
 import humanoidtoolbench.envs as _  # noqa: F401
-from humanoidtoolbench.cli._decoupled_wbc_recording import validate_recording_timing
 from humanoidtoolbench.cli._eval_common import _execute_run, _rollout_episode
 from humanoidtoolbench.evals.api import EvalConfig, EvalResult
 from humanoidtoolbench.runtime import validate_sim_mode
 
 # Allow 30 seconds at 50 Hz; seed 10069 first stabilizes at step 1044.
 _MAX_STABILIZATION_STEPS = 1500
+
+# The decoupled WBC runs its policy and camera loop at this rate.
+CONTROL_HZ = 50
+
+
+def validate_control_timing(render_hz: int, physics_dt: float) -> float:
+    """Require the 50 Hz control cadence; return the control interval in seconds."""
+    if render_hz != CONTROL_HZ:
+        raise ValueError(
+            f"The decoupled WBC evaluator requires {CONTROL_HZ} Hz; got {render_hz} Hz"
+        )
+    control_dt = 1.0 / CONTROL_HZ
+    if not math.isfinite(physics_dt) or physics_dt <= 0:
+        raise ValueError("physics_dt must be finite and positive")
+    substeps = int((1.0 / physics_dt) / render_hz)
+    if substeps < 1 or not math.isclose(
+        substeps * physics_dt, control_dt, rel_tol=0.0, abs_tol=1e-12
+    ):
+        raise ValueError(
+            f"physics_dt={physics_dt} must divide the {control_dt}s control interval"
+        )
+    return control_dt
 
 
 @contextmanager
@@ -107,10 +129,9 @@ def _run_episodes(
         sonic_env = raw_env.unwrapped  # type: ignore
         task = raw_env.unwrapped.task  # type: ignore[attr-defined]
 
-        # There is no dataset to read a frame rate from, so the task's own
-        # declaration is the source of truth.
+        # The task's own declaration is the source of truth for the frame rate.
         render_hz = task.metadata.get("render_hz", 30)
-        control_dt = validate_recording_timing(render_hz, sim_dt)
+        control_dt = validate_control_timing(render_hz, sim_dt)
 
         max_episode_steps = config.max_episode_steps
         raw_env = TimeLimit(raw_env, max_episode_steps=max_episode_steps)

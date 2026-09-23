@@ -35,9 +35,9 @@ Every mesh in the scene, the tools and the irrelevant household objects, is
 downloaded by the installer from the pinned MolmoSpaces release into
 `data/ms_assets`, which is why `zstd` is required, and verified by SHA-256
 against `resources/evaluation_assets.json` together with the controller
-weights. The packaged `resources/benchmark_assets` catalogue is used only
-when replaying recordings; the installer checks that it is hydrated.
-Controller weights are required even when the task policy runs on another
+weights. The installer also checks that the packaged
+`resources/benchmark_assets` directory is hydrated; the evaluator does not
+read it. Controller weights are required even when the task policy runs on another
 machine. Demonstration recordings are a separate download; `--model` downloads
 supported task-model checkpoints automatically.
 

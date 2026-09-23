@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from humanoidtoolbench.scenario_names import canonicalize_env_id
-
 
 @dataclass(frozen=True)
 class EvalConfig:
@@ -26,7 +24,6 @@ class EvalConfig:
     controller: str = "decoupled_wbc"
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "env_id", canonicalize_env_id(self.env_id))
         if self.data_format != "seeds":
             raise ValueError(
                 f"Unsupported data format {self.data_format!r}; only 'seeds' is supported."

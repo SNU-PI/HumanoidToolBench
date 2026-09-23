@@ -222,7 +222,9 @@ ASSET_POOLS: dict[str, list[str]] = {
         "d0a2f0234b414e8bb2b95890c0d5d759",
         "8a796d92b21e4257a2ed79d973064318",
     ],
-    # Retained for replay of episodes recorded before the decoy replacement.
+    # Not drawn by any scenario since the decoy replacement. Listed because
+    # the pinned asset manifest (resources/evaluation_assets.json) downloads
+    # these meshes and has to match ASSET_POOLS exactly.
     "foam_hammer": [
         "2de2cbb69ad44bc3ae2e01eacce9f174",
         "a190e92f53814532bf2ef03ec56bd16a",
@@ -326,18 +328,10 @@ def draw(role: str, rng=None, pools: dict[str, list[str]] | None = None) -> str:
 
     Without an rng the first entry comes back, which keeps anything that just
     wants "a hook" deterministic; the scenario passes its own generator so the
-    draw replays with the episode. `pools` is the table the slot is read from:
-    ASSET_POOLS, unless an OOD builder hands in OOD_ASSET_POOLS.
+    draw follows the episode's seed. `pools` is the table the slot is read
+    from: ASSET_POOLS, unless an OOD builder hands in OOD_ASSET_POOLS.
     """
     ids = (ASSET_POOLS if pools is None else pools)[role]
-    # A replay hands in the id it recorded rather than a generator. Taking it
-    # here is what makes the rebuild exact: an index cannot, because the same
-    # mesh sits in more than one pool and its position differs between them.
-    # The recorded ID also takes precedence across standard/OOD pools; only
-    # a fresh draw is restricted to the task's selected pool.
-    wanted = getattr(rng, "asset_id", None)
-    if wanted is not None:
-        return wanted
     if rng is None or len(ids) == 1:
         return ids[0]
     return ids[int(rng.integers(len(ids)))]
@@ -560,8 +554,8 @@ def mesh_asset(
 
     asset = BenchmarkAsset(
         {
-            # The id is in the uid so a recorded episode replays with the
-            # same mesh, not merely with the same kind of tool.
+            # The id is in the uid, so the MuJoCo body and the metrics name
+            # the mesh that was drawn, not merely the kind of tool.
             "uid": f"tool_{role}_{asset_uid[:8]}",
             "label": f"tool_{role}_{asset_uid[:8]}",
             "name": role.replace("_", " "),
@@ -682,7 +676,7 @@ def short_stick(rng=None, *, pools=None) -> BenchmarkAsset:
         min_thickness=GRIP_THICKNESS,
         max_thickness=GRIP_THICKNESS,
     )
-    # Keep the mesh id, so a replay rebuilds the stick that was drawn.
+    # Keep the mesh id in the name, as `mesh_asset` does.
     asset.uid = asset.label = f"tool_short_stick_{asset.uid.rsplit('_', 1)[1]}"
     return asset
 
@@ -740,21 +734,6 @@ def metal_hammer(rng=None, *, pools=None) -> BenchmarkAsset:
     return asset
 
 
-def foam_hammer(rng=None, *, uid: str | None = None) -> BenchmarkAsset:
-    """Legacy compliant hammer, retained for recorded episode replay."""
-    asset = mesh_asset(
-        "foam_hammer",
-        length=FOAM_HAMMER_HEAD,
-        long_length=FOAM_HAMMER_LENGTH,
-        mass=FOAM_HAMMER_MASS,
-        uid=uid,
-        rng=rng,
-        min_thickness=GRIP_THICKNESS,
-    )
-    asset.contact_solref = list(FOAM_CONTACT_SOLREF)
-    return asset
-
-
 def physical_distractor(rng=None, *, pools=None) -> BenchmarkAsset:
     """One swatter, roller, or plunger with the former foam tool's physics."""
     asset = mesh_asset(
@@ -797,8 +776,8 @@ PHYSICAL_TOOLS = {
 #
 # Each wraps its benchmark builder instead of repeating the arguments, so an
 # OOD tool can differ from a pool tool only by its mesh. The role in the uid
-# stays the benchmark's (`tool_hook_<id>`), so metrics and replays read an OOD
-# hook as they read any hook.
+# stays the benchmark's (`tool_hook_<id>`), so metrics read an OOD hook as they
+# read any hook.
 
 
 def ood_hook(rng=None) -> BenchmarkAsset:

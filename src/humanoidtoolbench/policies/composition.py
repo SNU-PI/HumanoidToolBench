@@ -35,8 +35,6 @@ class HumanoidPolicyAgent(Generic[GoalT]):
         self.body_controller = body_controller
         self._goal_queue: deque[GoalT] = deque()
         self._last_action_chunk: ActionChunk[GoalT] | None = None
-        self._last_observation: dict[str, Any] | None = None
-        self._last_pred_action: ActionCmd | None = None
 
     @property
     def pending_goals(self) -> int:
@@ -86,7 +84,6 @@ class HumanoidPolicyAgent(Generic[GoalT]):
     ) -> ActionCmd:
         """Return one simulator action, requesting a new chunk only if needed."""
 
-        self._last_observation = observation
         if not self._goal_queue:
             self._request_chunk(observation, instruction, **kwargs)
 
@@ -100,7 +97,6 @@ class HumanoidPolicyAgent(Generic[GoalT]):
                 f"{type(action).__name__}"
             )
         self._goal_queue.popleft()
-        self._last_pred_action = action
         return action
 
     def reset(self, **kwargs: Any) -> None:
@@ -108,8 +104,6 @@ class HumanoidPolicyAgent(Generic[GoalT]):
 
         self._goal_queue.clear()
         self._last_action_chunk = None
-        self._last_observation = None
-        self._last_pred_action = None
         self.task_policy.reset(**kwargs)
         self.body_controller.reset(**kwargs)
 
@@ -133,13 +127,3 @@ class HumanoidPolicyAgent(Generic[GoalT]):
                 f"{type(action).__name__}"
             )
         return action
-
-    def get_last_pred_action(self) -> ActionCmd | None:
-        """Compatibility accessor used by recorders and debugging wrappers."""
-
-        return self._last_pred_action
-
-    def get_last_observation(self) -> dict[str, Any] | None:
-        """Compatibility accessor used by recorders and debugging wrappers."""
-
-        return self._last_observation

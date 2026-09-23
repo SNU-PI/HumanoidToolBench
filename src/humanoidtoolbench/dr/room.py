@@ -8,7 +8,6 @@ surface, and the material bound to it.
 
 Why a separate randomiser rather than `TabletopSceneDR`: this one owns the
 walls, floor, and table finish, while the scene randomizer owns table geometry.
-Keeping those responsibilities separate makes recorded draws easy to replay.
 
 Materials come from the packaged vMaterials index. `humanoidtoolbench.assets.textures`
 turns each entry into an image MuJoCo can map, since MuJoCo cannot read MDL.
@@ -17,7 +16,6 @@ turns each entry into an image MuJoCo can map, since MuJoCo cannot read MDL.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -137,26 +135,14 @@ class RoomDR(Randomizer):
 
     # -- Randomizer --------------------------------------------------------
 
-    def load_state_dict(self, state_dict: dict[str, Any]) -> None:
-        self._inner_state = state_dict
-
     def surfaces(self, split: str = "train") -> dict[str, dict]:
-        """One draw per episode, shared by the room and the tables."""
+        """One draw per episode, shared by the room and the tables.
+
+        `apply` asks twice, once through `__call__` for the room and once for
+        the tables; the second call gets copies of the first draw.
+        """
         if self._inner_state is not None:
-            # Older recordings store the absolute path of the generated PNG.
-            # Rebuild only a missing PNG from its recorded material identity;
-            # the recorded rgba and physical appearance settings stay intact.
-            restored = {}
-            for name, saved_surface in self._inner_state.items():
-                surface = dict(saved_surface)
-                texture = surface.get("texture")
-                if texture and not Path(texture).expanduser().is_file():
-                    vmaterial = surface.get("vmaterial")
-                    if isinstance(vmaterial, dict):
-                        surface["texture"], _ = material_texture(vmaterial)
-                restored[name] = surface
-            self._inner_state = restored
-            return restored
+            return {name: dict(surface) for name, surface in self._inner_state.items()}
         cfg = self.cfg
         drawn = {
             "wall": self._surface(

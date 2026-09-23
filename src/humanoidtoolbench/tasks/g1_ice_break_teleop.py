@@ -19,7 +19,6 @@ Licensed under the terms in LICENSE file.
 
 from __future__ import annotations
 
-from functools import partial
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -28,14 +27,11 @@ if TYPE_CHECKING:
     from humanoidtoolbench.core.randomizer import RandomizerCfg
 
 from humanoidtoolbench.assets.tools import (
-    ASSET_POOLS,
     ICE_BLOCK_HALF,
-    ICE_GRID,
     ICE_HALF,
     ICE_RGBA,
     OOD_PHYSICAL_TOOLS,
     PHYSICAL_TOOLS,
-    foam_hammer,
     ice_block,
     ice_offsets,
     ice_shard,
@@ -69,7 +65,6 @@ BLOCK_REACH = 0.665
 # ask for more than that. Below L2 they share a bench, half this far either
 # side of the row centre; at L2 one crosses, so the second is a walk away.
 ICE_BLOCKS = 2
-SHARDS_PER_BLOCK = ICE_GRID[0] * ICE_GRID[1] * ICE_GRID[2]
 BLOCK_SPREAD = 0.20
 BLOCK_JITTER = 0.08
 # How far past the tool row the block that crosses at L2 stands. It shares a
@@ -174,40 +169,12 @@ class G1IceBreakTeleop(ToolReasoningTask):
     phrase: str = "break the ice block"
     target_name: str = "ice block"
 
-    # The blocks and their shards, so a recording carries the whole scene and
-    # can be posed back from it. Without them a kinematic replay leaves the ice
-    # wherever the reset put it while everything around it moves.
-    recording_object_slots = (
-        *ToolReasoningTask.recording_object_slots,
-        *(f"ice_{block}" for block in range(ICE_BLOCKS)),
-        *(
-            f"shard_{block}_{index}"
-            for block in range(ICE_BLOCKS)
-            for index in range(SHARDS_PER_BLOCK)
-        ),
-    )
-
     dr_cfgs: dict[str, RandomizerCfg] = {
         **ToolReasoningTask.dr_cfgs,
         "tools": ToolReasoningDRCfg(
             tools=PHYSICAL_TOOLS,
             correct_tool="metal_hammer",
             place_objects=_place,
-            extra_builders={
-                **{
-                    f"tool_foam_hammer_{uid[:8]}": partial(foam_hammer, uid=uid)
-                    for uid in ASSET_POOLS["foam_hammer"]
-                },
-                **{
-                    f"ice_block_{block}": partial(ice_block_at, block)
-                    for block in range(ICE_BLOCKS)
-                },
-                **{
-                    f"ice_shard_{block}_{index}": partial(ice_shard_at, block, index)
-                    for block in range(ICE_BLOCKS)
-                    for index in range(SHARDS_PER_BLOCK)
-                },
-            },
         ),
     }
     # An OOD twin's hammers and decoys; see `ToolReasoningTask.ood_tools`.
@@ -225,12 +192,10 @@ class G1IceBreakTeleop(ToolReasoningTask):
         self._closing: dict[tuple[int, int], float] = {}
         super().__init__(*args, **kwargs)
 
-    def reset(
-        self, seed: int | None = None, options: dict[str, Any] | None = None
-    ) -> None:
+    def reset(self, seed: int | None = None) -> None:
         from humanoidtoolbench.core.task import Task
 
-        Task.reset(self, seed, options)
+        Task.reset(self, seed)
         split = self.metadata.get("split", "train")
         self.apply_scene_dr(split)
 
@@ -521,51 +486,6 @@ class G1IceBreakTeleop(ToolReasoningTask):
             return 0.0
         spots = np.asarray(spots)
         return float(np.max(np.linalg.norm(spots - spots.mean(axis=0), axis=1)))
-
-    def metric_spec(self) -> dict[str, str]:
-        spec = {
-            **super().metric_spec(),
-            "peak_impulse": "float32",
-            "ice_broken": "bool",
-            "ice_broken_count": "int64",
-        }
-        # One column per count, so a run that broke one of two is visible as a
-        # partial result rather than folded into a single failed flag.
-        spec.update({f"ice_broke_{n}": "bool" for n in range(1, ICE_BLOCKS + 1)})
-        return spec
-
-    def recording_object_map(self) -> dict[str, str | None]:
-        """As the base, except that a hidden block or shard reports absent.
-
-        Breaking is not a move: the block is switched off and its shards are
-        switched on, in the model rather than in `qpos`. A recording that only
-        carried poses would leave a replay unable to tell a whole block from a
-        broken one, so presence carries it. `observation.object_present` is
-        written every frame, which is what makes it the right column: it says
-        which pieces of ice exist at that moment.
-        """
-        visible = super().recording_object_map()
-        for block in range(ICE_BLOCKS):
-            gone = self._broken[block]
-            if gone:
-                visible[f"ice_{block}"] = None
-            else:
-                for index in range(SHARDS_PER_BLOCK):
-                    visible[f"shard_{block}_{index}"] = None
-        return visible
-
-    def show_recording_object(self, model, slot: str, visible: bool) -> None:
-        """Switch a block or a shard on or off, as `_show` does during a run.
-
-        Only the ice: `_show` paints ice's own alpha back, and the tools are
-        there for the whole episode anyway.
-        """
-        if not (slot.startswith("ice_") or slot.startswith("shard_")):
-            return
-        layout = getattr(self, "_layout", None)
-        actor = None if layout is None else layout.actors.get(slot)
-        if actor is not None:
-            self._show(model, actor.asset.label, visible)
 
     def task_info(self, info: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         report = super().task_info(info, **kwargs)

@@ -11,7 +11,6 @@ from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
-from humanoidtoolbench.scenario_names import canonicalize_env_id
 
 # Statuses that should show a live (animated) spinner in the STATE column.
 _ACTIVE_STATUSES = {"creating_env", "ready", "running", "closing"}
@@ -267,7 +266,7 @@ def render_progress(
         "",
     )
     summary.add_row(
-        f"[bold]{canonicalize_env_id(env_id)}[/bold]  [dim]policy[/dim] {policy}",
+        f"[bold]{env_id}[/bold]  [dim]policy[/dim] {policy}",
         f"[bold]{total_completed}/{total_assigned}[/bold] episodes",
     )
     summary.add_row(

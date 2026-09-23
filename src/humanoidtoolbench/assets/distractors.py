@@ -34,7 +34,12 @@ from typing import Any
 
 import numpy as np
 
-from humanoidtoolbench.assets.tools import MissingToolAssets, _bounds, _package, mesh_asset
+from humanoidtoolbench.assets.tools import (
+    MissingToolAssets,
+    _bounds,
+    _package,
+    mesh_asset,
+)
 
 # Small household things, none of which is a tool for pushing, pulling or
 # striking. Sized to a common bulk so which one is drawn changes the look of
@@ -202,14 +207,3 @@ def sample(count: int, rng: Any) -> list[Any]:
         asset.uid = asset.label = f"irrelevant_{len(picked)}_{asset_id[:8]}"
         picked.append(asset)
     return picked
-
-
-def rebuild(uid: str) -> Any:
-    """The object a recorded episode drew, from the uid `sample` gave it."""
-    prefix = uid.rsplit("_", 1)[1]
-    for asset_id in DISTRACTOR_POOL:
-        if asset_id.startswith(prefix):
-            asset = build(asset_id)
-            asset.uid = asset.label = uid
-            return asset
-    raise KeyError(f"unknown irrelevant object: {uid!r}")

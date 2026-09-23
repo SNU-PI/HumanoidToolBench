@@ -29,7 +29,6 @@ class SonicLocoManipEnv(BaseDualSim):
         headless: bool = True,
         *args,
         mjviser_port: int | None = None,
-        render_obs: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -37,8 +36,6 @@ class SonicLocoManipEnv(BaseDualSim):
             sim_mode,
             headless,
             sonic_config=sonic_config,
-            # No observer for the pictures means no camera to draw them with.
-            make_renderers=render_obs,
             *args,
             **kwargs,
         )
@@ -58,22 +55,9 @@ class SonicLocoManipEnv(BaseDualSim):
             except Exception as exc:
                 print(f"Note: Channel factory initialization attempt: {exc}")
         self.viewer = None
-        # Whether an observation carries camera images. A policy that reads the
-        # simulator rather than pixels (the RL actors do) needs none of them,
-        # and drawing them is not free: it is a full offscreen render on every
-        # step, and on a card that is also running MuJoCo-Warp it aborts.
-        self.render_obs = render_obs
-        if not render_obs:
-            # The space has to describe what `_get_obs` actually returns, or
-            # gymnasium's passive checker rejects the first reset.
-            from gymnasium import spaces
-
-            kept = {
-                name: space
-                for name, space in self.observation_space.spaces.items()
-                if name == "joint_qpos"
-            }
-            self.observation_space = spaces.Dict(kept)
+        # Whether an observation carries camera images. The evaluator turns
+        # this off while the robot stabilizes, when nothing reads them.
+        self.render_obs = True
         self._mjviser_port = mjviser_port
         self._mjviser = None
 
@@ -103,7 +87,7 @@ class SonicLocoManipEnv(BaseDualSim):
         options: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:  # type: ignore
         super().reset(seed=seed, options=options)
-        self.task.reset(seed, options)
+        self.task.reset(seed)
         self.mujoco.update_layout(sonic_config=self.sonic_config)
 
         # Public aliases retained for the viewer and debugging helpers.

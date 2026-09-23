@@ -140,22 +140,12 @@ class G1BallMoveTeleop(ToolReasoningTask):
     phrase: str = "move the ball to the target"
     target_name: str = "ball"
 
-    recording_object_slots = (
-        *ToolReasoningTask.recording_object_slots,
-        "target",
-        "goal",
-    )
-
     dr_cfgs: dict[str, RandomizerCfg] = {
         **ToolReasoningTask.dr_cfgs,
         "tools": ToolReasoningDRCfg(
             tools=SPATIAL_TOOLS,
             correct_tool="long_stick",
             place_objects=_place,
-            extra_builders={
-                "push_ball": push_ball,
-                "push_spot": lambda: ring_marker("push_spot", TARGET_RADIUS),
-            },
         ),
     }
     # An OOD twin's sticks; see `ToolReasoningTask.ood_tools`.
@@ -167,12 +157,10 @@ class G1BallMoveTeleop(ToolReasoningTask):
         self._start_xy: np.ndarray | None = None
         super().__init__(*args, **kwargs)
 
-    def reset(
-        self, seed: int | None = None, options: dict[str, Any] | None = None
-    ) -> None:
+    def reset(self, seed: int | None = None) -> None:
         from humanoidtoolbench.core.task import Task
 
-        Task.reset(self, seed, options)
+        Task.reset(self, seed)
         split = self.metadata.get("split", "train")
         self.apply_scene_dr(split)
 
@@ -237,14 +225,6 @@ class G1BallMoveTeleop(ToolReasoningTask):
         xy = np.asarray(ball.pose.position[:2], dtype=float)
         spawn = np.asarray(self.layout.robot.pose.position[:2], dtype=float)
         return float(np.linalg.norm(xy - spawn) - (ARM_REACH + SHORT_STICK_LENGTH))
-
-    def metric_spec(self) -> dict[str, str]:
-        return {
-            **super().metric_spec(),
-            "push_distance": "float32",
-            "on_spot": "bool",
-            "reach_shortfall": "float32",
-        }
 
     def task_info(self, info: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         report = super().task_info(info, **kwargs)

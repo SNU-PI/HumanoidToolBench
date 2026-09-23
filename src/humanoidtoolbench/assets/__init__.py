@@ -7,7 +7,6 @@ from typing import Any
 
 _EXPORTS = {
     "BenchmarkAsset": (".benchmark", "BenchmarkAsset"),
-    "BenchmarkCatalog": (".benchmark", "BenchmarkCatalog"),
     "Box": (".primitive", "Box"),
     "Primitive": (".primitive", "Primitive"),
     "PrimitiveToolAsset": (".benchmark", "PrimitiveToolAsset"),

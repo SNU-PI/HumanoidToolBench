@@ -44,39 +44,8 @@ class TabletopSceneDR(SceneDR):
         quaternion = t3d.euler.euler2quat(0.0, 0.0, rotation_z).tolist()
         return PrimitiveBox(size=size, position=position, quaternion=quaternion)
 
-    @staticmethod
-    def _table_from_state(state: dict[str, Any]) -> PrimitiveBox:
-        pose = state["pose"]
-        table = PrimitiveBox(
-            size=state["size"],
-            position=pose["position"],
-            quaternion=pose["quaternion"],
-        )
-        if "material" in state:
-            table.set_material(state["material"])
-        return table
-
-    def state_dict(self) -> dict[str, Any]:
-        return self._inner_state.to_dict() if self._inner_state is not None else {}
-
-    def load_state_dict(self, state_dict: dict[str, Any]) -> None:
-        scene = TabletopScene(
-            uid=state_dict.get("uid", "toolbench"),
-            name=state_dict.get("name", "toolbench"),
-            data_dir=state_dict.get("data_dir", ""),
-        )
-        scene.set_table(self._table_from_state(state_dict["table"]))
-        if state_dict.get("table2") is not None:
-            scene.set_table2(self._table_from_state(state_dict["table2"]))
-        if state_dict.get("tool_table") is not None:
-            scene.set_tool_table(self._table_from_state(state_dict["tool_table"]))
-        self._inner_state = scene
-
     def __call__(self, split: str = "train", **kwargs: Any) -> TabletopScene:
         del split, kwargs
-        if self._inner_state is not None:
-            return self._inner_state
-
         scene = TabletopScene()
         scene.set_table(
             self._make_table(
@@ -104,7 +73,7 @@ class TabletopSceneDR(SceneDR):
                     self.cfg.tool_table_rotation_z,
                 )
             )
-        return self._transient(scene)
+        return scene
 
 
 @dataclass

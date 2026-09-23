@@ -154,22 +154,12 @@ class G1BallRetrieveTeleop(ToolReasoningTask):
     phrase: str = "retrieve the object"
     target_name: str = "object"
 
-    recording_object_slots = (
-        *ToolReasoningTask.recording_object_slots,
-        "target",
-        "goal",
-    )
-
     dr_cfgs: dict[str, RandomizerCfg] = {
         **ToolReasoningTask.dr_cfgs,
         "tools": ToolReasoningDRCfg(
             tools=AFFORDANCE_TOOLS,
             correct_tool="hook",
             place_objects=_place,
-            extra_builders={
-                "push_ball": push_ball,
-                "retrieve_area": lambda: ring_marker("retrieve_area", TARGET_RADIUS),
-            },
         ),
     }
     # An OOD twin's hooks and straight sticks; see `ToolReasoningTask.ood_tools`.
@@ -181,12 +171,10 @@ class G1BallRetrieveTeleop(ToolReasoningTask):
         self._start_distance: float | None = None
         super().__init__(*args, **kwargs)
 
-    def reset(
-        self, seed: int | None = None, options: dict[str, Any] | None = None
-    ) -> None:
+    def reset(self, seed: int | None = None) -> None:
         from humanoidtoolbench.core.task import Task
 
-        Task.reset(self, seed, options)
+        Task.reset(self, seed)
         split = self.metadata.get("split", "train")
         self.apply_scene_dr(split)
 
@@ -232,13 +220,6 @@ class G1BallRetrieveTeleop(ToolReasoningTask):
         # The ring is the whole condition. A distance gate as well made most
         # of the ring a losing square; the layout does that work instead.
         return inside
-
-    def metric_spec(self) -> dict[str, str]:
-        return {
-            **super().metric_spec(),
-            "retrieve_gain": "float32",
-            "in_target_area": "bool",
-        }
 
     def task_info(self, info: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         report = super().task_info(info, **kwargs)

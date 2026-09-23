@@ -16,7 +16,6 @@ from humanoidtoolbench.core.robot import Robot
 from humanoidtoolbench.dr.scene import TabletopSceneDR
 from humanoidtoolbench.robots.protocols import HeadCamMountable
 from humanoidtoolbench.sensors.config import CameraCfg, SensorCfg
-from humanoidtoolbench.tasks.compat import normalize_task_state_uid
 
 
 class Task(ABC):
@@ -35,10 +34,6 @@ class Task(ABC):
     sensor_cfgs: dict[str, SensorCfg]
 
     dr_cfgs: dict[str, RandomizerCfg]
-
-    # Stable semantic columns used by dataset recorders. Concrete tasks map
-    # each slot to the MuJoCo object name for the current episode.
-    recording_object_slots: tuple[str, ...] = ()
 
     def __init__(
         self,
@@ -106,74 +101,28 @@ class Task(ABC):
     @abstractmethod
     def action_space(self) -> spaces.Space: ...
 
-    # -- recording contract -------------------------------------------------
     def task_info(self, info: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        """Report the outcome of the current step to whoever is recording.
+        """Report the outcome of the current step.
 
-        Recorders must not know what a task means, so a task that wants its
-        outcome in the dataset returns it here::
+        A task that wants its outcome reported returns it here::
 
             {"success": bool, "failure": bool, "stage": int,
              "metrics": {"<name>": float, ...}}
 
         Every key is optional. Whatever is returned is merged into the gym
-        ``info`` dict and written verbatim; nothing is inferred from the reward.
-        The keys under ``metrics`` must match :meth:`metric_spec`.
+        ``info`` dict, and the evaluator writes ``metrics`` verbatim to the
+        per-step metrics and the episode summary; nothing is inferred from the
+        reward.
         """
 
         del info, kwargs
         return {}
 
-    def metric_spec(self) -> dict[str, Any] | list[str]:
-        """Declare the task-specific metrics that :meth:`task_info` will report.
-
-        Datasets have a fixed schema, so the names have to be known before the
-        first frame. Return either ``["name", ...]`` (float32 scalars) or
-        ``{"name": "float32", "stage": "int64"}``. Tasks that declare nothing
-        are recorded without any ``metric.*`` column instead of with padding.
-        """
-
-        return {}
-
-    def recording_object_map(self) -> dict[str, str | None]:
-        """Map semantic recording slots to current MuJoCo object names.
-
-        ``None`` means that the slot is intentionally absent. Recorders keep
-        the corresponding pose column and mark it absent rather than changing
-        their dataset schema between episodes. Recorders ask every frame, so a
-        task whose scene gains or loses a body mid-episode says so here.
-        """
-
-        return {slot: None for slot in self.recording_object_slots}
-
-    def show_recording_object(self, model, slot: str, visible: bool) -> None:
-        """Switch one recording slot's body on or off in a compiled model.
-
-        The inverse of a slot going absent in :meth:`recording_object_map`, for
-        a replay that poses a scene from a recording rather than simulating it.
-        A task whose slots are all there for the whole episode has nothing to
-        do here.
-        """
-
-    def reset(
-        self, seed: int | None = None, options: dict[str, Any] | None = None
-    ) -> None:
-        """Build a new randomized layout or replay a recorded DR state."""
+    def reset(self, seed: int | None = None) -> None:
+        """Build a new randomized layout from the seed."""
         split = self.metadata.get("split", "train")
 
-        if (
-            options is not None
-            and "state_dict" in options
-            and options["state_dict"] is not None
-        ):
-            state_dict = normalize_task_state_uid(options["state_dict"], self.uid)
-            dr_level = options.get("dr_level", None)
-            # Seed before loading so any domains omitted by a DR-level replay
-            # are redrawn reproducibly.
-            self.dr.reset(seed=seed)
-            self.dr.load_state_dict(state_dict, dr_level=dr_level)
-        else:
-            self.dr.reset(seed=seed)
+        self.dr.reset(seed=seed)
 
         self._layout = Layout()
         self._layout.add_robot(self.robot)
@@ -181,7 +130,6 @@ class Task(ABC):
         scene_dr = self.dr.get_randomizer("scene")
         if isinstance(scene_dr, TabletopSceneDR):
             scene = scene_dr(split)
-            self._layout.scene = scene
             self._layout.add_primitive("table", scene.table)
 
             if scene.table2 is not None:
@@ -211,29 +159,6 @@ class Task(ABC):
                         cam_cfg.pose["quaternion"] = self.robot.head_camera_orientation
 
                     self._layout.add_camera(cam_id, cam_cfg)
-
-    def state_dict(self) -> dict[str, Any]:
-        """Dump the current state of the task.
-
-        Returns:
-            A dictionary containing the current state of the task.
-        """
-        rand_state_dict = self.dr.state_dict()
-        return {
-            "uid": self.uid,
-            "label": self.label,
-            "description": self.description,
-            "metadata": self.metadata,
-            "robot_cfg": self.robot_cfg,
-            "sensor_cfgs": {k: v.__dict__ for k, v in self.sensor_cfgs.items()},
-            "dr_cfgs": {k: v.to_dict() for k, v in self.dr_cfgs.items()},
-            "dr_state_dict": rand_state_dict,
-            "layout": self._layout.to_dict() if self._layout is not None else {},
-        }
-
-    def load_state_dict(self, state_dict: dict[str, Any]) -> None:
-        """Clone the current layout with given options."""
-        return self.reset(options={"state_dict": state_dict})
 
     def check_success(self, *args, **kwargs) -> bool:
         """Check if the task is successfully completed."""

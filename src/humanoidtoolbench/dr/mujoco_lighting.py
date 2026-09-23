@@ -12,7 +12,6 @@ it is a wasted one.
 
 from __future__ import annotations
 
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
@@ -54,25 +53,6 @@ class MujocoLightingDR(Randomizer):
     @property
     def lights(self) -> list[dict[str, Any]]:
         return list(self._lights)
-
-    @staticmethod
-    def _encode_lights(lights: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        encoded = deepcopy(lights)
-        for light in encoded:
-            if "type" in light:
-                light["type"] = mujoco.mjtLightType(light["type"]).name
-        return encoded
-
-    @staticmethod
-    def _decode_lights(lights: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        decoded = deepcopy(lights)
-        for light in decoded:
-            kind = light.get("type")
-            if isinstance(kind, str):
-                light["type"] = getattr(mujoco.mjtLightType, kind)
-            elif kind is not None:
-                light["type"] = mujoco.mjtLightType(kind)
-        return decoded
 
     def _rig(self, colour, gain, key_pos, key_dir, fill_ratio, fill_skew):
         """Assemble one key / two fills / one uplight from drawn parameters."""
@@ -130,43 +110,11 @@ class MujocoLightingDR(Randomizer):
 
     def apply(self, layout=None, split: str = "train") -> list[dict[str, Any]]:
         del layout, split
-        if self._inner_state is not None and "lights" in self._inner_state:
-            self._lights = self._decode_lights(self._inner_state["lights"])
-            return self.lights
-        if (
-            self._inner_state is not None
-            and {
-                "key_gain",
-                "colour",
-            }
-            <= self._inner_state.keys()
-        ):
-            # Early recordings stored only the two independent lighting draws.
-            # Rebuild the old fixed-position rig deterministically instead of
-            # sampling new lights each time that episode is replayed.
-            self._lights = self._rig(
-                np.asarray(self._inner_state["colour"], dtype=float),
-                float(self._inner_state["key_gain"]),
-                [0.0, 0.35, 2.55],
-                [0.0, 0.10, -1.0],
-                float(np.mean(self.cfg.fill_ratio)),
-                1.0,
-            )
-            return self.lights
-
         cfg = self.cfg
         if cfg.light_mode not in {"fixed", "random"}:
             raise ValueError(f"Invalid MuJoCo lighting mode {cfg.light_mode!r}")
         if cfg.light_mode == "fixed":
-            self.fixed()
-            self._transient(
-                {
-                    "key_gain": float(np.mean(cfg.key_intensity)),
-                    "colour": kelvin_to_rgb(float(np.mean(cfg.temperature))).tolist(),
-                    "lights": self._encode_lights(self._lights),
-                }
-            )
-            return self.lights
+            return self.fixed()
 
         # Drawn from the global stream, like the other randomisers here, so
         # `DRManager.reset(seed)` reproduces the lighting too.
@@ -183,13 +131,6 @@ class MujocoLightingDR(Randomizer):
             [float(tilt[0]), float(0.10 + tilt[1]), -1.0],
             float(rng.uniform(*cfg.fill_ratio)),
             float(rng.uniform(0.7, 1.3)),
-        )
-        self._transient(
-            {
-                "key_gain": gain,
-                "colour": colour.tolist(),
-                "lights": self._encode_lights(self._lights),
-            }
         )
         return self.lights
 

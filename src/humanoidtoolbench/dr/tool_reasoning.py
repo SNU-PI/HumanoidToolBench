@@ -33,13 +33,11 @@ Licensed under the terms in LICENSE file.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import partial
 from typing import Any, Callable
 
 import numpy as np
 import transforms3d as t3d
 
-from humanoidtoolbench.assets.benchmark import BenchmarkCatalog
 from humanoidtoolbench.core.actor import ObjectActor
 from humanoidtoolbench.core.randomizer import Randomizer, RandomizerCfg
 from humanoidtoolbench.core.types import Pose
@@ -118,34 +116,12 @@ def _turn(asset, yaw: float) -> list[float]:
     return [float(v) for v in q]
 
 
-class _Fixed:
-    """An rng stand-in that always draws one particular asset.
-
-    Replaying an episode means rebuilding the tool it drew, and the builders
-    take a generator rather than an id. Handing them this keeps one code path
-    for both the draw and the replay.
-    """
-
-    def __init__(self, asset_id: str, role: str) -> None:
-        del role  # the builder knows the pool; the id is the same in all of them
-        # `draw` reads this and returns the mesh itself. Resolving to an index
-        # here cannot work: 48 meshes were added across four slots and some sit
-        # in two pools at different positions, so an index found in one pool
-        # picked a different tool out of the other.
-        self.asset_id = asset_id
-        self._index = 0
-
-    def integers(self, _n: int) -> int:
-        return self._index
-
-
 class ToolReasoningDR(Randomizer):
     """Place a scenario's tool row and its object."""
 
     def __init__(self, cfg: ToolReasoningDRCfg) -> None:
         super().__init__(cfg)
         self.cfg = cfg
-        self._catalog: BenchmarkCatalog | None = None
         self.placed: dict[str, ObjectActor] = {}
         self.correct_slot: int = -1
         self.stand_xy: np.ndarray | None = None
@@ -376,9 +352,6 @@ class ToolReasoningDR(Randomizer):
 
     def apply(self, layout, split: str = "train") -> dict[str, ObjectActor]:
         del split
-        if self._inner_state is not None:
-            return self._restore(layout)
-
         self.placed = {}
         bench = self._bench(layout)
         if bench is None:
@@ -386,7 +359,7 @@ class ToolReasoningDR(Randomizer):
         centre, top, depth, lateral, half, base = bench
 
         # Draw from the global stream so `DRManager.reset(seed)` reaches this
-        # generator too and an episode replays with the same layout.
+        # generator too and a seed always rebuilds the same layout.
         rng = np.random.default_rng(int(np.random.randint(0, 2**32, dtype=np.uint32)))
 
         drawn = self._tool_assets(rng)
@@ -404,10 +377,10 @@ class ToolReasoningDR(Randomizer):
         t_centre, t_top, t_depth, t_lateral, t_half, _ = tool_bench
         row = self._at(tool_bench, TOOL_ROW_REACH)
         # The irrelevant objects are numbered along the row, from the seam
-        # outwards. Nothing tells the two apart: both report role 2 and both
-        # get a recording column, so the number is only there to give the two
-        # columns a stable shape however the permutation came out. The draw
-        # order they were picked in survives on `reasoning_role`.
+        # outwards. Nothing tells the two apart: both report role 2, so the
+        # number only gives the two slots stable names however the permutation
+        # came out. The draw order they were picked in survives on
+        # `reasoning_role`.
         # Yaw and the footprint it gives, so the row packs by what it lays.
         laid = [self._laid(asset, t_depth, rng) for _, asset in drawn]
         widths = [half_lateral for _, half_lateral, _ in laid]
@@ -473,20 +446,6 @@ class ToolReasoningDR(Randomizer):
         goal_bench = self._goal_bench(layout, bench)
         self.cfg.place_objects(self, layout, bench, goal_bench, rng)
         self.stand_xy = self._stand_spot(bench, goal_bench)
-
-        state = {
-            "tools": [role for role, _ in drawn],
-            "correct_slot": self.correct_slot,
-            "poses": {
-                name: {
-                    "position": list(a.pose.position),
-                    "quaternion": list(a.pose.quaternion),
-                    "uid": a.asset.uid,
-                }
-                for name, a in self.placed.items()
-            },
-        }
-        super()._transient(state)
         return self.placed
 
     def _goal_bench(self, layout, bench):
@@ -546,30 +505,6 @@ class ToolReasoningDR(Randomizer):
                 return base + along * float(np.dot(spot - base, along))
         return base
 
-    def _restore(self, layout) -> dict[str, ObjectActor]:
-        """Rebuild a recorded layout so a replay sees the same bench."""
-        state = self._inner_state
-        self.placed = {}
-        self.correct_slot = int(state["correct_slot"])
-        bench = self._bench(layout)
-        if self._catalog is None:
-            self._catalog = BenchmarkCatalog()
-
-        for name, saved in state["poses"].items():
-            asset = self.cfg.asset_for_uid(saved["uid"], self._catalog)
-            layout.add_object(name, asset)
-            actor = layout.actors[name]
-            actor.pose = Pose(
-                position=list(saved["position"]), quaternion=list(saved["quaternion"])
-            )
-            self.placed[name] = actor
-
-        # After the rebuild, so the stand spot sees whether the episode had a
-        # goal to cross to.
-        if bench is not None:
-            self.stand_xy = self._stand_spot(bench, self._goal_bench(layout, bench))
-        return self.placed
-
 
 @dataclass
 class ToolReasoningDRCfg(RandomizerCfg):
@@ -583,69 +518,3 @@ class ToolReasoningDRCfg(RandomizerCfg):
     # supplies it rather than this generator guessing.
     place_objects: Callable[..., None] = lambda *_: None
     randmizer_class: type[Randomizer] = ToolReasoningDR
-
-    def asset_for_uid(self, uid: str, catalog: BenchmarkCatalog):
-        """Rebuild an asset from its uid, whichever source it came from.
-
-        A reasoning tool's uid is `tool_<role>_<asset id prefix>`, because a
-        slot holds a pool and the role alone would not say which mesh the
-        episode drew. The prefix is matched back against the pools, whichever
-        pool the role draws from (the two sticks share one), the OOD pools
-        included so that an evaluation on unseen tools replays too. An irrelevant
-        object carries its id the same way. A scenario's own objects are
-        rebuilt by the builder registered under their exact uid.
-        """
-        from humanoidtoolbench.assets import distractors
-        from humanoidtoolbench.assets import tools as tool_assets
-
-        if uid.startswith("tool_"):
-            for role, build in self.tools.items():
-                if not uid.startswith(f"tool_{role}_"):
-                    continue
-                prefix = uid[len(f"tool_{role}_") :]
-                for table in (tool_assets.ASSET_POOLS, tool_assets.OOD_ASSET_POOLS):
-                    for ids in table.values():
-                        for asset_id in ids:
-                            if asset_id.startswith(prefix):
-                                return build(_Fixed(asset_id, role))
-                return build(None)
-        if uid.startswith("irrelevant_"):
-            return distractors.rebuild(uid)
-        if uid in self.extra_builders:
-            return self.extra_builders[uid]()
-        for extra in self.extra_assets:
-            asset = extra()
-            if getattr(asset, "uid", None) == uid:
-                return asset
-        return catalog.load(uid)
-
-    # Scenario objects that a replay has to be able to rebuild by uid.
-    extra_assets: tuple[Callable[..., Any], ...] = ()
-    # The scenario's own objects, keyed by the exact uid they are placed
-    # under, so a replay can rebuild them. Called with no arguments.
-    extra_builders: dict[str, Callable[..., Any]] = field(default_factory=dict)
-
-    def to_dict(self):
-        """The recorded copy of this config, with the builders by name.
-
-        The recorder writes this into episodes.jsonl, which a function cannot
-        go into. A replay never reads the builders back from there: it uses
-        the task's own config and only the drawn state from the record.
-        """
-        cfg = super().to_dict()
-        cfg["tools"] = {
-            role: _builder_name(build) for role, build in self.tools.items()
-        }
-        cfg["place_objects"] = _builder_name(self.place_objects)
-        cfg["extra_assets"] = [_builder_name(build) for build in self.extra_assets]
-        cfg["extra_builders"] = {
-            uid: _builder_name(build) for uid, build in self.extra_builders.items()
-        }
-        return cfg
-
-
-def _builder_name(build: Callable[..., Any]) -> str:
-    if isinstance(build, partial):
-        args = ", ".join(repr(arg) for arg in build.args)
-        return f"{_builder_name(build.func)}({args})"
-    return f"{build.__module__}.{build.__qualname__}"

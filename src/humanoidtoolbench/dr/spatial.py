@@ -32,13 +32,6 @@ class SpatialDR(Randomizer):
         if not isinstance(actor, RobotActor):
             return
 
-        uid = str(actor.robot.uid)
-        if self._inner_state is not None and uid in self._inner_state:
-            state = self._inner_state[uid]
-            actor.pose.position = list(state["position"])
-            actor.pose.quaternion = list(state["quaternion"])
-            return
-
         position = self._sample(self.cfg.robot_region, [0.0, 0.0, 0.0])
         quaternion = self._sample(
             self.cfg.robot_orientation_region,
@@ -46,9 +39,6 @@ class SpatialDR(Randomizer):
         )
         actor.pose.position = position
         actor.pose.quaternion = quaternion
-        self._inner_state = {
-            uid: {"position": list(position), "quaternion": list(quaternion)}
-        }
 
     def _sample(self, region: Box | None, default: list[float]) -> list[float]:
         if region is None:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 import transforms3d as t3d
@@ -12,7 +12,6 @@ from humanoidtoolbench.core.actor import Actor, CameraEntity, ObjectActor, Robot
 if TYPE_CHECKING:
     from humanoidtoolbench.core.asset import Asset
     from humanoidtoolbench.core.robot import Robot
-    from humanoidtoolbench.core.scene import Scene
     from humanoidtoolbench.sensors.config import CameraCfg
 
 
@@ -20,7 +19,6 @@ class Layout:
     def __init__(self) -> None:
         self.actors: dict[str, Actor] = {}
         self.cameras: dict[str, CameraEntity] = {}
-        self.scene: Scene
 
     def _require_new_actor(self, name: str) -> None:
         if name in self.actors:
@@ -65,17 +63,3 @@ class Layout:
         if not isinstance(actor, RobotActor):
             raise TypeError("layout robot actor has an invalid type")
         return actor
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "actors": {
-                name: actor.to_dict()
-                for name, actor in self.actors.items()
-                if name != "robot"
-            },
-            "cameras": {
-                camera_id: camera.to_dict()
-                for camera_id, camera in self.cameras.items()
-            },
-            "scene": self.scene.to_dict(),
-        }

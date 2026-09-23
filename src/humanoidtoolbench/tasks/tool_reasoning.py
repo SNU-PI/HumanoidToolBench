@@ -369,57 +369,7 @@ class ToolReasoningTask(G1ToolbenchTabletop):
         del args, kwargs
         return float(self._lifted(info))
 
-    # -- recording ---------------------------------------------------------
-    #
-    # Every scenario records the same shape of bench: the tool the robot was
-    # meant to take, the confusable one when the mode carries it, whatever the
-    # scenario acts on, and the two irrelevant objects. A slot the cell does
-    # not have (mode S has no confusing tool, ice break has no marker) records
-    # as absent rather than being left out, so one recording schema covers all
-    # eighteen cells.
-    recording_object_slots: tuple[str, ...] = (
-        "tool",
-        "confusing_tool",
-        "irrelevant_1",
-        "irrelevant_2",
-    )
-
-    def recording_object_map(self) -> dict[str, str | None]:
-        """Recording slot -> the layout key its pose is published under.
-
-        The simulator keys `info` by layout slot, not by asset label, so this
-        returns the slot: a scenario draws a different mesh each episode and
-        its label changes with it, while the slot is what the recording schema
-        is built from.
-        """
-        layout = getattr(self, "_layout", None)
-        actors = getattr(layout, "actors", {}) if layout is not None else {}
-        return {
-            slot: (slot if slot in actors else None)
-            for slot in self.recording_object_slots
-        }
-
-    def metric_spec(self) -> dict[str, str]:
-        spec = {
-            "level": "int64",
-            "reasoning_mode": "int64",
-            "tool_lift": "float32",
-            "picked_correct_tool": "bool",
-            "first_touch_role": "int64",
-            "first_touch_correct": "bool",
-            "wrong_touch_count": "int64",
-            "tool_touched_target": "bool",
-            "wrong_tool_touched_target": "bool",
-        }
-        if self.level == 2:
-            spec.update(
-                {
-                    "dist_to_target_bench": "float32",
-                    "reached_target_bench": "bool",
-                    "first_move_toward_target": "int64",
-                }
-            )
-        return spec
+    # -- metrics -----------------------------------------------------------
 
     def task_info(self, info: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         picked = self.picked_correct_tool(info)
