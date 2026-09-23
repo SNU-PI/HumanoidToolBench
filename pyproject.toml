@@ -43,7 +43,6 @@ include = ["humanoidtoolbench", "humanoidtoolbench.*"]
 [tool.setuptools.package-data]
 humanoidtoolbench = [
     "resources/**/*",
-    "engines/*.c",
     "policies/_vendor/*.json",
     "policies/_vendor/LICENSE*",
 ]
