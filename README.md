@@ -81,10 +81,11 @@ checkpoints** from a Hugging Face ID or a local path, such as
 | `snupilab/humanoidtoolbench-act-sim-3003` | `G1BallMove-L0-S` | 2 / 100 |
 | ACT with untrained, randomly initialized weights | `G1BallMove-L0-S` | 0 / 100 |
 
-Both rows use the standard protocol and the asset manifest shipped in this
-release (`assets.manifest_sha256` starting `7891d62a`). The ACT row used
+Both rows use the standard protocol, the asset manifest shipped in this
+release (`assets.manifest_sha256` starting `7891d62a`) and the evaluation code
+at commit `bd8abfa` (`source_digest` starting `10cab839`). The ACT row used
 weights with SHA-256 starting `1e6459cb`, published at model revision
-`ffd733de`, and took about 100 minutes. The second row used the released ACT
+`ffd733de`, and took about two hours. The second row used the released ACT
 configuration with freshly initialized weights (SHA-256 starting `66788a3b`,
 not published). The shipped ACT checkpoint is a reference point near the
 floor, not a strong baseline, so a low score from a new policy does not by
