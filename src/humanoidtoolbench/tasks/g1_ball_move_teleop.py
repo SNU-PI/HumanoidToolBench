@@ -134,10 +134,6 @@ class G1BallMoveTeleop(ToolReasoningTask):
         "Push a ball to a marked spot with a stick long enough to reach it."
     )
 
-    reasoning_axis: str = "spatial"
-    phrase: str = "move the ball to the target"
-    target_name: str = "ball"
-
     dr_cfgs: dict[str, RandomizerCfg] = {
         **ToolReasoningTask.dr_cfgs,
         "tools": ToolReasoningDRCfg(
@@ -165,7 +161,7 @@ class G1BallMoveTeleop(ToolReasoningTask):
         self._start_xy = None
         self._reset_pick_state()
         self.reward = 0.0
-        self.robot.reset(spawn_pose=self.layout.robot.pose)
+        self.robot.reset()
 
     # -- scoring ----------------------------------------------------------
 

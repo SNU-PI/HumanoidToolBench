@@ -1,18 +1,18 @@
 # HumanoidToolBench data
 
-**[HumanoidToolBench demonstrations on Hugging Face](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop)**
-contains simulation teleoperation data and real Unitree G1 recordings. The
+**[ToolBook (snupilab/humanoidtoolbench-teleop)](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop)**,
+the HumanoidToolBench demonstration dataset on Hugging Face, contains
+simulation teleoperation data and real Unitree G1 recordings. The
 **[HumanoidToolBench collection](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)**
 links this dataset and the model releases.
 
 ## Access and source revisions
 
-On 2026-09-20, anonymous Hugging Face metadata requests confirmed that the
-dataset page is public and recording access uses manual approval. Request
-access on the dataset page, then authenticate your downloader after approval.
-The current card limits use to non-commercial research, disallows recording
-redistribution, and requests citation. These dataset conditions are separate
-from the code's MIT license.
+The dataset page is public; downloading recordings requires an access request
+that is approved manually. Request access on the dataset page, then
+authenticate your downloader after approval. The dataset card limits use to
+non-commercial research, disallows recording redistribution, and requests
+citation. These dataset conditions are separate from the code's MIT license.
 
 The collection links these source snapshots:
 

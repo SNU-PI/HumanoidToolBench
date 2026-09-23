@@ -73,7 +73,11 @@ def checkpoint_files(path: Path) -> tuple[Path, Path, dict]:
 
 
 class Bounds:
-    """Native Psi0 bounds operations, including constant state dimensions."""
+    """Min/max ("bounds") normalization as the checkpoints were trained with it.
+
+    It follows Psi0, whose ACT and DP model code is vendored in `_vendor`,
+    including its handling of state dimensions with a constant range.
+    """
 
     def __init__(self, field: dict):
         if (
@@ -178,7 +182,9 @@ class PretrainedPolicy:
                     )
                 seed = int.from_bytes(
                     hashlib.sha256(
-                        # Fixed RNG domain bytes preserve existing checkpoint evaluation seeds.
+                        # A historical domain prefix for the DP sampling seed. It
+                        # must never change: other bytes give every DP episode
+                        # different noise and so different results.
                         bytes.fromhex("74686574612d706f6c6963792d76313a")
                         + f"{episode}:{index}".encode()
                     ).digest()[:8],
@@ -268,7 +274,9 @@ def load_policy(checkpoint: Path, device: str) -> PretrainedPolicy:
             )
         model = ACTPolicy(ACTConfig(**values))
     else:
-        from humanoidtoolbench.policies._vendor.diffusion_policy import DiffusionPolicyModel
+        from humanoidtoolbench.policies._vendor.diffusion_policy import (
+            DiffusionPolicyModel,
+        )
 
         if (
             model_config.get("obs_dim") != 36

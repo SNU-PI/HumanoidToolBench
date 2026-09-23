@@ -16,7 +16,6 @@ from gear_sonic.utils.mujoco_sim.robot import Robot as GearSonicRobot
 from humanoidtoolbench.core.action import ActionCmd
 from humanoidtoolbench.core.controller import ControllerCfg
 from humanoidtoolbench.core.robot import Robot
-from humanoidtoolbench.core.types import Pose
 from humanoidtoolbench.robots.controllers.combo import (
     WholeBodyEEFController,
     WholeBodyEEFControllerCfg,
@@ -160,8 +159,6 @@ class G1Sonic(Robot, Controllable, HeadCamMountable, WristCamMountable):
         ),
     )
 
-    spawn_pose: Pose
-
     def __init__(self, sonic_config: dict, **kwargs) -> None:
         del kwargs
         Robot.__init__(self, self.uid, self.dof)
@@ -176,8 +173,8 @@ class G1Sonic(Robot, Controllable, HeadCamMountable, WristCamMountable):
         self.torques = np.zeros(self.num_body_dof + self.num_hand_dof * 2)
         self.torque_limit = np.array(sonic_robot.MOTOR_EFFORT_LIMIT_LIST)
 
-    def reset(self, **kwargs):
-        self.spawn_pose = kwargs["spawn_pose"]
+    def reset(self, **kwargs: Any) -> None:
+        del kwargs
         self._stabilized = False
         self._stabilize_step_count = 0
 
@@ -380,7 +377,7 @@ class G1Sonic(Robot, Controllable, HeadCamMountable, WristCamMountable):
                 body_torques = kp * (target_q - q_cur) + kd * (0 - dq_cur)
                 self.torques[self.body_joint_index - 1] = body_torques
 
-                # Hand PD control (driven by trigger/grip via decoupled WBC teleop IK)
+                # Hand PD control towards the Dex3 joint targets in the action.
                 # Joint order: thumb_0, thumb_1, thumb_2, index_0, index_1, middle_0, middle_1
                 # Index + middle work together against thumb in a power grip,
                 # so their kp is halved to balance grip forces.

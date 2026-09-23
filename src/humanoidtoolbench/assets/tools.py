@@ -20,7 +20,8 @@ be told apart by appearance as well as by shape, and a policy can learn "the
 dark curved one" without reasoning about what a crook is for. That is the price
 of using real assets, and it is worth stating rather than hiding.
 
-Fetch the meshes with `scripts/dataset/fetch_reasoning_tools.py`.
+The installer (`scripts/setup_evaluation.py`) downloads the meshes into
+`data/ms_assets`.
 
 HumanoidToolBench
 
@@ -37,9 +38,9 @@ import numpy as np
 
 from humanoidtoolbench.assets.benchmark import BenchmarkAsset, PrimitiveToolAsset
 
-# Where `msassets.py fetch` puts what it downloads.
-# Resolved against the checkout rather than the working directory, so the
-# evaluator finds the meshes the installer fetched from any directory.
+# Where the installer puts the MolmoSpaces meshes; HUMANOIDTOOLBENCH_MS_ASSETS
+# overrides it. Resolved against the checkout rather than the working
+# directory, so the evaluator finds the meshes from any directory.
 MS_ASSETS_DIR = Path(
     os.environ.get(
         "HUMANOIDTOOLBENCH_MS_ASSETS",
@@ -50,8 +51,8 @@ MS_OBJAVERSE = MS_ASSETS_DIR / "objects" / "objaverse"
 
 # What the Dex3 hand can lift and hold. Above this a tool is picked at and
 # never raised, which reads as a failure to choose rather than a failure to
-# lift, so every set is held to it. Lowered from 0.25 once teleoperation
-# showed the hand losing tools at that weight.
+# lift, so every set is held to it. At 0.25 kg the hand already loses its
+# grip on a tool.
 MAX_TOOL_MASS = 0.15
 
 # Where along a tool the operator's hand ends up: not at the very end, and not
@@ -106,9 +107,8 @@ TOOL_CONTACT_PRIORITY = 11
 # scenario draws from it each episode, so a policy sees many hooks rather than
 # memorising one. The controls hold across the pool because they are applied
 # per draw, not per asset: whichever hook comes out is scaled to the set's
-# length and given the set's mass.
-#
-# Curate these with `scripts/dataset/tool_candidates.py`.
+# length and given the set's mass. The pools are fixed for this release:
+# resources/evaluation_assets.json pins every asset they name.
 ASSET_POOLS: dict[str, list[str]] = {
     "hook": [
         "36eed3c8eda149feaeb14a1d5401f392",
@@ -116,10 +116,9 @@ ASSET_POOLS: dict[str, list[str]] = {
         "7be0661092ae444882d19814e5de2853",
         "a25a12860e834fafa182e2907ad8db1d",
         "1254687d099c4068a1bd80e40bd140cc",
-        # Added 2026-09-07. Each passes the same controlled pull search the
-        # five above pass, and places no worse than they do. Two of the six the
-        # audit shortlisted are not here: ded805f4 reads as a copy of 36eed3c8
-        # and adds no shape, and 44b7df77 was turned down on review.
+        # The four below pass the same controlled pull search the five above
+        # pass, and place no worse than they do. ded805f4 is left out: it
+        # reads as a copy of 36eed3c8 and adds no shape.
         "934c3cb6ed06462e8afee848b7942d6e",
         "71359c1397da4ca080dca0d80400b880",
         "f6aef21eab0247dd820be1ed32327dc6",
@@ -133,7 +132,7 @@ ASSET_POOLS: dict[str, list[str]] = {
         "392d625c88934a64b08c628e640fafd1",
         "2b429b2d6618419d8480251d6243397c",
         "c8714f25b5d844f7a2d28b3e69f2ea36",
-        # Added 2026-09-07, the same six rods the spatial slot takes. None of
+        # The six below are the same rods the spatial slot takes. None of
         # them gives the ball a single place to catch when the tool is drawn
         # back, so the wrong answer stays wrong.
         "9712c578203d4574a8cc092ff527290d",
@@ -151,7 +150,7 @@ ASSET_POOLS: dict[str, list[str]] = {
         "3ebe7900b5914ba1a2b85abd3135abe3",
         "0eedc541d1bb4a32935fc6ed7a2fea08",
         "19cb31b210f646919b56ebf897b22b33",
-        # Added 2026-09-07. No initial overlap in 1200 placements, and the
+        # The six below: no initial overlap in 1200 placements, and the
         # reach split holds: long pushes the ball 61 to 66 mm, short never
         # reaches it.
         "9712c578203d4574a8cc092ff527290d",
@@ -169,7 +168,7 @@ ASSET_POOLS: dict[str, list[str]] = {
         "1fb0baea870c4acd8b3457f1bb7c15b2",
         "113a47f834b4400fb1500314d482847a",
         "200bc458e8184653a049c5449737c67a",
-        # Added 2026-09-07. All fracture the block across the eight tested
+        # Every hammer below fractures the block across the eight tested
         # strike conditions, and all sit at or under 6.54 cm of head, so the
         # decoy stays the visibly larger tool.
         "01e5b5acad9843818529d15663df5b9e",
@@ -220,10 +219,6 @@ ASSET_POOLS: dict[str, list[str]] = {
         "8a796d92b21e4257a2ed79d973064318",
     ],
 }
-
-
-def pool(role: str) -> list[str]:
-    return list(ASSET_POOLS[role])
 
 
 def draw(role: str, rng=None) -> str:
@@ -475,7 +470,6 @@ def mesh_asset(
             "extent": [float(v) for v in extent],
             "height": lift,
             "footprint": float(np.max(extent[:2])),
-            "rest_offset": lift,
             "n_convex_parts": len(colliders),
             "length": float(np.max(extent)),
             "grip_width": float(np.min(extent)),
@@ -537,8 +531,8 @@ def straight_stick(rng=None) -> BenchmarkAsset:
     )
 
 
-# The paddle slot is gone: a flat blade can scoop a ball and carry it back, so
-# it was not reliably the wrong answer this axis needs.
+# There is no paddle slot: a flat blade can scoop a ball and carry it back, so
+# it is not reliably the wrong answer this axis needs.
 AFFORDANCE_TOOLS = {
     "hook": hook,
     "straight_stick": straight_stick,
@@ -547,7 +541,7 @@ AFFORDANCE_TOOLS = {
 
 # -- spatial: reach an object that is further away than it looks -------------
 #
-# One tool at two lengths. The §5 rule for this axis is that the candidates be
+# One tool at two lengths. The rule for this axis is that the candidates be
 # the same tool differing in a single spatial parameter, so both are the same
 # mesh: nothing but reach separates them, and a policy cannot answer from
 # appearance.
@@ -598,9 +592,10 @@ SPATIAL_TOOLS = {
 
 # -- physical: break an ice block with a concentrated impact ----------------
 #
-# New decoys reuse the former foam hammer's size, mass, and whole-asset
-# compliance. These are normalized benchmark properties, not measurements of
-# the source objects or separate models of their handles and working surfaces.
+# The decoys share one size, mass and whole-asset compliance, the FOAM_HAMMER_*
+# values below (named after the foam hammer the decoys replaced). These are
+# normalized benchmark properties, not measurements of the source objects or
+# separate models of their handles and working surfaces.
 METAL_HAMMER_HEAD = 0.34
 METAL_HAMMER_LENGTH = 0.42
 FOAM_HAMMER_HEAD = 0.42
@@ -628,7 +623,7 @@ def metal_hammer(rng=None) -> BenchmarkAsset:
 
 
 def physical_distractor(rng=None) -> BenchmarkAsset:
-    """One swatter, roller, or plunger with the former foam tool's physics."""
+    """One swatter, roller, or plunger with the FOAM_HAMMER_* size, mass and compliance."""
     asset = mesh_asset(
         "physical_distractor",
         length=FOAM_HAMMER_HEAD,
@@ -651,7 +646,6 @@ def physical_distractor(rng=None) -> BenchmarkAsset:
         asset.mesh_scale[2] *= factor
         asset.extent[2] *= factor
         asset.height *= factor
-        asset._rest_offset *= factor
         asset.centre_offset[2] *= factor
         asset.grip_width = float(np.min(asset.extent))
     asset.contact_solref = list(FOAM_CONTACT_SOLREF)
@@ -727,10 +721,10 @@ def _primitive(
 ) -> PrimitiveToolAsset:
     """A procedural asset, for the things a scanned mesh cannot express.
 
-    The target cube, the ice shards and the goal marker are geometry with a
-    job rather than objects with a look: the cube has to present one face and
-    one edge whatever the episode, the shards have to tile into a block, and
-    the marker has to be a ring thin enough never to touch anything.
+    The ball, the ice shards and the goal ring are geometry with a job rather
+    than objects with a look: the ball has to be the same in every episode,
+    the shards have to tile into a block, and the ring has to be thin enough
+    never to touch anything.
     """
     return PrimitiveToolAsset(
         {
@@ -748,7 +742,6 @@ def _primitive(
             "height": grip_width,
             "extent": [length, grip_width, grip_width],
             "grip_width": grip_width,
-            "rest_offset": 0.0,
             "n_convex_parts": len(geoms),
             "mesh_scale": [1.0, 1.0, 1.0],
             "visual_mesh": None,
@@ -841,34 +834,6 @@ def ice_offsets() -> list[list[float]]:
     ]
 
 
-def marker_asset(uid: str, radius: float, rgba=(0.16, 0.62, 0.36, 0.55)):
-    """The goal spot: a flat disc that is drawn but never collides.
-
-    It has to be visible, because the instruction speaks of a marked spot and a
-    policy that cannot see the mark cannot aim at it. It must also not touch
-    anything, or an object would ride up onto it and the success radius would
-    be measuring a collision instead of a position.
-    """
-    return _primitive(
-        uid,
-        "goal",
-        [
-            {
-                "type": "cylinder",
-                "size": [radius, 0.0015],
-                "pos": [0.0, 0.0, 0.0015],
-                "rgba": list(rgba),
-                "mass": 0.0,
-                "visual_only": True,
-            }
-        ],
-        length=2 * radius,
-        mass=0.0,
-        grip_width=0.003,
-        static=True,
-    )
-
-
 RING_LINE = 0.005
 RING_SEGMENTS = 32
 
@@ -911,20 +876,3 @@ def ring_marker(uid: str, radius: float, rgba=(0.95, 0.95, 0.95, 1.0)):
         grip_width=0.001,
         static=True,
     )
-
-
-def available() -> bool:
-    """Whether every mesh a pool names has been downloaded.
-
-    The irrelevant objects count: a scene is short two objects without them,
-    which is a different scene rather than a duller one.
-    """
-    from humanoidtoolbench.assets.distractors import DISTRACTOR_POOL
-
-    try:
-        for ids in (*ASSET_POOLS.values(), DISTRACTOR_POOL):
-            for asset_id in ids:
-                _package(asset_id)
-    except MissingToolAssets:
-        return False
-    return True

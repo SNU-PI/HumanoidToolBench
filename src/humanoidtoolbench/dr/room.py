@@ -1,8 +1,7 @@
 """The room the tabletop tasks stand in, as a randomiser.
 
-Geometry is fixed and shared: the 5 x 5 x 3 m room measured in
-`humanoid-tool-use-benchmark` (toolbench/scene/scene.py), with 0.05 m walls, a
-0.08 m baseboard and a floor slab. Every task that asks for a room gets the
+Geometry is fixed and shared: a 5 x 5 x 3 m room, the size of the original
+benchmark scene, with 0.05 m walls, a 0.08 m baseboard and a floor slab. Every task that asks for a room gets the
 same one. What varies per episode is only how it *looks*: the albedo of each
 surface, and the material bound to it.
 
@@ -121,8 +120,6 @@ class RoomDR(Randomizer):
             "rgba": rgba,
             "specular": specular,
             "shininess": shininess,
-            # Recorded so an episode can say which material it drew.
-            "vmaterial": material,
         }
 
     @staticmethod
@@ -191,9 +188,8 @@ class RoomDR(Randomizer):
     def apply(self, layout, split: str = "train") -> dict[str, Box]:
         """Put the room in the layout and dress the table it already has.
 
-        The table comes from the scene randomiser and arrives carrying a
-        vMaterials entry, which is MDL and so invisible to MuJoCo. It is
-        re-dressed here with the image form of a material drawn from the same
+        The table comes from the scene randomiser as a bare slab. It is dressed
+        here with the image form of a material drawn from the vMaterials
         index, so the bench is randomised rather than a fixed wood.
 
         Called after the layout is otherwise built: the room is decoration, and
@@ -383,19 +379,17 @@ class ToolbenchSceneDR(TabletopSceneDR):
 
 @dataclass
 class ToolbenchSceneDRCfg(TabletopSceneDRCfg):
-    """Two tables at the benchmark's measured size, as defaults.
+    """One bench the size of two of the original benchmark's tables.
 
-    From humanoid-tool-use-benchmark (toolbench/scene/scene.py): 0.901 x 0.802 m
-    tops at z = 0.758, lowered here to 0.70 for easier reach, butted together so
-    the pair reads as one bench. The slab is 0.035 m: `table_height` fixes the
-    top surface, so its thickness is free, and a thin one is what lets the legs
-    below it show.
+    The original benchmark scene has two 0.901 x 0.802 m tops at z = 0.758.
+    Here they are one 1.802 x 0.802 m top, lowered to 0.70 for easier reach.
+    The slab is 0.035 m: `table_height` fixes the top surface, so its thickness
+    is free, and a thin one is what lets the legs below it show.
 
-    One top, centred on the robot, which spawns at about x = 0, y = 0.75 facing
-    -y. The placement code works in halves of it: the half at the robot's right
-    hand carries the scenario's own objects and the half at its left carries the
-    tool row, each within reach of a turn. They were two slabs once, which left
-    a seam down the middle and a leg at each side of it.
+    The top is centred on the robot, which spawns at about x = 0, y = 0.75
+    facing -y. The placement code works in halves of it: the half at the
+    robot's right hand carries the scenario's own objects and the half at its
+    left carries the tool row, each within reach of a turn.
     """
 
     # One top, not two butted together. Two slabs left a seam down the middle

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from gymnasium import spaces
 
-from humanoidtoolbench.core.actor import Actor
 from humanoidtoolbench.core.layout import Layout
 from humanoidtoolbench.core.task import Task
 from humanoidtoolbench.dr.camera import CameraDRCfg
@@ -49,9 +48,8 @@ FRAME = {"width": 640, "height": 360}
 # robot's own hand sits 0.170 m from this camera, so it clips nothing, and the
 # frames at 0.1 and at 0.02 come out pixel for pixel identical.
 #
-# Their far plane does not survive the trip. Isaac is handed 1.0e5 m, which a
-# reversed-Z RTX renderer is happy with and MuJoCo's depth buffer is not; the
-# room is 5 m across, so 5 is what it gets.
+# Their far plane is not kept. Their config sets 1.0e5 m, which MuJoCo's depth
+# buffer cannot resolve; the room is 5 m across, so 5 is what it gets.
 WRIST_CAM_FOCAL_MM = 12.0
 WRIST_CAM_APERTURE_MM = 20.0
 WRIST_CAM_FOV = 2.0 * np.arctan(WRIST_CAM_APERTURE_MM / (2.0 * WRIST_CAM_FOCAL_MM))
@@ -141,11 +139,7 @@ class G1ToolbenchTabletop(Task):
         physics_dt: float | None = None,
         **robot_kwargs: Any,
     ) -> None:
-        self._instruction: str | None = None
-        self._tools: list[Any] = []
-        self._target: Actor | None = None
         self._layout: Layout | None = None
-        self._init_target_height: float | None = None
         self.reward = 0.0
 
         self.sensor_cfgs = deepcopy(self.sensor_cfgs)
@@ -161,22 +155,6 @@ class G1ToolbenchTabletop(Task):
         if self._layout is None:
             raise RuntimeError("call reset() first")
         return self._layout
-
-    @property
-    def instruction(self) -> str:
-        if self._instruction is None:
-            raise RuntimeError("call reset() first")
-        return self._instruction
-
-    @property
-    def target(self) -> Actor:
-        if self._target is None:
-            raise RuntimeError("call reset() first")
-        return self._target
-
-    @property
-    def tools(self) -> list[Any]:
-        return list(self._tools)
 
     @property
     def action_space(self) -> spaces.Space:

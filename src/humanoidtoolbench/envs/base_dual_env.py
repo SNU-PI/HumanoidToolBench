@@ -40,7 +40,6 @@ class BaseDualSim(gym.Env):
         self.sim_mode = sim_mode
 
         if isinstance(task, str):
-            # FIXME dynamic import task
             self.task = TaskRegistry.make(task, *args, **kwargs)
         else:
             self.task = task

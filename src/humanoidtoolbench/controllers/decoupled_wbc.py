@@ -1,9 +1,10 @@
 """Decoupled whole-body controller backend for the Unitree G1.
 
-This module owns the robot-specific half of the legacy 36-D VLA path.  Task
-policies only produce :class:`~humanoidtoolbench.actions.DecoupledGoal` objects; the
-backend converts one goal into the 29 body and 14 Dex3 joint targets consumed
-by the MuJoCo robot.
+This module owns the robot-specific half of the 36-D `decoupled_v1` action
+path.  Task policies only produce
+:class:`~humanoidtoolbench.actions.DecoupledGoal` objects; the backend
+converts one goal into the 29 body and 14 Dex3 joint targets consumed by the
+MuJoCo robot.
 """
 
 from __future__ import annotations

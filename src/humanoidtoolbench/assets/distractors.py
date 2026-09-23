@@ -16,10 +16,8 @@ one the size of the block would be mistaken for the target.
 The pool below is uncurated on purpose. Unlike the tools there is nothing
 to choose between here: any of these is equally not an answer, and a wider
 pool only makes the bench vary more, so it holds every candidate the
-catalogue returned for the four queries in
-`scripts/dataset/tool_candidates.py --which distractors`. Rebuilding that
-sheet now shows more than these, because it pins whatever the pool already
-names to the front of its group and then adds fresh hits underneath.
+MolmoSpaces catalogue returned for four household-object queries (food,
+tableware, containers, odds and ends).
 
 HumanoidToolBench
 
@@ -75,8 +73,8 @@ def _length(asset_id: str) -> float:
     return min(DISTRACTOR_MAX_LENGTH, float(np.max(natural)) * DISTRACTOR_BULK / bulk)
 
 
-# Grouped by what the catalogue was asked for, which is how the sheet shows
-# them; the draw ignores the grouping.
+# Grouped by the catalogue query that returned them; the draw ignores the
+# grouping.
 DISTRACTOR_POOL: list[str] = [
     # food
     "005a246f8c304e77b27cf11cd53ff4ed",  # apple

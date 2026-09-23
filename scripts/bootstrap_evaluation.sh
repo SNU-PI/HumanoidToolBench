@@ -19,8 +19,9 @@ if [[ "$MODE" == "--install" ]]; then
             exit 1
         fi
     done
-    # A release snapshot has no private Git history or gitlinks. Each controller
-    # dependency is fetched anonymously from its pinned public repository.
+    # The controller dependencies are not part of this repository. Each one is
+    # cloned from its public repository and checked out at the revision pinned
+    # in resources/evaluation_assets.json.
     while IFS=$'\t' read -r path url revision; do
         if [[ ! -e "$ROOT_DIR/$path/.git" ]]; then
             env GIT_LFS_SKIP_SMUDGE=1 nice -n 10 \

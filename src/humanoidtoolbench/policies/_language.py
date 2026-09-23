@@ -1,4 +1,4 @@
-"""Pinned frozen CLIP text features shared by ACT/DP training and serving."""
+"""Pinned frozen CLIP text features that condition the ACT and DP checkpoints."""
 
 from __future__ import annotations
 
@@ -53,15 +53,13 @@ def config_receipt(config) -> dict:
     return language_receipt(enabled)
 
 
-def make_encoder(config):
-    return FrozenCLIPInstructionCache() if config_receipt(config)["enabled"] else None
-
-
 class FrozenCLIPInstructionCache:
-    """Encode each exact instruction once, outside the trainable policy and DDP.
+    """Encode each exact instruction once and reuse the embedding.
 
-    The encoder stays on CPU in float32 in training and serving. Loading only
-    local pinned files keeps model downloads out of data workers and requests.
+    The encoder runs on CPU in float32, the precision the checkpoints were
+    trained with. It loads only local files at the pinned revision:
+    `load_policy` downloads them first, so no policy request triggers a
+    download.
     """
 
     def __init__(self):

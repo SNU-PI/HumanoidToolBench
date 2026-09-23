@@ -1,16 +1,14 @@
 """Procedural textures for the tool-use room.
 
-The upstream scene binds NVIDIA's `Walnut_Planks.mdl`; MuJoCo cannot read MDL
-and the table asset only names the material, so there is no image to extract.
-These are generated instead: deterministic (a fixed seed: a texture is an
-asset, not a sample), no download, and tuned to roughly the tone the MDL
-renders so the room keeps its intended look.
+The room's surfaces are named after NVIDIA vMaterials entries, which are MDL
+shaders: MuJoCo cannot read MDL, and there is no image to extract from them.
+The textures are generated instead: deterministic (a fixed seed: a texture is
+an asset, not a sample), no download, and tuned to roughly the tone of each
+material family.
 
-Generation is lazy: `ensure(name)` writes the PNG on first use and returns the
-path thereafter. Nothing needs to be built ahead of time or committed.
-
-    from humanoidtoolbench.assets.textures import ensure
-    path = ensure("wood")          # -> ~/.cache/humanoidtoolbench/textures/wood.png
+Generation is lazy: `material_texture` writes a PNG to `TEXTURE_DIR` the first
+time a material is asked for and reuses it afterwards. Nothing needs to be
+built ahead of time or committed.
 """
 
 from __future__ import annotations
@@ -22,7 +20,9 @@ import numpy as np
 
 _CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
 TEXTURE_DIR = Path(
-    os.environ.get("HUMANOIDTOOLBENCH_TEXTURE_DIR", _CACHE_ROOT / "humanoidtoolbench" / "textures")
+    os.environ.get(
+        "HUMANOIDTOOLBENCH_TEXTURE_DIR", _CACHE_ROOT / "humanoidtoolbench" / "textures"
+    )
 ).expanduser()
 
 SIZE = 1024
@@ -62,17 +62,6 @@ def wood(w=SIZE, h=SIZE, base=(0.52, 0.33, 0.19), plank_rows=6) -> np.ndarray:
 
     shade = 0.90 + 0.10 * grain + tone - 0.45 * seam
     shade += rng.normal(0, 0.010, (h, w))  # fibre speckle
-    rgb = np.clip(np.asarray(base)[None, None, :] * shade[..., None], 0, 1)
-    return (rgb * 255).astype(np.uint8)
-
-
-def wood_edge(w=SIZE // 4, h=SIZE, base=(0.46, 0.29, 0.17)) -> np.ndarray:
-    """End grain for the slab's sides: same wood, no planks, tighter rings."""
-    rng = _rng()
-    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
-    warp = _smooth_noise(rng, w, h, 12)
-    grain = np.sin((y / h * 90.0 + warp * 2.2) * np.pi)
-    shade = 0.84 + 0.16 * (0.5 + 0.5 * grain) + rng.normal(0, 0.01, (h, w))
     rgb = np.clip(np.asarray(base)[None, None, :] * shade[..., None], 0, 1)
     return (rgb * 255).astype(np.uint8)
 
@@ -141,7 +130,6 @@ def weave(w=512, h=512, base=(0.55, 0.52, 0.50), pitch=7.0) -> np.ndarray:
 
 GENERATORS = {
     "wood": wood,
-    "wood_edge": wood_edge,
     "plaster": plaster,
     "concrete": concrete,
     "steel": steel,
@@ -150,11 +138,11 @@ GENERATORS = {
 }
 
 # ------------------------------------------------------- vMaterials -> MuJoCo
-# RoomDR picks NVIDIA vMaterials, which are MDL: a shader graph that
-# only an MDL-capable renderer can instantiate. There is no image anywhere on disk for MuJoCo to
-# use (`resources/vMaterials_2/` holds only the index), and no MDL renderer in
-# a mujoco-only checkout. So a material is reproduced rather than loaded: its
-# path gives the family, its name seeds the colour and scale. Same material
+# RoomDR picks NVIDIA vMaterials, which are MDL: a shader graph that only an
+# MDL-capable renderer can instantiate. There is no image on disk for MuJoCo
+# to use (`resources/vMaterials_2/` holds only the index). So a material is
+# reproduced rather than loaded: its path gives the family, its name seeds
+# the colour and scale. Same material
 # name always yields the same texture, different ones look different, which is
 # what randomising materials is for.
 
@@ -225,29 +213,4 @@ def material_texture(
     return str(path), [float(tint[0]), float(tint[1]), float(tint[2]), 1.0]
 
 
-def ensure(name: str, out_dir: Path | None = None, force: bool = False) -> str:
-    """Path to the texture, generating it the first time it is asked for."""
-    if name not in GENERATORS:
-        raise KeyError(f"unknown texture {name!r}; have {sorted(GENERATORS)}")
-    out_dir = Path(out_dir or TEXTURE_DIR)
-    path = out_dir / f"{name}.png"
-    if force or not path.exists():
-        from PIL import Image
-
-        out_dir.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_name(f".{name}.{os.getpid()}.png")
-        Image.fromarray(GENERATORS[name]()).save(tmp)
-        tmp.replace(path)  # atomic: two processes may race on first use
-    return str(path)
-
-
-def ensure_all(out_dir: Path | None = None, force: bool = False) -> dict[str, str]:
-    return {name: ensure(name, out_dir, force) for name in GENERATORS}
-
-
-__all__ = ["ensure", "ensure_all", "material_texture", "GENERATORS", "TEXTURE_DIR"]
-
-
-if __name__ == "__main__":
-    for name, path in ensure_all(force=True).items():
-        print(f"{name:12s} {path}")
+__all__ = ["material_texture", "GENERATORS", "TEXTURE_DIR"]
