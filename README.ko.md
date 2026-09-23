@@ -81,7 +81,7 @@ Diffusion Policy 시뮬레이션 체크포인트**를 Hugging Face ID나 로컬 
 | 학습하지 않은 무작위 초기화 ACT | `G1BallMove-L0-S` | 0 / 100 |
 
 두 결과 모두 정식 프로토콜과 이 배포본의 에셋 매니페스트
-(`assets.manifest_sha256`가 `d2e1c39c`로 시작)를 사용했습니다. ACT는
+(`assets.manifest_sha256`가 `3f5b21bf`로 시작)를 사용했습니다. ACT는
 SHA-256이 `1e6459cb`로 시작하는 가중치(모델 리비전 `ffd733de`로 공개)를
 사용했고 약 100분이 걸렸습니다. 두 번째 행은 공개된 ACT 설정에 가중치만
 새로 초기화한 것입니다(SHA-256이 `66788a3b`로 시작, 비공개). 배포된 ACT

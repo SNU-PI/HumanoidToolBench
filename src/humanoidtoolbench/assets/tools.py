@@ -161,11 +161,8 @@ ASSET_POOLS: dict[str, list[str]] = {
         "bdf07f6c648b4d74af80ea7103ac384c",
         "cb84d2732c9840498598e9838b368385",
     ],
-    # Physical: a heavy metal head, and a foam one that is deliberately the
-    # larger of the two.
-    # Dropped for reading as steel rather than rubber: 07e36824, 3018091c,
-    # 4bc67992, 1f44cf28. What is left is toy hammers and rubber mallets, all
-    # 1.5x to 3.5x the metal heads' thickness, so size stays the decoy.
+    # Physical: a heavy metal hammer, and a light compliant decoy that is
+    # deliberately the larger of the two.
     "metal_hammer": [
         "0133e824d5154a8fa575d9d3027ded6d",
         "1fc9ef60b96340ac8ae6a706aa068c33",
@@ -174,7 +171,7 @@ ASSET_POOLS: dict[str, list[str]] = {
         "200bc458e8184653a049c5449737c67a",
         # Added 2026-09-07. All fracture the block across the eight tested
         # strike conditions, and all sit at or under 6.54 cm of head, so the
-        # foam decoy stays the visibly larger tool.
+        # decoy stays the visibly larger tool.
         "01e5b5acad9843818529d15663df5b9e",
         "11d6edfdf58142e78d5435dc4bc03460",
         "27a9c65a5fcd4f958a6e1c7e693c3cc5",
@@ -222,100 +219,6 @@ ASSET_POOLS: dict[str, list[str]] = {
         "d0a2f0234b414e8bb2b95890c0d5d759",
         "8a796d92b21e4257a2ed79d973064318",
     ],
-    # Not drawn by any scenario since the decoy replacement. Listed because
-    # the pinned asset manifest (resources/evaluation_assets.json) downloads
-    # these meshes and has to match ASSET_POOLS exactly.
-    "foam_hammer": [
-        "2de2cbb69ad44bc3ae2e01eacce9f174",
-        "a190e92f53814532bf2ef03ec56bd16a",
-        "ae3b71ad58004a6f9124869ffe02545d",
-        "95447c4b8c824fb7888cc9bed57a87f7",
-        "57fc7be2efcd4284a9514f05dbb51942",
-    ],
-}
-
-# Meshes for an out-of-distribution test. None is in ASSET_POOLS, and none
-# appears in any recording (checked 2026-09-14 against the `tool_<role>_<id>`
-# uids of every episode). The `ood_*` builders below make them with the same
-# factories as the pools above, so length, grip thickness and mass follow the
-# same rules. Those rules do not always reach their target: thickening stops at
-# MAX_THICKEN and at MAX_TOOL_WIDTH, which leaves some pool tools thinner than
-# GRIP_THICKNESS. A mesh is here only if what the rules make of it lands inside
-# the range its role's pool lands in: grips of 50 mm for hooks, 26.8 to 50 mm
-# for sticks, 50 to 51.6 mm for metal hammers, 24.9 to 75.9 mm for decoys.
-OOD_ASSET_POOLS: dict[str, list[str]] = {
-    "hook": [
-        # Crowbars with a crook at one end.
-        "bd150d5016c443e68463583e3b3c4d0d",
-        "f4cf6f8c1e8040718a68b46517531a67",
-        "f342bc93ab7b4c0fb3a52d51fe179311",
-        # Candy canes.
-        "684c7052d0cb470da71a67a0aca148d6",
-        "5128c71a17af4bac879807ace1e82bd6",
-        "b5b1280f5561460688a7cb73224b7995",
-    ],
-    "stick": [
-        "41462f7e54e24b4294f62104cb085996",
-        "403a49ff877046588ab7782e021679dd",
-        "b474c060ea084235a23817d97ef2b909",
-        "f4910bd3c6af455f9ac988639f9368b1",
-        "84bdeaad10e347fe83f5292186e1ced7",
-        "43a3626e04af45dbac13b152d84d1c01",
-        "4099fa96c15a4c0889953cb280f21b2e",
-        "577a66fc394e4c70834cf622364a8dee",
-        "27624ee05fea49899ba2a63e2f6d1e34",
-        "c4a5c09cfda54a6b8ab67ef949e42536",
-        "cd6467ab49094b1784e414db5613f2db",
-    ],
-    "metal_hammer": [
-        "13f18f64c9bd4130b2f17c84832819ac",
-        "237435ea473a4880a0feec50da473536",
-        "bd57a5ce07914ba7a3093beb14891494",
-        "1bfd4e1f28e144ad991ea8b413fab344",
-    ],
-    "physical_distractor": [
-        # Paint roller.
-        "002a355c77774228b15db50d77d0e002",
-        # Fly swatters, one of them electric.
-        "30e08be02db047a39882403e48694c58",
-        "6655a2fa5e984c9cab631a7f94fba275",
-        # Plungers.
-        "81e1c64fa7834f588bb03c3084ddf450",
-        "d2c6575ef88747a28d207668ffbd44f2",
-    ],
-}
-# The affordance decoy and the spatial stick draw from one list, as the two
-# benchmark pools share most of their rods.
-OOD_ASSET_POOLS["straight_stick"] = OOD_ASSET_POOLS["stick"]
-
-# The correct-tool OOD twins score the task as the cell does, so the unseen
-# correct tool has to be able to do the job, and a grip in range does not show
-# that. Two crowbars above stand on end, one bend is too shallow to catch the
-# ball, one candy cane never pulls it, and some rods stand up, bend away or
-# barely touch it. These are the unseen meshes that pass the prescribed-motion
-# probes the benchmark pools pass (artifacts/s_to_r_ood_20260915/
-# tool_function_audit): a hook that pulls the ball back on the fine grid, and a
-# long stick that lies flat and pushes the ball as far as a pool stick does.
-# f4910bd3 pushes well but failed the rod audit's finite-table support test.
-# 44b7df77 is not in OOD_ASSET_POOLS; the 2026-09-07 hook audit shortlisted it
-# and no prepared recording contains it.
-OOD_CORRECT_ASSET_POOLS: dict[str, list[str]] = {
-    "hook": [
-        # Curved green hook.
-        "44b7df77727143169c545e39956a77e2",
-        # Candy canes.
-        "684c7052d0cb470da71a67a0aca148d6",
-        "b5b1280f5561460688a7cb73224b7995",
-    ],
-    "stick": [
-        "27624ee05fea49899ba2a63e2f6d1e34",
-        "43a3626e04af45dbac13b152d84d1c01",
-        "577a66fc394e4c70834cf622364a8dee",
-        "84bdeaad10e347fe83f5292186e1ced7",
-        "b474c060ea084235a23817d97ef2b909",
-        "c4a5c09cfda54a6b8ab67ef949e42536",
-        "cd6467ab49094b1784e414db5613f2db",
-    ],
 }
 
 
@@ -323,15 +226,14 @@ def pool(role: str) -> list[str]:
     return list(ASSET_POOLS[role])
 
 
-def draw(role: str, rng=None, pools: dict[str, list[str]] | None = None) -> str:
+def draw(role: str, rng=None) -> str:
     """One asset id from a slot's pool.
 
     Without an rng the first entry comes back, which keeps anything that just
     wants "a hook" deterministic; the scenario passes its own generator so the
-    draw follows the episode's seed. `pools` is the table the slot is read
-    from: ASSET_POOLS, unless an OOD builder hands in OOD_ASSET_POOLS.
+    draw follows the episode's seed.
     """
-    ids = (ASSET_POOLS if pools is None else pools)[role]
+    ids = ASSET_POOLS[role]
     if rng is None or len(ids) == 1:
         return ids[0]
     return ids[int(rng.integers(len(ids)))]
@@ -465,7 +367,6 @@ def mesh_asset(
     rng=None,
     min_thickness: float | None = None,
     max_thickness: float | None = None,
-    pools: dict[str, list[str]] | None = None,
 ) -> BenchmarkAsset:
     """One fetched MolmoSpaces object, scaled and weighed to order.
 
@@ -480,11 +381,8 @@ def mesh_asset(
     `min_thickness` and `max_thickness` bound how thick the grip is (see
     `_grip_section`), scaling the two axes across the length together; give
     both the same value to fix it.
-
-    `pools` is only where the id is drawn from (see `draw`). Nothing about the
-    scaling reads it, which is what keeps an OOD tool to a pool tool's size.
     """
-    asset_uid = uid or draw(role, rng, pools)
+    asset_uid = uid or draw(role, rng)
     package = _package(asset_uid)
     visual = package / f"{asset_uid}_visual.obj"
     from humanoidtoolbench.assets.evaluation import canonical_colliders
@@ -615,27 +513,25 @@ def mesh_asset(
 # -- affordance: retrieve an object that cannot be reached from behind --------
 
 
-def hook(rng=None, *, pools=None) -> BenchmarkAsset:
+def hook(rng=None) -> BenchmarkAsset:
     """The crook goes past the object and catches its far side."""
     return mesh_asset(
         "hook",
         length=AFFORDANCE_LENGTH,
         mass=AFFORDANCE_MASS,
         rng=rng,
-        pools=pools,
         min_thickness=GRIP_THICKNESS,
         max_thickness=GRIP_THICKNESS,
     )
 
 
-def straight_stick(rng=None, *, pools=None) -> BenchmarkAsset:
+def straight_stick(rng=None) -> BenchmarkAsset:
     """Reaches the object and can only push it away."""
     return mesh_asset(
         "straight_stick",
         length=AFFORDANCE_LENGTH,
         mass=AFFORDANCE_MASS,
         rng=rng,
-        pools=pools,
         min_thickness=GRIP_THICKNESS,
         max_thickness=GRIP_THICKNESS,
     )
@@ -660,7 +556,7 @@ LONG_STICK_LENGTH = MAX_TOOL_LENGTH
 STICK_MASS = MAX_TOOL_MASS
 
 
-def short_stick(rng=None, *, pools=None) -> BenchmarkAsset:
+def short_stick(rng=None) -> BenchmarkAsset:
     """Reaches part of the way. Everything else about it is the long one.
 
     Scaled as the long stick is and then shortened along its length alone, so
@@ -672,7 +568,6 @@ def short_stick(rng=None, *, pools=None) -> BenchmarkAsset:
         long_length=SHORT_STICK_LENGTH,
         mass=STICK_MASS,
         rng=rng,
-        pools=pools,
         min_thickness=GRIP_THICKNESS,
         max_thickness=GRIP_THICKNESS,
     )
@@ -681,14 +576,13 @@ def short_stick(rng=None, *, pools=None) -> BenchmarkAsset:
     return asset
 
 
-def long_stick(rng=None, *, pools=None) -> BenchmarkAsset:
+def long_stick(rng=None) -> BenchmarkAsset:
     """The same stick, long enough to reach."""
     asset = mesh_asset(
         "stick",
         length=LONG_STICK_LENGTH,
         mass=STICK_MASS,
         rng=rng,
-        pools=pools,
         min_thickness=GRIP_THICKNESS,
         max_thickness=GRIP_THICKNESS,
     )
@@ -719,7 +613,7 @@ METAL_CONTACT_SOLREF = [0.004, 1.0]
 FOAM_CONTACT_SOLREF = [0.10, 1.5]
 
 
-def metal_hammer(rng=None, *, pools=None) -> BenchmarkAsset:
+def metal_hammer(rng=None) -> BenchmarkAsset:
     """The intended ice-breaking tool, heavier and stiffer than the decoys."""
     asset = mesh_asset(
         "metal_hammer",
@@ -727,14 +621,13 @@ def metal_hammer(rng=None, *, pools=None) -> BenchmarkAsset:
         long_length=METAL_HAMMER_LENGTH,
         mass=METAL_HAMMER_MASS,
         rng=rng,
-        pools=pools,
         min_thickness=GRIP_THICKNESS,
     )
     asset.contact_solref = list(METAL_CONTACT_SOLREF)
     return asset
 
 
-def physical_distractor(rng=None, *, pools=None) -> BenchmarkAsset:
+def physical_distractor(rng=None) -> BenchmarkAsset:
     """One swatter, roller, or plunger with the former foam tool's physics."""
     asset = mesh_asset(
         "physical_distractor",
@@ -742,7 +635,6 @@ def physical_distractor(rng=None, *, pools=None) -> BenchmarkAsset:
         long_length=FOAM_HAMMER_LENGTH,
         mass=FOAM_HAMMER_MASS,
         rng=rng,
-        pools=pools,
         min_thickness=GRIP_THICKNESS,
     )
     if Path(asset.visual_mesh).stem == "9ce080633f6f48be9ecc761bbeb7f640_visual":
@@ -770,74 +662,6 @@ PHYSICAL_TOOLS = {
     "metal_hammer": metal_hammer,
     "physical_distractor": physical_distractor,
 }
-
-
-# -- out of distribution: the same builders, drawing from OOD_ASSET_POOLS -----
-#
-# Each wraps its benchmark builder instead of repeating the arguments, so an
-# OOD tool can differ from a pool tool only by its mesh. The role in the uid
-# stays the benchmark's (`tool_hook_<id>`), so metrics read an OOD hook as they
-# read any hook.
-
-
-def ood_hook(rng=None) -> BenchmarkAsset:
-    """A hook no recording has seen, scaled as `hook` scales its own."""
-    return hook(rng, pools=OOD_ASSET_POOLS)
-
-
-def ood_straight_stick(rng=None) -> BenchmarkAsset:
-    """A straight stick no recording has seen, scaled as `straight_stick`."""
-    return straight_stick(rng, pools=OOD_ASSET_POOLS)
-
-
-def ood_short_stick(rng=None) -> BenchmarkAsset:
-    """A short stick no recording has seen, scaled as `short_stick`."""
-    return short_stick(rng, pools=OOD_ASSET_POOLS)
-
-
-def ood_long_stick(rng=None) -> BenchmarkAsset:
-    """A long stick no recording has seen, scaled as `long_stick`."""
-    return long_stick(rng, pools=OOD_ASSET_POOLS)
-
-
-def ood_metal_hammer(rng=None) -> BenchmarkAsset:
-    """A metal hammer no recording has seen, scaled as `metal_hammer`."""
-    return metal_hammer(rng, pools=OOD_ASSET_POOLS)
-
-
-def ood_physical_distractor(rng=None) -> BenchmarkAsset:
-    """A decoy no recording has seen, with `physical_distractor`'s physics."""
-    return physical_distractor(rng, pools=OOD_ASSET_POOLS)
-
-
-OOD_AFFORDANCE_TOOLS = {
-    "hook": ood_hook,
-    "straight_stick": ood_straight_stick,
-}
-OOD_SPATIAL_TOOLS = {
-    "long_stick": ood_long_stick,
-    "short_stick": ood_short_stick,
-}
-OOD_PHYSICAL_TOOLS = {
-    "metal_hammer": ood_metal_hammer,
-    "physical_distractor": ood_physical_distractor,
-}
-
-
-def ood_correct_hook(rng=None) -> BenchmarkAsset:
-    """An unseen hook that pulls the ball back, scaled as `hook`."""
-    return hook(rng, pools=OOD_CORRECT_ASSET_POOLS)
-
-
-def ood_correct_long_stick(rng=None) -> BenchmarkAsset:
-    """An unseen long stick that pushes the ball, scaled as `long_stick`."""
-    return long_stick(rng, pools=OOD_CORRECT_ASSET_POOLS)
-
-
-# What a correct-tool OOD twin swaps in. The hammers have no function audit,
-# so IceBreak has no correct-tool twin.
-OOD_CORRECT_AFFORDANCE_TOOLS = {"hook": ood_correct_hook}
-OOD_CORRECT_SPATIAL_TOOLS = {"long_stick": ood_correct_long_stick}
 
 
 # -- the objects the tools act on --------------------------------------------

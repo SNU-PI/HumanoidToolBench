@@ -13,16 +13,15 @@ three tools are on the bench.
   irrelevant objects are drawn the same way, and any drop in success is the
   cost of having to rule the extra tool out.
 
-The scene is two benches butted together, one at each of the robot's hands,
-with the seam straight ahead. The tools lie on the left bench, within reach of
-a turn, at every level. What the tool acts on goes on the right bench, also at
-every level. What moves with the level is the goal: at L0 and L1 it is on the
-right bench beside the object, and at L2 it crosses to the left bench, so the
-job is to bring the object over rather than to work it where it lies. The L2
-goal shares its bench with the tool row, so it goes on the strip along that
+The bench is one slab worked as two halves, one at each of the robot's hands,
+with the middle straight ahead. The tools lie on the left bench, within reach
+of a turn, at every level. What the tool acts on goes on the right bench, also
+at every level. What moves with the level is the goal: at L0 and L1 it is on
+the right bench beside the object, and at L2 it crosses to the left bench, so
+the job is to bring the object over rather than to work it where it lies. The
+L2 goal shares its bench with the tool row, so it goes on the strip along that
 bench's far edge, past the row. `stand_xy` is where the work is done from: the
-spawn, or at L2 the spot level with the goal, a step along the pair. A scene
-with only one bench puts the tools on it too.
+spawn, or at L2 the spot level with the goal, a step along the pair.
 
 HumanoidToolBench
 
@@ -129,8 +128,11 @@ class ToolReasoningDR(Randomizer):
     # -- geometry ---------------------------------------------------------
 
     @staticmethod
-    def _bench(layout, key: str = "table"):
-        """(centre, top, depth axis, lateral axis, half extent) or None.
+    def _bench(layout, side: str = "right"):
+        """(centre, top, depth axis, lateral axis, half extent, base) or None.
+
+        `side` is the half of the table slab to return: the bench at the
+        robot's right hand or the one at its left.
 
         The axes are the bench's own rather than a constant: the robot stands
         along +x in one layout and +y in another, and a hard-coded axis silently
@@ -143,12 +145,10 @@ class ToolReasoningDR(Randomizer):
         runs out well before the bench's width says it should.
         """
         # One slab, two working halves. The bench at the robot's right hand and
-        # the one at its left are the two ends of the same top, so a scene that
-        # has only `table` splits it here rather than carrying a second slab,
-        # which is what keeps the top seamless and the legs at its four outer
-        # corners. A scene that really does have a `table2` is left alone.
-        halved = layout.actors.get("table2") is None and key in ("table", "table2")
-        table = layout.actors.get("table" if halved else key)
+        # the one at its left are the two ends of the same top, split here
+        # rather than carried as two slabs, which is what keeps the top
+        # seamless and the legs at its four outer corners.
+        table = layout.actors.get("table")
         if table is None or not hasattr(table, "size"):
             return None
         centre = np.asarray(table.pose.position[:2], dtype=float)
@@ -176,14 +176,10 @@ class ToolReasoningDR(Randomizer):
         depth = np.asarray(depth, dtype=float)
         depth = depth / float(np.linalg.norm(depth))
         lateral = np.array([-depth[1], depth[0]])
-        if halved:
-            across = int(np.argmax(np.abs(lateral)))
-            half = half.copy()
-            half[across] *= 0.5
-            # `lateral` points to the robot's left, which is the left bench.
-            centre = centre + lateral * (
-                (1.0 if key == "table2" else -1.0) * half[across]
-            )
+        across = int(np.argmax(np.abs(lateral)))
+        half[across] *= 0.5
+        # `lateral` points to the robot's left, which is the left bench.
+        centre = centre + lateral * ((1.0 if side == "left" else -1.0) * half[across])
         return centre, top, depth, lateral, half, base
 
     @staticmethod
@@ -370,10 +366,8 @@ class ToolReasoningDR(Randomizer):
         # The tool row goes on the left bench, with that bench's own axes: its
         # depth runs from the robot out along the bench, so the handles are the
         # near end of each tool, and its lateral runs square to the robot, so
-        # every slot in the row is the same reach away. A scene with only one
-        # bench takes the near half of it for the row and the far half for the
-        # target.
-        tool_bench = self._bench(layout, "table2") or bench
+        # every slot in the row is the same reach away.
+        tool_bench = self._bench(layout, "left")
         t_centre, t_top, t_depth, t_lateral, t_half, _ = tool_bench
         row = self._at(tool_bench, TOOL_ROW_REACH)
         # The irrelevant objects are numbered along the row, from the seam
@@ -458,9 +452,7 @@ class ToolReasoningDR(Randomizer):
         centre, top, depth, lateral, half, base = bench
         if self.cfg.level != 2:
             return bench
-        other = self._bench(layout, "table2")
-        if other is None:
-            raise ValueError("L2 puts the goal on table2, which this scene lacks")
+        other = self._bench(layout, "left")
         centre2, top2, _, _, half2, _ = other
         # The bench pair's own axes rather than the robot's line of sight to
         # this bench. The tool row is laid on that line, which runs across the

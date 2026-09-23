@@ -26,8 +26,6 @@ if TYPE_CHECKING:
     from humanoidtoolbench.core.randomizer import RandomizerCfg
 
 from humanoidtoolbench.assets.tools import (
-    OOD_CORRECT_SPATIAL_TOOLS,
-    OOD_SPATIAL_TOOLS,
     SHORT_STICK_LENGTH,
     SPATIAL_TOOLS,
     push_ball,
@@ -148,10 +146,6 @@ class G1BallMoveTeleop(ToolReasoningTask):
             place_objects=_place,
         ),
     }
-    # An OOD twin's sticks; see `ToolReasoningTask.ood_tools`.
-    ood_tool_builders = OOD_SPATIAL_TOOLS
-    # A correct-tool twin's long stick, one shown to push the ball.
-    ood_correct_tool_builders = OOD_CORRECT_SPATIAL_TOOLS
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._start_xy: np.ndarray | None = None

@@ -30,7 +30,6 @@ from humanoidtoolbench.assets.tools import (
     ICE_BLOCK_HALF,
     ICE_HALF,
     ICE_RGBA,
-    OOD_PHYSICAL_TOOLS,
     PHYSICAL_TOOLS,
     ice_block,
     ice_offsets,
@@ -177,8 +176,6 @@ class G1IceBreakTeleop(ToolReasoningTask):
             place_objects=_place,
         ),
     }
-    # An OOD twin's hammers and decoys; see `ToolReasoningTask.ood_tools`.
-    ood_tool_builders = OOD_PHYSICAL_TOOLS
 
     def __init__(
         self,

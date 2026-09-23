@@ -47,9 +47,7 @@ def test_public_suite_selects_all_18_canonical_conditions():
         assert item.save_video and item.headless
 
 
-@pytest.mark.parametrize(
-    "name", ["G1BallMoveEasyGap50Attach", "G1IceBreakEasyNearTouch", "G1BallMoveOOD"]
-)
+@pytest.mark.parametrize("name", ["G1BallMoveCustom", "G1IceBreakV2", "G1UnknownTask"])
 def test_public_cli_rejects_noncanonical_environments(name):
     with pytest.raises(SystemExit):
         public_eval.main([f"humanoidtoolbench/{name}-L1-S", "--dry-run"])

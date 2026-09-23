@@ -111,11 +111,6 @@ class MujocoLightingDR(Randomizer):
     def apply(self, layout=None, split: str = "train") -> list[dict[str, Any]]:
         del layout, split
         cfg = self.cfg
-        if cfg.light_mode not in {"fixed", "random"}:
-            raise ValueError(f"Invalid MuJoCo lighting mode {cfg.light_mode!r}")
-        if cfg.light_mode == "fixed":
-            return self.fixed()
-
         # Drawn from the global stream, like the other randomisers here, so
         # `DRManager.reset(seed)` reproduces the lighting too.
         rng = np.random.default_rng(int(np.random.randint(0, 2**32, dtype=np.uint32)))
@@ -157,7 +152,6 @@ class MujocoLightingDRCfg(RandomizerCfg):
     # It is the robot's own body occluding its own light, and it tells a policy
     # nothing the proprioception does not already say.
     shadows: bool = False
-    light_mode: str = "random"  # fixed, random
 
     randmizer_class: Any = MujocoLightingDR
 

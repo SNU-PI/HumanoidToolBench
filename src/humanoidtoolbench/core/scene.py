@@ -25,15 +25,6 @@ class TabletopScene(Scene):
         self.name = name
         self.data_dir = data_dir
         self.table: Asset
-        self.table2: Asset | None = None
-        # The small bench at the robot's right that the tools are laid on.
-        self.tool_table: Asset | None = None
 
     def set_table(self, table: Asset) -> None:
         self.table = table
-
-    def set_table2(self, table: Asset) -> None:
-        self.table2 = table
-
-    def set_tool_table(self, table: Asset) -> None:
-        self.tool_table = table

@@ -189,10 +189,10 @@ class RoomDR(Randomizer):
         return super()._transient(drawn)
 
     def apply(self, layout, split: str = "train") -> dict[str, Box]:
-        """Put the room in the layout and dress whatever tables it already has.
+        """Put the room in the layout and dress the table it already has.
 
-        The tables come from the scene randomiser and arrive carrying a
-        vMaterials entry, which is MDL and so invisible to MuJoCo. They are
+        The table comes from the scene randomiser and arrives carrying a
+        vMaterials entry, which is MDL and so invisible to MuJoCo. It is
         re-dressed here with the image form of a material drawn from the same
         index, so the bench is randomised rather than a fixed wood.
 
@@ -205,18 +205,16 @@ class RoomDR(Randomizer):
             layout.add_primitive(name, primitive)
 
         surfaces = self.surfaces(split)
-        for key in ("table", "table2", "tool_table"):
-            table = layout.actors.get(key)
-            if table is None or not hasattr(table, "set_material"):
-                continue
+        table = layout.actors.get("table")
+        if table is not None and hasattr(table, "set_material"):
             table.set_material(dict(surfaces["table"]))
-            for name, part in self._table_parts(key, table, surfaces).items():
+            for name, part in self._table_parts(table, surfaces).items():
                 layout.add_primitive(name, part)
                 room[name] = part
         return room
 
-    def _table_parts(self, prefix: str, table, surfaces: dict) -> dict[str, Box]:
-        """Apron rails and four legs under a table slab.
+    def _table_parts(self, table, surfaces: dict) -> dict[str, Box]:
+        """Apron rails and four legs under the table slab.
 
         Read off the slab that is already in the layout rather than off the
         config, so the legs follow wherever the scene randomiser put the table
@@ -243,15 +241,15 @@ class RoomDR(Randomizer):
         # boxes interpenetrating at every corner, which renders as z-fighting on
         # the leg faces and reads as a modelling mistake on camera.
         for name, (size, pos) in {
-            f"{prefix}_apron_y_pos": ((2 * lx - leg, at, ah), (cx, cy + ly, apron_z)),
-            f"{prefix}_apron_y_neg": ((2 * lx - leg, at, ah), (cx, cy - ly, apron_z)),
-            f"{prefix}_apron_x_pos": ((at, 2 * ly - leg, ah), (cx + lx, cy, apron_z)),
-            f"{prefix}_apron_x_neg": ((at, 2 * ly - leg, ah), (cx - lx, cy, apron_z)),
+            "table_apron_y_pos": ((2 * lx - leg, at, ah), (cx, cy + ly, apron_z)),
+            "table_apron_y_neg": ((2 * lx - leg, at, ah), (cx, cy - ly, apron_z)),
+            "table_apron_x_pos": ((at, 2 * ly - leg, ah), (cx + lx, cy, apron_z)),
+            "table_apron_x_neg": ((at, 2 * ly - leg, ah), (cx - lx, cy, apron_z)),
         }.items():
             parts[name] = self._slab(size, pos, surfaces["table"])
 
         for i, (sx, sy) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):
-            parts[f"{prefix}_leg_{i}"] = self._slab(
+            parts[f"table_leg_{i}"] = self._slab(
                 (leg, leg, slab_bottom),
                 (cx + sx * lx, cy + sy * ly, 0.5 * slab_bottom),
                 surfaces["leg"],
@@ -380,7 +378,7 @@ class RoomDRCfg(RandomizerCfg):
 
 
 class ToolbenchSceneDR(TabletopSceneDR):
-    """Build the benchmark's two table slabs without a background scene asset."""
+    """Build the benchmark's bench slab without a background scene asset."""
 
 
 @dataclass

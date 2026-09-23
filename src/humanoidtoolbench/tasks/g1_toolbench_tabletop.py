@@ -12,7 +12,7 @@ from humanoidtoolbench.core.actor import Actor
 from humanoidtoolbench.core.layout import Layout
 from humanoidtoolbench.core.task import Task
 from humanoidtoolbench.dr.camera import CameraDRCfg
-from humanoidtoolbench.dr.manager import ToolbenchDRManager
+from humanoidtoolbench.dr.manager import DRManager
 from humanoidtoolbench.dr.mujoco_lighting import MujocoLightingDR, MujocoLightingDRCfg
 from humanoidtoolbench.dr.room import RoomDRCfg, ToolbenchSceneDRCfg
 from humanoidtoolbench.dr.spatial import SpatialDRCfg
@@ -73,7 +73,6 @@ class G1ToolbenchTabletop(Task):
         "physics_dt": 0.005,
         "control_hz": 200,
         "render_hz": 50,
-        "dr_level": 0,
         "version": 1.0,
         "reward_dt": 0.02,
         "image_dt": 0.033333,
@@ -124,7 +123,6 @@ class G1ToolbenchTabletop(Task):
 
     dr_cfgs: dict[str, RandomizerCfg] = {
         "spatial": SpatialDRCfg(
-            spatial_mode="random",
             robot_region=Box(low=[-0.1, 0.65, 0.0], high=[0.1, 0.85, 0.0]),
             robot_orientation_region=Box(
                 low=[0.7071, 0.0, 0.0, -0.7071],
@@ -139,12 +137,9 @@ class G1ToolbenchTabletop(Task):
 
     def __init__(
         self,
-        robot_uid: str = "g1_sonic",
         split: str = "train",
-        render_hz: int | None = None,
-        dr_level: int = 0,
-        *args: Any,
-        **kwargs: Any,
+        physics_dt: float | None = None,
+        **robot_kwargs: Any,
     ) -> None:
         self._instruction: str | None = None
         self._tools: list[Any] = []
@@ -153,18 +148,12 @@ class G1ToolbenchTabletop(Task):
         self._init_target_height: float | None = None
         self.reward = 0.0
 
-        self.robot_cfg = {**self.robot_cfg, "uid": robot_uid}
         self.sensor_cfgs = deepcopy(self.sensor_cfgs)
         self.dr_cfgs = deepcopy(self.dr_cfgs)
-        self._robot = RobotRegistry.make(**self.robot_cfg, **kwargs)
+        self._robot = RobotRegistry.make(**self.robot_cfg, **robot_kwargs)
 
         super().__init__(
-            dr=ToolbenchDRManager(level=dr_level, **self.dr_cfgs),
-            split=split,
-            render_hz=render_hz,
-            dr_level=dr_level,
-            *args,
-            **kwargs,
+            dr=DRManager(**self.dr_cfgs), split=split, physics_dt=physics_dt
         )
 
     @property

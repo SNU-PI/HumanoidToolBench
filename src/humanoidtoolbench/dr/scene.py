@@ -18,16 +18,14 @@ class SceneDR(Randomizer):
 
 
 class TabletopSceneDR(SceneDR):
-    """Build one or two table slabs directly from configuration ranges."""
+    """Build the table slab at the middle of its configuration ranges."""
 
     def __init__(self, cfg: "TabletopSceneDRCfg") -> None:
         super().__init__(cfg)
         self.cfg = cfg
 
     def _draw(self, value: Box | None, default: Any) -> Any:
-        if value is None:
-            return default
-        return value.middle() if self.cfg.scene_mode == "fixed" else value.sample()
+        return default if value is None else value.middle()
 
     def _make_table(
         self,
@@ -55,44 +53,15 @@ class TabletopSceneDR(SceneDR):
                 self.cfg.rotation_z,
             )
         )
-        if self.cfg.enable_table2:
-            scene.set_table2(
-                self._make_table(
-                    self.cfg.table2_size,
-                    self.cfg.table2_position,
-                    self.cfg.table2_height,
-                    self.cfg.table2_rotation_z,
-                )
-            )
-        if self.cfg.enable_tool_table:
-            scene.set_tool_table(
-                self._make_table(
-                    self.cfg.tool_table_size,
-                    self.cfg.tool_table_position,
-                    self.cfg.tool_table_height,
-                    self.cfg.tool_table_rotation_z,
-                )
-            )
         return scene
 
 
 @dataclass
 class TabletopSceneDRCfg(RandomizerCfg):
-    scene_mode: str = "fixed"
     table_size: Box | None = None
     table_position: Box | None = None
     table_height: Box | None = None
     rotation_z: Box | None = None
-    enable_table2: bool = False
-    table2_size: Box | None = None
-    table2_position: Box | None = None
-    table2_height: Box | None = None
-    table2_rotation_z: Box | None = None
-    enable_tool_table: bool = False
-    tool_table_size: Box | None = None
-    tool_table_position: Box | None = None
-    tool_table_height: Box | None = None
-    tool_table_rotation_z: Box | None = None
     randmizer_class: Type[Randomizer] = TabletopSceneDR
 
 

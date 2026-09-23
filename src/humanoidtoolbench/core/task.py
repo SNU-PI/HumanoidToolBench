@@ -39,23 +39,13 @@ class Task(ABC):
         self,
         dr: DRManager,
         split: str | None = None,
-        render_hz: int | None = None,
-        dr_level: int | None = None,
         physics_dt: float | None = None,
-        *args: Any,
-        **kwargs: Any,
     ) -> None:
-        del args, kwargs
         self.metadata = dict(type(self).metadata)
         self.metadata.update(
             {
                 k: v
-                for k, v in {
-                    "split": split,
-                    "render_hz": render_hz,
-                    "dr_level": dr_level,
-                    "physics_dt": physics_dt,
-                }.items()
+                for k, v in {"split": split, "physics_dt": physics_dt}.items()
                 if v is not None
             }
         )
@@ -131,11 +121,6 @@ class Task(ABC):
         if isinstance(scene_dr, TabletopSceneDR):
             scene = scene_dr(split)
             self._layout.add_primitive("table", scene.table)
-
-            if scene.table2 is not None:
-                self._layout.add_primitive("table2", scene.table2)
-            if scene.tool_table is not None:
-                self._layout.add_primitive("tool_table", scene.tool_table)
             table_height = scene.table.pose.position[2] + 0.5 * scene.table.size[2]
         else:
             table_height = 0.0

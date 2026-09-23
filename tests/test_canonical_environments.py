@@ -1,4 +1,4 @@
-"""The public task runtime preserves canonical scoring and rejects variants."""
+"""The task runtime keeps canonical scoring and rejects unknown options."""
 
 from types import SimpleNamespace
 
@@ -15,30 +15,18 @@ from humanoidtoolbench.tasks.g1_ice_break_teleop import (
 from humanoidtoolbench.tasks.g1_toolbench_tabletop import G1ToolbenchTabletop
 
 TASKS = (G1BallMoveTeleop, G1BallRetrieveTeleop, G1IceBreakTeleop)
-REMOVED_OPTIONS = (
-    "gap_scale",
-    "sticky_grasp",
-    "hand_reach",
-    "no_tools",
-    "fail_on_tool_lift",
-    "touch_breaks",
-    "near_blocks",
-)
 
 
 @pytest.mark.parametrize("task_type", TASKS)
-@pytest.mark.parametrize("option", REMOVED_OPTIONS)
-@pytest.mark.parametrize("enabled", [False, True])
-def test_removed_task_options_fail_before_initializing_the_robot(
-    task_type, option, enabled, monkeypatch
+def test_unknown_task_options_fail_before_initializing_the_robot(
+    task_type, monkeypatch
 ):
     def unexpected_initialization(*args, **kwargs):
-        pytest.fail("unsupported options must fail before robot initialization")
+        pytest.fail("unknown options must fail before robot initialization")
 
     monkeypatch.setattr(G1ToolbenchTabletop, "__init__", unexpected_initialization)
-    value = (0.5 if enabled else 1.0) if option == "gap_scale" else enabled
-    with pytest.raises(TypeError, match=f"Unsupported task options: {option}"):
-        task_type(level=1, mode="R", **{option: value})
+    with pytest.raises(TypeError, match="unexpected keyword arguments: no_such_option"):
+        task_type(level=1, mode="R", no_such_option=True)
 
 
 @pytest.fixture(params=TASKS)
@@ -55,10 +43,6 @@ def test_canonical_cells_keep_their_success_hold(task_type, level, mode):
     task.picked_correct_tool = lambda info: True
     task.job_done = lambda info, **kwargs: False
 
-    for option in REMOVED_OPTIONS:
-        assert not hasattr(task, option)
-    assert not hasattr(task, "edit_spec")
-    assert not hasattr(task, "_apply_easy")
     assert task.metadata["max_episode_steps"] == 3000
     assert task.metadata["render_hz"] == 50
 

@@ -154,12 +154,6 @@ class MujocoSimulator(Simulator):
 
         self.mj_worldbody = mj_worldbody
 
-        # Whatever a task has to declare before the compile, once every body it
-        # names is in: the eval-only sticky grasp adds its welds here.
-        edit_spec = getattr(self.task, "edit_spec", None)
-        if edit_spec is not None:
-            edit_spec(mjSpec)
-
         for cname, camera in self.task.layout.cameras.items():
             self._build_camera(cname, camera)
 

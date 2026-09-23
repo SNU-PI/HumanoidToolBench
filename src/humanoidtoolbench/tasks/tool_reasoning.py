@@ -72,6 +72,12 @@ TOUCH_ROLE: dict[str, int] = {
     "irrelevant_2": 2,
 }
 
+# The keyword arguments a canonical environment hands its task besides the
+# cell: `gym.make` passes them through the environment, and the task forwards
+# them to the robot and the base task. Anything else is refused rather than
+# silently dropped.
+TASK_OPTIONS = frozenset({"split", "physics_dt", "sonic_config"})
+
 
 class ToolReasoningTask(G1ToolbenchTabletop):
     """Shared level and mode machinery for a reasoning scenario.
@@ -85,39 +91,19 @@ class ToolReasoningTask(G1ToolbenchTabletop):
     phrase: str = ""
     target_name: str = ""
     reasoning_axis: str = ""
-    # What an OOD twin draws its tools from instead of the scenario's own,
-    # keyed as `dr_cfgs["tools"].tools` is; see `ood_tools`.
-    ood_tool_builders: dict[str, Any] = {}
-    # What a correct-tool OOD twin draws its correct tool from, keyed by role.
-    # Only tools shown to do the task are here; see `ood_correct_tool`.
-    ood_correct_tool_builders: dict[str, Any] = {}
 
     metadata: dict[str, Any] = {
         **G1ToolbenchTabletop.metadata,
         "success_criteria": PICK_CRITERIA,
     }
 
-    def __init__(
-        self,
-        level: int = 1,
-        mode: str = "S",
-        *args: Any,
-        ood_tools: bool = False,
-        ood_correct_tool: bool = False,
-        **kwargs: Any,
-    ) -> None:
-        unsupported = {
-            "gap_scale",
-            "sticky_grasp",
-            "hand_reach",
-            "no_tools",
-            "fail_on_tool_lift",
-            "touch_breaks",
-            "near_blocks",
-        }.intersection(kwargs)
-        if unsupported:
+    def __init__(self, level: int = 1, mode: str = "S", **kwargs: Any) -> None:
+        unknown = set(kwargs) - TASK_OPTIONS
+        if unknown:
             raise TypeError(
-                f"Unsupported task options: {', '.join(sorted(unsupported))}"
+                f"{type(self).__name__} got unexpected keyword arguments: "
+                f"{', '.join(sorted(unknown))}. A task takes level, mode and "
+                f"{', '.join(sorted(TASK_OPTIONS))}."
             )
         if level not in LEVELS:
             raise ValueError(f"level must be one of {LEVELS}, got {level!r}")
@@ -125,16 +111,6 @@ class ToolReasoningTask(G1ToolbenchTabletop):
             raise ValueError(f"mode must be one of {MODES}, got {mode!r}")
         self.level = int(level)
         self.mode = str(mode)
-        # Eval-only as well: every tool comes from the OOD pools, meshes no
-        # recording has seen, built by the same factories as the benchmark's.
-        # The bench, the objects and the scoring are the cell's own.
-        self.ood_tools = bool(ood_tools)
-        # Eval-only as well: only the correct tool is unseen, drawn from tools
-        # shown to do the task; the confusable tool and the irrelevant objects
-        # keep the cell's draw.
-        self.ood_correct_tool = bool(ood_correct_tool)
-        if self.ood_tools and self.ood_correct_tool:
-            raise ValueError("Use either ood_tools or ood_correct_tool, not both")
 
         # The tool draw depends on the cell, so the config carries it rather
         # than the randomizer guessing from the task.
@@ -143,20 +119,6 @@ class ToolReasoningTask(G1ToolbenchTabletop):
         if tool_cfg is not None:
             tool_cfg.mode = self.mode
             tool_cfg.level = self.level
-            if self.ood_tools:
-                if not self.ood_tool_builders:
-                    raise ValueError(f"{type(self).__name__} has no OOD tools")
-                tool_cfg.tools = dict(self.ood_tool_builders)
-            if self.ood_correct_tool:
-                correct = tool_cfg.correct_tool
-                if correct not in self.ood_correct_tool_builders:
-                    raise ValueError(
-                        f"{type(self).__name__} has no verified OOD correct tool"
-                    )
-                tool_cfg.tools = {
-                    **tool_cfg.tools,
-                    correct: self.ood_correct_tool_builders[correct],
-                }
 
         self._picked: str | None = None
         self._pick_height = 0.0
@@ -177,7 +139,7 @@ class ToolReasoningTask(G1ToolbenchTabletop):
         self._target_bodies: set[int] = set()
         self._pelvis_body = -1
 
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     # -- identity ---------------------------------------------------------
 

@@ -82,7 +82,7 @@ checkpoints** from a Hugging Face ID or a local path, such as
 | ACT with untrained, randomly initialized weights | `G1BallMove-L0-S` | 0 / 100 |
 
 Both rows use the standard protocol and the asset manifest shipped in this
-release (`assets.manifest_sha256` starting `d2e1c39c`). The ACT row used
+release (`assets.manifest_sha256` starting `3f5b21bf`). The ACT row used
 weights with SHA-256 starting `1e6459cb`, published at model revision
 `ffd733de`, and took about 100 minutes. The second row used the released ACT
 configuration with freshly initialized weights (SHA-256 starting `66788a3b`,

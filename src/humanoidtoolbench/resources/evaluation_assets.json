@@ -1265,17 +1265,6 @@
         "2cb7026ffacf4889bb265099b8460c7f_visual_0.png": "cf70bad341ace3a616c30c5e3ca131b90fd1f81b0dcf94cc8d402448eaf68ee6"
       }
     },
-    "2de2cbb69ad44bc3ae2e01eacce9f174": {
-      "shard": "mujoco/objects/objaverse/20260131/shards/00012.tar",
-      "offset": 996547072,
-      "size": 110117,
-      "files": {
-        "2de2cbb69ad44bc3ae2e01eacce9f174_visual.obj": "f27e22705ac1f989eb322427eb21b933e0b62df4f3fa6cf3726037e92260c5a8",
-        "2de2cbb69ad44bc3ae2e01eacce9f174_collider0.obj": "cdbd15dfaafbf966f17ba861c51738948e9767101def96b94961e110c937598d",
-        "2de2cbb69ad44bc3ae2e01eacce9f174_collider1.obj": "94ffa2e4ad1e76fb87996ccd23a0c5b00361434166cbc17d932e2c5b764d1864",
-        "2de2cbb69ad44bc3ae2e01eacce9f174_visual_0.png": "2295c14143c8fb6984a1b9530f8a3a9ac7df64e9f9eec82ef25d5bf6c6f31e73"
-      }
-    },
     "2e2d067b8a2845acb6f585c1c5eac840": {
       "shard": "mujoco/objects/objaverse/20260131/shards/00012.tar",
       "offset": 1200341504,
@@ -1530,17 +1519,6 @@
         "56ca74a3eae041b98e3f0c8c1f26b8f2_visual_0.png": "cb4f1046e13394ea7decce21e07c342833c44c49874316616fe4bfbb4df22cdb"
       }
     },
-    "57fc7be2efcd4284a9514f05dbb51942": {
-      "shard": "mujoco/objects/objaverse/20260131/shards/00023.tar",
-      "offset": 1383742976,
-      "size": 646650,
-      "files": {
-        "57fc7be2efcd4284a9514f05dbb51942_visual.obj": "ff9dfe5fd05db86f44304c31c51a564c40aab9aee07d7c82cf710d145add8946",
-        "57fc7be2efcd4284a9514f05dbb51942_collider0.obj": "2147bbc40493fbfa5c51526f8e7b1d71a4daf7f23ac45ab321a14e2b2e24dba9",
-        "57fc7be2efcd4284a9514f05dbb51942_collider1.obj": "9f26f22782c61477985501791acf09d2a1013fb7ba9957e7f3786ad08b22b0e1",
-        "57fc7be2efcd4284a9514f05dbb51942_visual_0.png": "2fb8538f2af2d5226c4118c61cdd7d18dddd218db95b5f97bda32b5327193309"
-      }
-    },
     "695757a99900484a82f12ae30e8bf4ec": {
       "shard": "mujoco/objects/objaverse/20260131/shards/00028.tar",
       "offset": 689108480,
@@ -1720,18 +1698,6 @@
         "934c3cb6ed06462e8afee848b7942d6e_visual_0.png": "6eb8110ebdb0e26b08ded3e2f6e30a5187d00345da6aa572a9a268f81cde1279"
       }
     },
-    "95447c4b8c824fb7888cc9bed57a87f7": {
-      "shard": "mujoco/objects/objaverse/20260131/shards/00040.tar",
-      "offset": 623580160,
-      "size": 432229,
-      "files": {
-        "95447c4b8c824fb7888cc9bed57a87f7_visual.obj": "fe55c158e7bd805150b274950434b47877b1f56b158e4e1524a6fca75d26a3f4",
-        "95447c4b8c824fb7888cc9bed57a87f7_collider0.obj": "6f5d0ed314a2171624907373d374a4e949b3924dd785595a5fee61cff0a01604",
-        "95447c4b8c824fb7888cc9bed57a87f7_collider1.obj": "286c9b7c2b607e67ab450c8f0598378146d468109c799b4a5b2090a0eed0de9c",
-        "95447c4b8c824fb7888cc9bed57a87f7_collider2.obj": "39c0ac8528146b0078d6813791936d0f93e06a8463c1a50dd299ccf0916273cd",
-        "95447c4b8c824fb7888cc9bed57a87f7_visual_0.png": "a0de5d867b01ebd4f1d214a8d1d7334229f04679ee50ba405e0a127396201caa"
-      }
-    },
     "9712c578203d4574a8cc092ff527290d": {
       "shard": "mujoco/objects/objaverse/20260131/shards/00040.tar",
       "offset": 1637424128,
@@ -1762,17 +1728,6 @@
         "9ce080633f6f48be9ecc761bbeb7f640_collider0.obj": "53b4e7da992119b1d92722dd8267c627adc47149be0e135ecbdfcc02bf5c4144",
         "9ce080633f6f48be9ecc761bbeb7f640_collider1.obj": "a35bc2bf42dee8563d2084b9542d4d35840cba0b5e5997f4cc1365f8aec06a8f",
         "9ce080633f6f48be9ecc761bbeb7f640_visual_0.png": "26b44a6b516ee48cef6ff35b3f9d978400f8f377e7182b432bc1771549f2624c"
-      }
-    },
-    "a190e92f53814532bf2ef03ec56bd16a": {
-      "shard": "mujoco/objects/objaverse/20260131/shards/00043.tar",
-      "offset": 1257654784,
-      "size": 1056662,
-      "files": {
-        "a190e92f53814532bf2ef03ec56bd16a_visual.obj": "8368c6c00e429cfa010f81668efa10650be900089a2058fda59d26480cc2b55a",
-        "a190e92f53814532bf2ef03ec56bd16a_collider0.obj": "69c4aadcba4836246c1379884c31151fde47f4e093ab834031399f4abbc5ff59",
-        "a190e92f53814532bf2ef03ec56bd16a_collider1.obj": "705e30520d3f3bc6681b39740104053bfe95d9074b9b406f5ea352009cfabc82",
-        "a190e92f53814532bf2ef03ec56bd16a_visual_0.png": "3fca478f8a1e2a72a695bedf89a5aca4464b608c74addf22a01d54474714043e"
       }
     },
     "a25a12860e834fafa182e2907ad8db1d": {
@@ -1834,17 +1789,6 @@
         "ac029344ea9c41f8900b50e9a628444d_collider1.obj": "eedba5023f99dd4e4ed6a915f54c2a911d3ebd076e98215d1e24d4524948a7f4",
         "ac029344ea9c41f8900b50e9a628444d_collider2.obj": "fdeaa50383e56b29ee3b441c6afc9723d1f65be7fa04fa1e9d14cdca87a9349c",
         "ac029344ea9c41f8900b50e9a628444d_visual_0.png": "b7f6dd566aff3f745cbf045ee2304622a3962f18009e570d163b0c8689e50a11"
-      }
-    },
-    "ae3b71ad58004a6f9124869ffe02545d": {
-      "shard": "mujoco/objects/objaverse/20260131/shards/00047.tar",
-      "offset": 305618944,
-      "size": 449918,
-      "files": {
-        "ae3b71ad58004a6f9124869ffe02545d_visual.obj": "413db9b9a144433ea76a2a5547f53a8b2007c6ea74a86eec4d347a25af097455",
-        "ae3b71ad58004a6f9124869ffe02545d_collider0.obj": "601f4e6ec3f7ecc05601b71aa8eb4e0cd7edc46674714730a8255c5454bfd328",
-        "ae3b71ad58004a6f9124869ffe02545d_collider1.obj": "ae298cd232066c84c284b49cf7454bf65c790ac81cf8a4fcb637991ac5f03969",
-        "ae3b71ad58004a6f9124869ffe02545d_visual_0.png": "65f79c4d325b046a49ceed65cb33d8b2a293ad9e96eb0245662b62fd9aae28c0"
       }
     },
     "b2d45fba3c364669a624e60884b88bb2": {

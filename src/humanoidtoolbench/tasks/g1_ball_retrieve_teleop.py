@@ -27,8 +27,6 @@ if TYPE_CHECKING:
 
 from humanoidtoolbench.assets.tools import (
     AFFORDANCE_TOOLS,
-    OOD_AFFORDANCE_TOOLS,
-    OOD_CORRECT_AFFORDANCE_TOOLS,
     TARGET_HALF,
     push_ball,
     ring_marker,
@@ -162,10 +160,6 @@ class G1BallRetrieveTeleop(ToolReasoningTask):
             place_objects=_place,
         ),
     }
-    # An OOD twin's hooks and straight sticks; see `ToolReasoningTask.ood_tools`.
-    ood_tool_builders = OOD_AFFORDANCE_TOOLS
-    # A correct-tool twin's hook, one shown to pull the ball back.
-    ood_correct_tool_builders = OOD_CORRECT_AFFORDANCE_TOOLS
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._start_distance: float | None = None
