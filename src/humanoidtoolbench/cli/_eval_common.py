@@ -25,15 +25,6 @@ from humanoidtoolbench.evals.tui import (
 )
 
 
-def _append_eval_stats_line(eval_dir: str, line: str) -> None:
-    path = Path(eval_dir) / "eval_stats.txt"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a", buffering=1) as f:
-        f.write(line)
-        f.flush()
-        os.fsync(f.fileno())
-
-
 @contextmanager
 def _redirect_stdio_to_log(log_path: str):
     log_file = open(log_path, "a", buffering=1)
@@ -184,7 +175,6 @@ def _rollout_episode(
     summary_tmp = summary_path.with_suffix(".json.tmp")
     summary_tmp.write_text(json.dumps(task_metrics, indent=2, allow_nan=False) + "\n")
     summary_tmp.replace(summary_path)
-    _append_eval_stats_line(eval_dir, f"{task_id}: {is_success} \n")
     report(
         "episode_end",
         episode=task_id,
@@ -224,8 +214,6 @@ def _execute_run(
     # again; make sure we restore it last.
     ensure_cursor_restored_at_exit(console)
     progress = {0: WorkerProgress()}
-    _append_eval_stats_line(eval_dir, "================\n")
-    _append_eval_stats_line(eval_dir, f"run: {env_id} - {policy}\n")
 
     # The console writes to terminal_stream, so the stream must outlive the
     # summary lines printed after the episodes finish.
@@ -261,7 +249,6 @@ def _execute_run(
         except BaseException as exc:
             print(f"Terminal cleanup failed: {exc}", file=sys.stderr)
 
-    _append_eval_stats_line(eval_dir, f"success rate: {sr:.2f} \n")
     return EvalResult(
         env_id=env_id,
         policy=policy,

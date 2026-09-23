@@ -44,9 +44,9 @@ def validate_control_timing(render_hz: int, physics_dt: float) -> float:
 
 
 @contextmanager
-def _stabilization_images(sonic_env, *, enabled):
+def _stabilization_images(sonic_env):
     """Skip images while the proprioceptive WBC stabilizes; nothing reads them."""
-    suppress = enabled and getattr(sonic_env, "render_obs", False) is True
+    suppress = getattr(sonic_env, "render_obs", False) is True
     if suppress:
         sonic_env.render_obs = False
     try:
@@ -75,14 +75,50 @@ def _fetch_policy_info(host: str, port: int, timeout: float = 5.0) -> dict[str, 
 
 
 def _make_sonic_config() -> dict[str, Any]:
-    import tyro
-    from gear_sonic.utils.mujoco_sim.configs import SimLoopConfig
+    """The pinned G1 WBC configuration the robot and the controller read.
 
-    config = tyro.cli(
-        SimLoopConfig, config=(tyro.conf.ConsolidateSubcommandArgs,), args=[]
+    This is gear_sonic's g1_29dof_sonic_model12.yaml with the values its
+    simulation-loop defaults (SimLoopConfig.load_wbc_yaml) write on top.
+    """
+    import gear_sonic
+    import yaml
+
+    path = (
+        Path(gear_sonic.__file__).resolve().parent
+        / "utils/mujoco_sim/wbc_configs/g1_29dof_sonic_model12.yaml"
     )
-    sonic_config = config.load_wbc_yaml()
-    sonic_config["ENV_NAME"] = "humanoidtoolbench"
+    with path.open() as file:
+        sonic_config = yaml.safe_load(file)
+    sonic_config.update(
+        {
+            "INTERFACE": "lo",
+            "ENV_TYPE": "sim",
+            "VERSION": "sonic_model12",
+            "SIMULATOR": "mujoco",
+            "SIMULATE_DT": 1 / 200.0,
+            "ENABLE_OFFSCREEN": False,
+            "ENABLE_ONSCREEN": True,
+            "model_path": "policy/stand.onnx,policy/walk.onnx",
+            # False would silently hand the waist to the lower-body policy.
+            "enable_waist": True,
+            "with_hands": True,
+            "verbose": False,
+            "verbose_timing": False,
+            "upper_body_max_joint_speed": 1000,
+            "keyboard_dispatcher_type": "raw",
+            "enable_gravity_compensation": False,
+            "gravity_compensation_joints": ["arms"],
+            "high_elbow_pose": False,
+            "joint_safety_mode": "kill",
+            "arm_velocity_limit": 25.0,
+            "hand_velocity_limit": 1000.0,
+            "lower_body_velocity_limit": 20.0,
+            "waist_pitch_limit": 15.0,
+            "hand_torque_limit": 0.1,
+            "enable_natural_walk": False,
+            "ENV_NAME": "humanoidtoolbench",
+        }
+    )
     return sonic_config
 
 
@@ -94,7 +130,6 @@ def _run_episodes(
     """Evaluate every episode of ``config`` in this process."""
     env_id = config.env_id
     sim_mode = config.sim_mode
-    headless = config.headless
     eval_dir = config.eval_dir
 
     # Keep OpenCV/video dependencies off the import path of runs without videos.
@@ -103,7 +138,6 @@ def _run_episodes(
         from humanoidtoolbench.envs.wrappers.video_recorder import VideoRecorder
 
     sim_dt = sonic_config["SIMULATE_DT"]
-    control_dt = 4 * sim_dt  # = 0.02 s (50 Hz)
 
     eval_output_dir = str(Path(eval_dir) / "videos")
 
@@ -122,7 +156,7 @@ def _run_episodes(
         split=config.split,
         sim_mode=sim_mode,
         physics_dt=sim_dt,
-        headless=headless,
+        headless=config.headless,
         sonic_config=sonic_config,
     )
     try:
@@ -187,37 +221,16 @@ def _run_episodes(
                 # DecoupledWbcBackend.reset() engages its lower-body policy.
 
                 # --- Wait for robot to stabilize (velocity-based) ---
-                realtime_stabilization = (
-                    not headless
-                    or getattr(sonic_env, "viewer", None) is not None
-                    or getattr(sonic_env, "_mjviser", None) is not None
-                )
                 stabilization_start = time.perf_counter()
-                stabilization_sleep_seconds = 0.0
                 sim_cnt = 0
                 stabilized = robot.stabilized
-                with _stabilization_images(
-                    sonic_env,
-                    enabled=not realtime_stabilization,
-                ) as images_suppressed:
+                with _stabilization_images(sonic_env) as images_suppressed:
                     while not stabilized and sim_cnt < _MAX_STABILIZATION_STEPS:
-                        if realtime_stabilization:
-                            step_start = time.monotonic()
                         action = agent.get_stabilize_action(observation, info=info)
                         # Bypass TimeLimit so startup keeps the full policy budget.
                         observation, _reward, _terminated, _truncated, info = (
                             sonic_env.step(action)
                         )
-                        sonic_env.update_viewer()
-                        if realtime_stabilization:
-                            elapsed = time.monotonic() - step_start
-                            sleep_time = control_dt - elapsed
-                            if sleep_time > 0:
-                                sleep_start = time.perf_counter()
-                                time.sleep(sleep_time)
-                                stabilization_sleep_seconds += (
-                                    time.perf_counter() - sleep_start
-                                )
                         sim_cnt += 1
                         stabilized = robot.stabilized
 
@@ -234,9 +247,7 @@ def _run_episodes(
                     control_steps=sim_cnt,
                     max_control_steps=_MAX_STABILIZATION_STEPS,
                     control_dt=control_dt,
-                    realtime_pacing=realtime_stabilization,
                     elapsed_seconds=time.perf_counter() - stabilization_start,
-                    sleep_seconds=stabilization_sleep_seconds,
                     image_observations_suppressed=images_suppressed,
                     image_observations_skipped=sim_cnt if images_suppressed else 0,
                     final_observation_refreshed=final_observation_refreshed,

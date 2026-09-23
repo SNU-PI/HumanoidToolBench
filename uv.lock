@@ -9,14 +9,6 @@ resolution-markers = [
     "sys_platform == 'darwin'",
 ]
 
-[manifest]
-
-[[manifest.dependency-metadata]]
-name = "unitree-sdk2py"
-version = "1.0.1"
-requires-dist = ["cyclonedds==0.10.2", "numpy", "opencv-python-headless"]
-requires-python = ">=3.8"
-
 [[package]]
 name = "absl-py"
 version = "2.4.0"
@@ -95,18 +87,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d8/8f/78f5489ffadb0db3eb7aff53d31c24531d33eb545f0c6f6567c25f49a5ff/charset_normalizer-3.4.6-cp310-cp310-win_amd64.whl", hash = "sha256:aa9cccf4a44b9b62d8ba8b4dd06c649ba683e4bf04eea606d2e94cfc2d6ff4d6", size = 154244, upload-time = "2026-03-15T18:50:22.81Z" },
     { url = "https://files.pythonhosted.org/packages/e4/74/e472659dffb0cadb2f411282d2d76c60da1fc94076d7fffed4ae8a93ec01/charset_normalizer-3.4.6-cp310-cp310-win_arm64.whl", hash = "sha256:e985a16ff513596f217cee86c21371b8cd011c0f6f056d0920aa2d926c544058", size = 143312, upload-time = "2026-03-15T18:50:24.074Z" },
     { url = "https://files.pythonhosted.org/packages/2a/68/687187c7e26cb24ccbd88e5069f5ef00eba804d36dde11d99aad0838ab45/charset_normalizer-3.4.6-py3-none-any.whl", hash = "sha256:947cf925bc916d90adba35a64c82aace04fa39b46b52d4630ece166655905a69", size = 61455, upload-time = "2026-03-15T18:53:23.833Z" },
-]
-
-[[package]]
-name = "click"
-version = "8.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/fa/656b739db8587d7b5dfa22e22ed02566950fbfbcdc20311993483657a5c0/click-8.3.1.tar.gz", hash = "sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a", size = 295065, upload-time = "2025-11-15T20:45:42.706Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/78/01c019cdb5d6498122777c1a43056ebb3ebfeef2076d9d026bfe15583b2b/click-8.3.1-py3-none-any.whl", hash = "sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6", size = 108274, upload-time = "2025-11-15T20:45:41.139Z" },
 ]
 
 [[package]]
@@ -305,22 +285,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/cc/c7/eed8f27100517e8c0e6b923d5f0845d0cb99763da6fdee00478f91db7325/coloredlogs-15.0.1.tar.gz", hash = "sha256:7c991aa71a4577af2f82600d8f8f3a89f936baeaf9b50a9c197da014e5bf16b0", size = 278520, upload-time = "2021-06-11T10:22:45.202Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/06/3d6badcf13db419e25b07041d9c7b4a2c331d3f4e7134445ec5df57714cd/coloredlogs-15.0.1-py2.py3-none-any.whl", hash = "sha256:612ee75c546f53e92e70049c9dbfcc18c935a2b9a53b66085ce9ef6a6e5c0934", size = 46018, upload-time = "2021-06-11T10:22:42.561Z" },
-]
-
-[[package]]
-name = "cyclonedds"
-version = "0.10.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "rich-click" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/62/88/4b440f5916976234838989c3214222a5abc6fd48009a992c4dc22a86c04f/cyclonedds-0.10.2.tar.gz", hash = "sha256:f834962eabbdcdf4e9cd75cf87222f3c5ef22d9cb9e7ed651d9a8710fe984a30", size = 156849, upload-time = "2022-09-09T07:04:19.798Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/9f/ad6b8668e5f6d7297cdca4fa42e3c57073f5a323aa7a590e2a1581289eef/cyclonedds-0.10.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:63a7e2a2b9e326939a01c86e47f47c529e066728f41faec37e6bc8d54f2f0841", size = 862463, upload-time = "2022-09-09T07:04:22.957Z" },
-    { url = "https://files.pythonhosted.org/packages/04/2b/b392a8593c9d7e7f770c60900b3ea3733704ec9786de258d6013b9faad0c/cyclonedds-0.10.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:e834a6eda188a2c48aa19fa94809511dc791ed6c13bdcc20a50b50d80bfaa1f4", size = 797567, upload-time = "2022-09-09T07:04:24.353Z" },
-    { url = "https://files.pythonhosted.org/packages/c1/23/6d8b2630e0c1f24b84c414572ca16b728c69f0d81d974756b4bf0e990afe/cyclonedds-0.10.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1194b03377e7644c7fb7230dd19b85eb363699d179459bdc5486974ec8d0fc0e", size = 6612050, upload-time = "2022-09-09T07:04:27.111Z" },
-    { url = "https://files.pythonhosted.org/packages/bc/05/6b4084bc94f564ec8a1b2e4b3b3634835064fefec560f57d85a173d5c68f/cyclonedds-0.10.2-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:2965d180c66d2dc03d1d39de056a57007c41c6b21173fee73b808c5123a7a1c5", size = 6634895, upload-time = "2022-09-09T07:04:29.16Z" },
-    { url = "https://files.pythonhosted.org/packages/f1/e7/3bbb2d3e6eb7aa29e2edc95ea5062458a0c92dd3e87640f83feed537e555/cyclonedds-0.10.2-cp310-cp310-win_amd64.whl", hash = "sha256:a5be989f69103954c6041b80e3ea1ae9973d41b1b0e437fb71b671417c450ad6", size = 2274046, upload-time = "2022-09-09T07:04:30.987Z" },
 ]
 
 [[package]]
@@ -722,7 +686,6 @@ dependencies = [
     { name = "transformers" },
     { name = "transforms3d" },
     { name = "trimesh" },
-    { name = "unitree-sdk2py" },
 ]
 
 [package.dev-dependencies]
@@ -755,7 +718,6 @@ requires-dist = [
     { name = "transformers", specifier = "==4.57.1" },
     { name = "transforms3d", specifier = ">=0.4.2" },
     { name = "trimesh", specifier = ">=4.7.1" },
-    { name = "unitree-sdk2py", editable = "third_party/unitree_sdk2_python" },
 ]
 
 [package.metadata.requires-dev]
@@ -1298,21 +1260,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rich-click"
-version = "1.9.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-    { name = "rich" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/04/27/091e140ea834272188e63f8dd6faac1f5c687582b687197b3e0ec3c78ebf/rich_click-1.9.7.tar.gz", hash = "sha256:022997c1e30731995bdbc8ec2f82819340d42543237f033a003c7b1f843fc5dc", size = 74838, upload-time = "2026-01-31T04:29:27.707Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ca/e5/d708d262b600a352abe01c2ae360d8ff75b0af819b78e9af293191d928e6/rich_click-1.9.7-py3-none-any.whl", hash = "sha256:2f99120fca78f536e07b114d3b60333bc4bb2a0969053b1250869bcdc1b5351b", size = 71491, upload-time = "2026-01-31T04:29:26.777Z" },
-]
-
-[[package]]
 name = "ruff"
 version = "0.15.7"
 source = { registry = "https://pypi.org/simple" }
@@ -1609,23 +1556,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/30/c1/0a5850badd3f18373d6a0366091638674cec6780b558c1c5b846adea938b/tyro-1.0.10.tar.gz", hash = "sha256:2822eacac963a4922bf7eafe3b156a1f0f7fe8e34148202987581224f25565c2", size = 481084, upload-time = "2026-03-18T08:24:17.307Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/05/be/a0b4c9fa64999a2e337cbefcdedd2e101e8dd88a84e4fa497bd0e4531dc1/tyro-1.0.10-py3-none-any.whl", hash = "sha256:8de87a3a40c8a91f10831f8f0638cd0eed00f0e4de9cd3d561e967f407477210", size = 183433, upload-time = "2026-03-18T08:24:16.012Z" },
-]
-
-[[package]]
-name = "unitree-sdk2py"
-version = "1.0.1"
-source = { editable = "third_party/unitree_sdk2_python" }
-dependencies = [
-    { name = "cyclonedds" },
-    { name = "numpy" },
-    { name = "opencv-python-headless" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "cyclonedds", specifier = "==0.10.2" },
-    { name = "numpy" },
-    { name = "opencv-python-headless" },
 ]
 
 [[package]]

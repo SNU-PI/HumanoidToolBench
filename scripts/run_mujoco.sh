@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Run a HumanoidToolBench MuJoCo-only command inside the repository-owned environment.
 #
-# The GPU is used by default. This is still a shared lab server, so the wrapper
-# keeps the polite defaults: a single pinned GPU, reduced scheduling priority,
-# and bounded math thread pools. HUMANOIDTOOLBENCH_FORCE_CPU=1 restores the original
-# GPU-free smoke-test envelope.
+# The GPU is used by default. So that an evaluation shares a machine well, the
+# wrapper selects a single GPU, lowers the scheduling priority and bounds the
+# math thread pools. HUMANOIDTOOLBENCH_FORCE_CPU=1 hides every GPU and renders
+# with Mesa llvmpipe instead.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -41,11 +41,9 @@ export PATH="$ENV_PREFIX/bin:$PATH"
 export HUMANOIDTOOLBENCH_FORCE_CPU="$FORCE_CPU"
 export HUMANOIDTOOLBENCH_RUNTIME_WRAPPER=1
 export MUJOCO_GL="${MUJOCO_GL:-egl}"
-# Only used by windowed (glfw) rendering; EGL ignores it.
-export DISPLAY="${DISPLAY:-:1}"
 
 if [[ "$FORCE_CPU" == "1" ]]; then
-    # A conda-era prefix ships its own Mesa; the uv .venv relies on system Mesa.
+    # Use Mesa from the environment prefix when it ships one, else the system's.
     MESA_EGL_VENDOR_JSON="$ENV_PREFIX/share/glvnd/egl_vendor.d/50_mesa.json"
     if [[ -f "$MESA_EGL_VENDOR_JSON" ]]; then
         # Mesa has to shadow any system/NVIDIA GL, so the env prefix goes first.
