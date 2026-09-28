@@ -1,5 +1,7 @@
 # HumanoidToolBench
 
+https://github.com/user-attachments/assets/796a6ff9-8247-457b-b40d-e6305630faed
+
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
 HumanoidToolBench 评测 Unitree G1 能否选择合适的工具并用它完成任务。三个场景（BallMove、BallRetrieve、IceBreak）、三个级别（L0 工具选择、L1 原地使用、L2 移动使用）和两种工具集合模式（S、R）构成 **18 个条件**，在 MuJoCo 中用全身控制器进行仿真。本仓库是评测工具包：它通过 HTTP 调用你的策略，为每个回合打分，并校验录像。

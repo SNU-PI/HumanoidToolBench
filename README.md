@@ -1,5 +1,7 @@
 # HumanoidToolBench
 
+https://github.com/user-attachments/assets/796a6ff9-8247-457b-b40d-e6305630faed
+
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
 HumanoidToolBench evaluates whether a Unitree G1 can choose a suitable tool

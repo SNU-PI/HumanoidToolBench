@@ -1,5 +1,7 @@
 # HumanoidToolBench
 
+https://github.com/user-attachments/assets/796a6ff9-8247-457b-b40d-e6305630faed
+
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
 HumanoidToolBench는 Unitree G1이 적절한 도구를 고르고 그 도구로 태스크를
