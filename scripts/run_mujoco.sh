@@ -139,4 +139,6 @@ if [[ "$NICE_LEVEL" != "0" ]]; then
 fi
 
 echo "[mujoco] nice=$NICE_LEVEL cpuset=${CPUSET:-inherited} threads=$CPU_THREADS gpu=$GPU_LABEL renderer=$RENDERER_LABEL" >&2
+# Native crashes in MuJoCo, EGL or CUDA otherwise end without any traceback.
+export PYTHONFAULTHANDLER="${PYTHONFAULTHANDLER:-1}"
 exec "${COMMAND[@]}"

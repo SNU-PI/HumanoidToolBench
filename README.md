@@ -20,6 +20,8 @@ Documentation: [Environments](docs/ENVIRONMENTS.md) ·
   rendering mode for GPU-free smoke tests is described in the
   [evaluation guide](docs/PUBLIC_EVALUATION.md#installation-scope).
 - [uv](https://docs.astral.sh/uv/), Git and `zstd`. uv provisions Python 3.10.
+- The EGL and OpenGL dispatch libraries, which minimal images such as the CUDA
+  containers leave out: `sudo apt install libegl1 libopengl0` on Ubuntu.
 - Setup downloads about 4 GB and uses about 9 GB of disk. The first `--model`
   run downloads about 2 GB more (checkpoint and CLIP text encoder).
 - One condition at the standard 100 episodes takes about 2 hours on one GPU

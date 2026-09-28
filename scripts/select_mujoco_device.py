@@ -9,6 +9,27 @@ import sys
 import uuid
 
 
+# PyOpenGL's EGL platform loads both libraries. Minimal images such as the CUDA
+# containers ship the NVIDIA driver but not these glvnd dispatch libraries.
+GL_LIBRARIES = {"libEGL.so.1": "libegl1", "libOpenGL.so.0": "libopengl0"}
+
+
+def require_gl_libraries() -> None:
+    missing = []
+    for library, package in GL_LIBRARIES.items():
+        try:
+            ctypes.CDLL(library)
+        except OSError:
+            missing.append((library, package))
+    if missing:
+        names = ", ".join(library for library, _ in missing)
+        packages = " ".join(package for _, package in missing)
+        raise RuntimeError(
+            f"{names} not found; install it with `sudo apt install {packages}` "
+            "(Ubuntu/Debian) and rerun"
+        )
+
+
 def cuda_device_uuid(index: int) -> bytes:
     # Query the CUDA driver after the wrapper sets CUDA_VISIBLE_DEVICES. CUDA
     # ordinals can differ from both nvidia-smi and EGL enumeration order.
@@ -101,6 +122,7 @@ def main() -> None:
     parser.add_argument("--device", default="auto")
     args = parser.parse_args()
     try:
+        require_gl_libraries()
         index = select_egl_device(
             cuda_device_uuid(cuda_device_index(args.device)), egl_device_uuids(),
             os.environ.get("MUJOCO_EGL_DEVICE_ID"),

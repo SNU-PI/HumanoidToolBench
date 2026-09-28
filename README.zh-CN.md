@@ -10,6 +10,7 @@ HumanoidToolBench 评测 Unitree G1 能否选择合适的工具并用它完成�
 
 - Linux x86_64，配备 NVIDIA GPU 和支持 EGL 无头渲染的驱动。锁定的 PyTorch wheel 为 CUDA 12.8 版本。无 GPU 的冒烟测试可使用软件渲染模式，见[评测指南](docs/PUBLIC_EVALUATION.md#installation-scope)。
 - [uv](https://docs.astral.sh/uv/)、Git 和 `zstd`。Python 3.10 由 uv 自动安装。
+- EGL 和 OpenGL 分发库。CUDA 容器等精简镜像通常不含这些库，Ubuntu 上可用 `sudo apt install libegl1 libopengl0` 安装。
 - 安装约下载 4 GB，占用磁盘约 9 GB。首次运行 `--model` 时会再下载约 2 GB（检查点和 CLIP 文本编码器）。
 - 单个条件按标准 100 回合运行，在一块 GPU 上约需 2 小时，产生约 1 GB 的视频和日志。全部 18 个条件顺序运行约需一天半，占用约 15 GB。以上数字使用随附的 ACT 检查点在一台工作站的 GPU 上测得，随策略推理时间增加。
 

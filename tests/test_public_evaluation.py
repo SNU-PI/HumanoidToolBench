@@ -288,8 +288,8 @@ def test_list_envs_prints_the_18_conditions(capsys):
 def test_missing_policy_server_fails_before_simulation(capsys, monkeypatch):
     monkeypatch.delenv("HUMANOIDTOOLBENCH_PREFLIGHT_DONE", raising=False)
     monkeypatch.setattr(
-        public_eval.os,
-        "execv",
+        public_eval,
+        "run_in_runtime_wrapper",
         lambda *args: pytest.fail("reached the simulator re-exec"),
     )
     # A bound, non-listening socket refuses connections for as long as it is open.
@@ -923,3 +923,17 @@ def test_video_validator_rejects_black_middle_frame(tmp_path):
     writer.release(False)
     with pytest.raises(ValueError, match="Black camera frame"):
         validation.validate_video(tmp_path / "camera_failed.mp4", 2)
+
+
+def test_runtime_wrapper_explains_a_native_crash(capsys):
+    status = public_eval.run_in_runtime_wrapper(
+        [sys.executable, "-c", "import os; os.abort()"]
+    )
+    assert status == 134
+    assert "SIGABRT" in capsys.readouterr().err
+
+
+def test_runtime_wrapper_passes_through_a_normal_exit(capsys):
+    status = public_eval.run_in_runtime_wrapper([sys.executable, "-c", "raise SystemExit(3)"])
+    assert status == 3
+    assert capsys.readouterr().err == ""

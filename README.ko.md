@@ -22,6 +22,8 @@ HumanoidToolBench는 Unitree G1이 적절한 도구를 고르고 그 도구로 �
   있습니다.
 - [uv](https://docs.astral.sh/uv/), Git, `zstd`. Python 3.10은 uv가 직접
   설치합니다.
+- EGL·OpenGL 디스패치 라이브러리. CUDA 컨테이너 같은 최소 이미지에는 빠져
+  있으니 Ubuntu에서 `sudo apt install libegl1 libopengl0`로 설치하세요.
 - 설치 시 약 4 GB를 내려받고 디스크 약 9 GB를 사용합니다. 첫 `--model`
   실행 때 체크포인트와 CLIP 텍스트 인코더 약 2 GB를 추가로 내려받습니다.
 - 조건 하나를 정식 100 에피소드로 돌리면 GPU 한 장 기준 약 2시간이 걸리고

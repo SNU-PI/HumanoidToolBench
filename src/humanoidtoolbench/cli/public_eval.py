@@ -366,6 +366,36 @@ def code_identity() -> dict:
     return identity
 
 
+def run_in_runtime_wrapper(command: list[str]) -> int:
+    """Run the simulator process and explain a native crash, which has no traceback."""
+    import signal
+    import subprocess
+
+    child = subprocess.Popen(command)
+    # The terminal sends Ctrl+C to the whole process group; a scheduler or
+    # `timeout` signals only this process, so pass those on.
+    for signum in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(signum, lambda received, _frame: child.send_signal(received))
+    while True:
+        try:
+            status = child.wait()
+            break
+        except KeyboardInterrupt:
+            continue
+    if status < 0 and -status in (
+        signal.SIGABRT, signal.SIGBUS, signal.SIGKILL, signal.SIGSEGV
+    ):
+        print(
+            f"[mujoco] the evaluator was killed by {signal.Signals(-status).name}. "
+            "This usually means the GPU ran out of memory or EGL rendering failed.\n"
+            "[mujoco] Check nvidia-smi and pick a free GPU with HUMANOIDTOOLBENCH_GPU=N, "
+            "or retry with HUMANOIDTOOLBENCH_FORCE_CPU=1 to rule out the GPU driver.",
+            file=sys.stderr,
+            flush=True,
+        )
+    return 128 - status if status < 0 else status
+
+
 def _fetch_info(host: str, port: int, timeout: float) -> dict:
     import urllib.request
 
@@ -489,16 +519,17 @@ def main(argv: list[str] | None = None) -> None:
         os.environ["HUMANOIDTOOLBENCH_MUJOCO_ENV_PREFIX"] = sys.prefix
         os.environ["HUMANOIDTOOLBENCH_POLICY_DEVICE"] = args.device
         arguments = sys.argv[1:] if argv is None else argv
-        os.execv(
-            "/bin/bash",
-            [
-                "bash",
-                str(wrapper),
-                sys.executable,
-                "-m",
-                "humanoidtoolbench.cli.public_eval",
-                *arguments,
-            ],
+        raise SystemExit(
+            run_in_runtime_wrapper(
+                [
+                    "/bin/bash",
+                    str(wrapper),
+                    sys.executable,
+                    "-m",
+                    "humanoidtoolbench.cli.public_eval",
+                    *arguments,
+                ]
+            )
         )
 
     # Set the headless backend before MuJoCo is imported. The runtime wrapper
