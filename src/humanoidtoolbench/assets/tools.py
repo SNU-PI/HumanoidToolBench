@@ -25,8 +25,8 @@ The installer (`scripts/setup_evaluation.py`) downloads the meshes into
 
 HumanoidToolBench
 
-Copyright (c) 2025 Songlin Wei and Contributors
-Licensed under the terms in LICENSE file.
+Portions derived from SIMPLE (https://github.com/physical-superintelligence-lab/SIMPLE),
+Copyright (c) 2025 Songlin Wei and Contributors. Licensed under the terms in LICENSE file.
 """
 
 from __future__ import annotations

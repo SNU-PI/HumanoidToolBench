@@ -14,8 +14,8 @@ but any tool that delivers a qualifying impact can break the block.
 
 HumanoidToolBench
 
-Copyright (c) 2025 Songlin Wei and Contributors
-Licensed under the terms in LICENSE file.
+Portions derived from SIMPLE (https://github.com/physical-superintelligence-lab/SIMPLE),
+Copyright (c) 2025 Songlin Wei and Contributors. Licensed under the terms in LICENSE file.
 """
 
 from __future__ import annotations

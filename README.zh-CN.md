@@ -108,4 +108,4 @@ uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max
 
 本版本提供**评测代码**。你可以使用示范数据在自己的框架中训练模型；本版本不包含模型训练流程。
 
-[MIT 代码许可证](LICENSE)。第三方资源、模型和数据遵循各自的条款。
+[MIT 代码许可证](LICENSE)。部分仿真代码源自 [SIMPLE](https://github.com/physical-superintelligence-lab/SIMPLE)（MIT）。第三方资源、模型和数据遵循各自的条款。

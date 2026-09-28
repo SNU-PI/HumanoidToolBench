@@ -12,8 +12,8 @@ only push it. The hook's crook goes past the object and catches it.
 
 HumanoidToolBench
 
-Copyright (c) 2025 Songlin Wei and Contributors
-Licensed under the terms in LICENSE file.
+Portions derived from SIMPLE (https://github.com/physical-superintelligence-lab/SIMPLE),
+Copyright (c) 2025 Songlin Wei and Contributors. Licensed under the terms in LICENSE file.
 """
 
 from __future__ import annotations

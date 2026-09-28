@@ -25,8 +25,8 @@ spawn, or at L2 the spot level with the goal, a step along the pair.
 
 HumanoidToolBench
 
-Copyright (c) 2025 Songlin Wei and Contributors
-Licensed under the terms in LICENSE file.
+Portions derived from SIMPLE (https://github.com/physical-superintelligence-lab/SIMPLE),
+Copyright (c) 2025 Songlin Wei and Contributors. Licensed under the terms in LICENSE file.
 """
 
 from __future__ import annotations

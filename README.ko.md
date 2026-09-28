@@ -172,5 +172,6 @@ uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max
 프레임워크에서 모델을 훈련할 수 있으며, 모델 훈련 파이프라인은 포함되어
 있지 않습니다.
 
-[MIT 코드 라이선스](LICENSE). 외부 에셋, 모델, 데이터는 각각의 이용 조건을
+[MIT 코드 라이선스](LICENSE). 시뮬레이션 코드 일부는
+[SIMPLE](https://github.com/physical-superintelligence-lab/SIMPLE)(MIT)에서 가져왔습니다. 외부 에셋, 모델, 데이터는 각각의 이용 조건을
 따릅니다.

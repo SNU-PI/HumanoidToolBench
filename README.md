@@ -173,5 +173,6 @@ Recording downloads currently require an approved access request. See the
 This release provides **evaluation code**. You can use the demonstrations to
 train in your own framework; model training pipelines are not included.
 
-[MIT code license](LICENSE). Third-party assets, models, and data retain their
-own terms.
+[MIT code license](LICENSE). Parts of the simulation code are derived from
+[SIMPLE](https://github.com/physical-superintelligence-lab/SIMPLE) (MIT).
+Third-party assets, models, and data retain their own terms.
