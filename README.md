@@ -169,8 +169,9 @@ Instructions, thresholds and recorded metrics are listed in
 
 **[Download ToolBook on Hugging Face](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop)**
 
-Recording downloads currently require an approved access request. See the
-[dataset guide](data/README.md) for layouts and observation/action formats.
+The recordings are released under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) for non-commercial
+research. See the [dataset guide](data/README.md) for layouts and
+observation/action formats.
 
 This release provides **evaluation code**. You can use the demonstrations to
 train in your own framework; model training pipelines are not included.

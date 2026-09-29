@@ -167,8 +167,9 @@ uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max
 
 **[Hugging Face에서 ToolBook 다운로드](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop)**
 
-현재 녹화 데이터 다운로드에는 접근 신청과 승인이 필요합니다. 폴더 구조와
-관측/행동 형식은 [데이터 가이드](data/README.md)를 참고하세요.
+녹화 데이터는 비상업적 연구용으로 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 라이선스로
+공개됩니다. 폴더 구조와 관측/행동 형식은 [데이터 가이드](data/README.md)를
+참고하세요.
 
 이 배포본은 **평가 코드**를 제공합니다. 시연 데이터를 사용해 원하는
 프레임워크에서 모델을 훈련할 수 있으며, 모델 훈련 파이프라인은 포함되어

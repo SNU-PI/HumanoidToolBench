@@ -6,13 +6,13 @@ simulation teleoperation data and real Unitree G1 recordings. The
 **[HumanoidToolBench collection](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)**
 links this dataset and the model releases.
 
-## Access and source revisions
+## License and source revisions
 
-The dataset page is public; downloading recordings requires an access request
-that is approved manually. Request access on the dataset page, then
-authenticate your downloader after approval. The dataset card limits use to
-non-commercial research, disallows recording redistribution, and requests
-citation. These dataset conditions are separate from the code's MIT license.
+The recordings are released under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) and can be downloaded
+without an access request. You may use and redistribute them for
+non-commercial purposes with attribution; please cite HumanoidToolBench in
+work that uses them. This license is separate from the code's MIT license, and
+third-party assets keep their own terms.
 
 The collection links these source snapshots:
 
