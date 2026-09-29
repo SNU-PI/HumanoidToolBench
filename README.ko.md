@@ -2,6 +2,8 @@
 
 https://github.com/user-attachments/assets/796a6ff9-8247-457b-b40d-e6305630faed
 
+**[프로젝트 페이지](https://snu-pi.github.io/HumanoidToolBench/)** · [ToolBook 데이터셋](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [체크포인트](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
+
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
 HumanoidToolBench는 Unitree G1이 적절한 도구를 고르고 그 도구로 태스크를
