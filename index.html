@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HumanoidToolBench: Benchmarking Humanoid Tool Use from Selection to Mobile Execution</title>
+<meta name="description" content="An 18-task benchmark for humanoid tool use, from selecting a suitable tool to using it while moving, with ToolBook: 3.1k human demonstrations in simulation and on a real Unitree G1.">
+<link rel="canonical" href="https://snu-pi.github.io/HumanoidToolBench/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="HumanoidToolBench">
+<meta property="og:description" content="An 18-task benchmark for humanoid tool use, from selecting a suitable tool to using it while moving, with ToolBook: 3.1k human demonstrations in simulation and on a real Unitree G1.">
+<meta property="og:url" content="https://snu-pi.github.io/HumanoidToolBench/">
+<meta property="og:image" content="https://snu-pi.github.io/HumanoidToolBench/static/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="HumanoidToolBench">
+<meta name="twitter:description" content="An 18-task benchmark for humanoid tool use, from selecting a suitable tool to using it while moving, with ToolBook: 3.1k human demonstrations in simulation and on a real Unitree G1.">
+<meta name="twitter:image" content="https://snu-pi.github.io/HumanoidToolBench/static/img/og.jpg">
+<meta name="citation_title" content="HumanoidToolBench: Benchmarking Humanoid Tool Use from Selection to Mobile Execution">
+<meta name="citation_author" content="Kyochul Jang">
+<meta name="citation_author" content="Seohyeon Park">
+<meta name="citation_author" content="Ohchul Kwon">
+<meta name="citation_author" content="Sangjun Park">
+<meta name="citation_author" content="Junhyeok Choi">
+<meta name="citation_author" content="Seungyeop Yi">
+<meta name="citation_author" content="Chaeyun Kim">
+<meta name="citation_author" content="Sangkyu Lee">
+<meta name="citation_author" content="Idan Szpektor">
+<meta name="citation_author" content="Avi Caciularu">
+<meta name="citation_author" content="Jongmin Park">
+<meta name="citation_author" content="Youngjae Yu">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="static/img/favicon.png">
+<link rel="apple-touch-icon" href="static/img/apple-touch-icon.png">
+<link rel="preload" href="static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="static/img/poster.webp" as="image" fetchpriority="high">
+<link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="HumanoidToolBench, back to top">
+      <img src="static/img/mark.webp" width="30" height="30" alt="">
+      <span>HumanoidTool<b>Bench</b></span>
+    </a>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#tasks">Tasks</a>
+      <a href="#overview">Overview</a>
+      <a href="#results">Results</a>
+      <a href="#analysis">Analysis</a>
+      <a href="#toolbook">ToolBook</a>
+      <a href="#start">Get started</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="https://github.com/SNU-PI/HumanoidToolBench"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>GitHub<span class="count is-pending" data-count="github" title="GitHub stars"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.3l2 4.3 4.7.6-3.5 3.2.9 4.6L8 11.7 3.9 14l.9-4.6L1.3 6.2 6 5.6z"/></svg><span>0</span></span></a>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="hero" id="top">
+  <div class="wrap">
+    <h1>
+      <img class="hero-logo" src="static/img/logo.webp" srcset="static/img/logo-480.webp 480w, static/img/logo.webp 960w" sizes="(max-width: 560px) 82vw, 480px" width="960" height="217" fetchpriority="high" alt="HumanoidToolBench">
+      <span class="hero-title">Benchmarking Humanoid Tool Use from <em>Selection</em> to <em>Mobile Execution</em></span>
+    </h1>
+
+    <!-- AUTHORS: in paper order. The name links to the author's page, the envelope to their email. -->
+    <p class="authors">
+      <span class="author"><a href="https://www.kyochul.com/">Kyochul Jang</a><sup>1</sup><a class="mail" href="mailto:kyochul@snu.ac.kr" aria-label="Email Kyochul Jang" title="kyochul@snu.ac.kr"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://eainx.github.io/">Seohyeon Park</a><sup>1</sup><a class="mail" href="mailto:seohyun423@snu.ac.kr" aria-label="Email Seohyeon Park" title="seohyun423@snu.ac.kr"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://github.com/dootheg0924">Ohchul Kwon</a><sup>1</sup><a class="mail" href="mailto:dootheg0924@snu.ac.kr" aria-label="Email Ohchul Kwon" title="dootheg0924@snu.ac.kr"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://www.umass.edu/robotics/people/sangjun-park">Sangjun Park</a><sup>2</sup><a class="mail" href="mailto:sangjunpark@umass.edu" aria-label="Email Sangjun Park" title="sangjunpark@umass.edu"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://acensia.github.io/">Junhyeok Choi</a><sup>1</sup><a class="mail" href="mailto:acensia@snu.ac.kr" aria-label="Email Junhyeok Choi" title="acensia@snu.ac.kr"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://github.com/devpotatopotato">Seungyeop Yi</a><sup>1</sup><a class="mail" href="mailto:tmootu76@snu.ac.kr" aria-label="Email Seungyeop Yi" title="tmootu76@snu.ac.kr"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://golddohyun.github.io/">Chaeyun Kim</a><sup>1</sup><a class="mail" href="mailto:golddohyun@snu.ac.kr" aria-label="Email Chaeyun Kim" title="golddohyun@snu.ac.kr"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://oddqueue.github.io/">Sangkyu Lee</a><sup>1</sup><a class="mail" href="mailto:oddqueue@gmail.com" aria-label="Email Sangkyu Lee" title="oddqueue@gmail.com"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://sites.google.com/site/idanszpektor">Idan Szpektor</a><sup>3</sup><a class="mail" href="mailto:szpektor@google.com" aria-label="Email Idan Szpektor" title="szpektor@google.com"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://aviclu.github.io/">Avi Caciularu</a><sup>3</sup><a class="mail" href="mailto:avica@google.com" aria-label="Email Avi Caciularu" title="avica@google.com"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://imjongminpark.github.io/">Jongmin Park</a><sup>1</sup><a class="mail" href="mailto:jm.park@snu.ac.kr" aria-label="Email Jongmin Park" title="jm.park@snu.ac.kr"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>,
+      <span class="author"><a href="https://yj-yu.github.io/home/">Youngjae Yu</a><sup>1*</sup><a class="mail" href="mailto:youngjae4yu@gmail.com" aria-label="Email Youngjae Yu" title="youngjae4yu@gmail.com"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.75"/><path d="M2.25 4.5 8 9l5.75-4.5"/></svg></a></span>
+    </p>
+    <p class="affils">
+      <span><sup>1</sup>Seoul National University</span>
+      <span><sup>2</sup>University of Massachusetts Amherst</span>
+      <span><sup>3</sup>Google Research</span>
+    </p>
+    <p class="byline"><sup>*</sup>Corresponding author</p>
+
+    <div class="actions">
+      <a class="btn" aria-disabled="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Paper <small>coming soon</small></a>
+      <a class="btn btn-primary" href="https://github.com/SNU-PI/HumanoidToolBench"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>Code<span class="count is-pending" data-count="github" title="GitHub stars"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.3l2 4.3 4.7.6-3.5 3.2.9 4.6L8 11.7 3.9 14l.9-4.6L1.3 6.2 6 5.6z"/></svg><span>0</span></span></a>
+      <a class="btn" href="https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/></svg>ToolBook dataset<span class="count is-pending" data-count="hf-dataset" title="Likes on Hugging Face"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 14.2S1.5 10.4 1.5 5.9A3.4 3.4 0 0 1 8 4.5a3.4 3.4 0 0 1 6.5 1.4c0 4.5-6.5 8.3-6.5 8.3z"/></svg><span>0</span></span></a>
+      <a class="btn" href="https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/><path d="M4 7l8 4.5L20 7M12 11.5v10"/></svg>Checkpoints</a>
+    </div>
+
+    <div class="video-frame" id="video">
+      <video controls playsinline preload="metadata" poster="static/img/poster.webp" width="1280" height="720">
+        <source src="static/video/humanoidtoolbench.mp4" type="video/mp4">
+        Your browser cannot play this video.
+        <a href="static/video/humanoidtoolbench.mp4">Download the video</a>.
+      </video>
+    </div>
+    <p class="note">Three-minute overview, with narration.</p>
+    <p class="hero-sum after-video">Can a humanoid pick the right tool and then use it, standing still or on the move? 18 tasks, 55 tools and 3.1k human demonstrations, in simulation and on a real Unitree G1.</p>
+  </div>
+</div>
+
+<section id="tasks" class="tight">
+  <div class="wrap">
+    <p class="eyebrow">The tasks</p>
+    <h2>The robot is told the goal, never the tool</h2>
+    <p class="lede">It has to choose a suitable tool from the objects on the table and use it. Three scenarios, three execution levels and two tool-set modes make 18 tasks.</p>
+
+    <div class="row-head first"><h3>3 scenarios</h3><p>Each one needs a different tool function.</p></div>
+    <div class="clips">
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/ballmove.webp" aria-label="A simulated humanoid picks up a long stick and pushes a ball into a ring"><source src="static/video/clips/ballmove.mp4" type="video/mp4"></video><figcaption><b>BallMove<span class="chip">Spatial</span></b><span class="cap">“Pick the tool and move the ball to the target.” Only a long stick reaches the ball.</span></figcaption></figure>
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/ballretrieve.webp" aria-label="A simulated humanoid picks up a hook and pulls a ball back into a ring"><source src="static/video/clips/ballretrieve.mp4" type="video/mp4"></video><figcaption><b>BallRetrieve<span class="chip amber">Affordance</span></b><span class="cap">“Pick the tool and retrieve the ball to the target.” Only a hook can pull it back.</span></figcaption></figure>
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/icebreak.webp" aria-label="A simulated humanoid picks up a hammer and breaks two ice blocks"><source src="static/video/clips/icebreak.mp4" type="video/mp4"></video><figcaption><b>IceBreak<span class="chip purple">Physical</span></b><span class="cap">“Pick the tool and break the ice blocks.” Only a stiff, heavy hammer breaks them.</span></figcaption></figure>
+    </div>
+
+    <div class="row-head"><h3>3 execution levels and a decoy</h3><p>Shown on BallMove. The clip above is L1, stationary use, in standard mode.</p></div>
+    <div class="clips">
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/level-l0.webp" aria-label="A simulated humanoid picks up a long stick from the table"><source src="static/video/clips/level-l0.mp4" type="video/mp4"></video><figcaption><b>L0 · Select and pick up</b><span class="cap">Success is lifting the suitable tool by 8 cm. Nothing else is scored.</span></figcaption></figure>
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/level-l2.webp" aria-label="A simulated humanoid walks along the table with a stick and pushes a ball"><source src="static/video/clips/level-l2.mp4" type="video/mp4"></video><figcaption><b>L2 · Mobile tool use</b><span class="cap">The goal is out of reach, so the robot steps along the table while holding the tool.</span></figcaption></figure>
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/decoy.webp" aria-label="A simulated humanoid chooses between a long and a short stick"><source src="static/video/clips/decoy.mp4" type="video/mp4"></video><figcaption><b>Decoy mode</b><span class="cap">A short stick lies beside the long one. The instruction is the same; the choice is harder.</span></figcaption></figure>
+    </div>
+
+    <div class="row-head"><h3>On the real Unitree G1</h3><p>Policy rollouts after fine-tuning on 91 real demonstrations, played at 1.5 to 3× speed.</p></div>
+    <div class="clips four">
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/real-ballmove-s.webp" aria-label="A real humanoid pushes a ball into a ring with a long yellow stick"><source src="static/video/clips/real-ballmove-s.mp4" type="video/mp4"></video><figcaption><b>BallMove · S</b><span class="cap">One long stick and unrelated objects.</span></figcaption></figure>
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/real-ballmove-d.webp" aria-label="A real humanoid picks the long stick over a short one and pushes a ball"><source src="static/video/clips/real-ballmove-d.mp4" type="video/mp4"></video><figcaption><b>BallMove · D</b><span class="cap">A short stick is added as a decoy.</span></figcaption></figure>
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/real-ballretrieve-s.webp" aria-label="A real humanoid pulls a ball back with a hook"><source src="static/video/clips/real-ballretrieve-s.mp4" type="video/mp4"></video><figcaption><b>BallRetrieve · S</b><span class="cap">One hook and unrelated objects.</span></figcaption></figure>
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/real-ballretrieve-d.webp" aria-label="A real humanoid picks the hook over a straight stick and pulls a ball back"><source src="static/video/clips/real-ballretrieve-d.mp4" type="video/mp4"></video><figcaption><b>BallRetrieve · D</b><span class="cap">A straight stick is added as a decoy.</span></figcaption></figure>
+    </div>
+    <p class="note">Simulation clips are human demonstrations from ToolBook, seen through the robot's head camera.</p>
+
+    <div class="more-group">
+      <details class="more">
+        <summary>The task structure in one figure</summary>
+        <div class="inner">
+          <figure class="fig"><div class="scroll-x"><a class="zoom" href="static/img/task-structure.webp" target="_blank" rel="noopener" title="Open at full size"><img src="static/img/task-structure.webp" width="2200" height="699" loading="lazy" style="min-width:860px" alt="Task structure: tool families (sticks, hooks, hammers), the three scenarios with their instructions, the three execution levels, and standard versus decoy tool sets for each scenario."></a></div><figcaption><b>Task structure.</b> 3 scenarios × 3 execution levels × 2 tool-set modes = 18 tasks, built on 55 tool assets: 9 sticks, 9 hooks and 37 hammers. A decoy differs from the suitable tool in the one property the scenario needs: a 0.30 m stick instead of 0.50 m, a straight stick instead of a hook, a light fly swatter, paint roller or plunger instead of a metal hammer.</figcaption></figure>
+        </div>
+      </details>
+      <details class="more">
+        <summary>What the policy sees and controls</summary>
+        <div class="inner">
+          <ul class="facts">
+            <li><b>Robot.</b> Unitree G1 with 29 body joints, two seven-joint Dex3 hands and a head camera, in MuJoCo and on hardware.</li>
+            <li><b>Observation.</b> The head-camera image and a 32-value robot state. No object state is given.</li>
+            <li><b>Action.</b> 36 values at 50 Hz: hand, arm and waist targets, base height, and base motion. Pretrained GR00T Balance and Walk controllers drive the legs.</li>
+            <li><b>Scenes.</b> Every episode draws new tools, positions, robot spawn, surface materials and lighting.</li>
+            <li><b>Environment IDs</b> write decoy mode as <code>R</code>, for example <code>G1BallMove-L1-R</code>.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="overview" class="tint">
+  <div class="wrap">
+    <p class="eyebrow">Overview</p>
+    <h2>Choosing the right tool is only the first step</h2>
+    <div class="abstract">
+      <p>Humanoids need tools to do tasks beyond their physical limits. That takes selecting a suitable tool and coordinating manipulation and, when needed, locomotion. Existing benchmarks do not evaluate these together on a humanoid.</p>
+      <p><b>HumanoidToolBench</b> does, with 18 tasks and <b>ToolBook</b>, 3.1k human demonstrations. Seven policies in simulation and three on the real robot show substantial gaps between selecting a tool and completing the task.</p>
+    </div>
+
+    <ul class="stats">
+      <li><b>18</b><span>tasks</span></li>
+      <li><b>55</b><span>tool assets</span></li>
+      <li><b>3,094</b><span>human demonstrations</span></li>
+      <li><b>7</b><span>policies in simulation</span></li>
+      <li><b>3</b><span>policies on a real G1</span></li>
+    </ul>
+
+    <div class="more-group">
+      <details class="more">
+        <summary>How it compares with existing benchmarks</summary>
+        <div class="inner">
+          <div class="scroll-x"><table class="plain" style="min-width:820px" aria-label="Comparison with related benchmarks">
+<thead><tr><th scope="col">Benchmark</th><th scope="col">Embodiment</th><th scope="col">Tool-use scope</th><th scope="col">Tool assets</th><th scope="col">Selection</th><th scope="col">Hierarchical levels</th><th scope="col">Decoy variants</th><th scope="col">Sim demos</th><th scope="col">Real demos</th></tr></thead><tbody>
+<tr><th scope="row">LIBERO</th><td>Single-arm</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>0</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td>6,500</td><td>0</td></tr>
+<tr><th scope="row">RoboTwin 2.0</th><td>Dual-arm</td><td class="part"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="partly"><path d="M8 3l5.5 9.5h-11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></td><td>11</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>0</td><td>40</td></tr>
+<tr><th scope="row">HumanoidBench</th><td>Humanoid</td><td class="part"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="partly"><path d="M8 3l5.5 9.5h-11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></td><td>1</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>0</td><td>0</td></tr>
+<tr><th scope="row">SIMPLE</th><td>Humanoid</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>0</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>–</td><td>–</td></tr>
+<tr><th scope="row">WOLF-VLA</th><td>Humanoid</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>0</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>0</td><td>0</td></tr>
+<tr><th scope="row">PhysToolBench</th><td>None (VQA)</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td>0</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>0</td><td>0</td></tr>
+<tr><th scope="row">DexCraft</th><td>Single-arm</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td>6</td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td>30</td><td>150</td></tr>
+<tr><th scope="row">RoboWits</th><td>Dual-arm</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td>17</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td class="no"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="no"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td>1,207</td><td>0</td></tr>
+<tr class="ours"><th scope="row">HumanoidToolBench</th><td>Humanoid</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td>55</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td>3,003</td><td>91</td></tr>
+</tbody></table></div>
+          <p class="note"><span class="part"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="partly"><path d="M8 3l5.5 9.5h-11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span> tool use is included but is not the primary evaluation scope. 0: not applicable or none released. –: not reported.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap">
+    <p class="eyebrow">Results</p>
+    <h2>Policies that pick up the right tool still often fail to finish the task</h2>
+    <p class="lede">Each policy is trained once on the 3,003 simulation demonstrations and run for 100 episodes per task.</p>
+
+    <div class="card" style="margin-top:28px">
+      <div class="card-head">
+        <h3>Simulation success rate (%)</h3>
+        <p>Bold marks the best policy in a column.</p>
+        <div class="tabs" data-tabs hidden role="group" aria-label="Tool-set mode"><button type="button" data-mode="S" aria-pressed="true">Standard</button><button type="button" data-mode="D" aria-pressed="false">Decoy</button></div>
+      </div>
+      <div class="card-body"><div class="pane" data-pane="S"><h4 class="pane-title">Standard (S)</h4><div class="scroll-x"><table class="heat" aria-label="Simulation success rate in percent, standard mode">
+<colgroup><col class="c-name"><col span="3"><col class="c-gap"><col span="3"><col class="c-gap"><col span="3"></colgroup>
+<thead><tr class="lv"><th scope="col" rowspan="2"><span class="skip">Policy</span></th>
+<th scope="colgroup" colspan="3">L0 <span>Select</span></th>
+<th class="gap" rowspan="2" aria-hidden="true"></th>
+<th scope="colgroup" colspan="3">L1 <span>Stationary</span></th>
+<th class="gap" rowspan="2" aria-hidden="true"></th>
+<th scope="colgroup" colspan="3">L2 <span>Mobile</span></th>
+</tr><tr>
+<th scope="col">Move</th>
+<th scope="col">Retrieve</th>
+<th scope="col">Break</th>
+<th scope="col">Move</th>
+<th scope="col">Retrieve</th>
+<th scope="col">Break</th>
+<th scope="col">Move</th>
+<th scope="col">Retrieve</th>
+<th scope="col">Break</th>
+</tr></thead><tbody>
+<tr><th scope="row">ACT<small>IL</small></th>
+<td style="--v:5" data-tip="ACT · BallMove L0 · Standard" data-value="5%">5</td>
+<td class="z" style="--v:0" data-tip="ACT · BallRetrieve L0 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · IceBreak L0 · Standard" data-value="0%">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="ACT · BallMove L1 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · BallRetrieve L1 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · IceBreak L1 · Standard" data-value="0%">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="ACT · BallMove L2 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · BallRetrieve L2 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · IceBreak L2 · Standard" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">DP<small>IL</small></th>
+<td style="--v:14" data-tip="DP · BallMove L0 · Standard" data-value="14%">14</td>
+<td style="--v:5" data-tip="DP · BallRetrieve L0 · Standard" data-value="5%">5</td>
+<td style="--v:17" data-tip="DP · IceBreak L0 · Standard" data-value="17%">17</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="DP · BallMove L1 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="DP · BallRetrieve L1 · Standard" data-value="0%">0</td>
+<td style="--v:2" data-tip="DP · IceBreak L1 · Standard" data-value="2%">2</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="DP · BallMove L2 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="DP · BallRetrieve L2 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="DP · IceBreak L2 · Standard" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">π<sub>0.5</sub><small>VLA</small></th>
+<td style="--v:29" data-tip="π0.5 · BallMove L0 · Standard" data-value="29%">29</td>
+<td style="--v:24" data-tip="π0.5 · BallRetrieve L0 · Standard" data-value="24%">24</td>
+<td style="--v:31" data-tip="π0.5 · IceBreak L0 · Standard" data-value="31%">31</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:4" data-tip="π0.5 · BallMove L1 · Standard" data-value="4%">4</td>
+<td class="z" style="--v:0" data-tip="π0.5 · BallRetrieve L1 · Standard" data-value="0%">0</td>
+<td style="--v:12" data-tip="π0.5 · IceBreak L1 · Standard" data-value="12%">12</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:1" data-tip="π0.5 · BallMove L2 · Standard" data-value="1%">1</td>
+<td class="z" style="--v:0" data-tip="π0.5 · BallRetrieve L2 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="π0.5 · IceBreak L2 · Standard" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">Ψ<sub>0</sub><small>VLA</small></th>
+<td style="--v:19" data-tip="Ψ0 · BallMove L0 · Standard" data-value="19%">19</td>
+<td style="--v:14" data-tip="Ψ0 · BallRetrieve L0 · Standard" data-value="14%">14</td>
+<td style="--v:22" data-tip="Ψ0 · IceBreak L0 · Standard" data-value="22%">22</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:9" data-tip="Ψ0 · BallMove L1 · Standard" data-value="9%">9</td>
+<td class="z" style="--v:0" data-tip="Ψ0 · BallRetrieve L1 · Standard" data-value="0%">0</td>
+<td style="--v:13" data-tip="Ψ0 · IceBreak L1 · Standard" data-value="13%">13</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:1" data-tip="Ψ0 · BallMove L2 · Standard" data-value="1%">1</td>
+<td class="z" style="--v:0" data-tip="Ψ0 · BallRetrieve L2 · Standard" data-value="0%">0</td>
+<td style="--v:2" data-tip="Ψ0 · IceBreak L2 · Standard" data-value="2%">2</td>
+</tr>
+<tr><th scope="row">GR00T N1.7<small>VLA</small></th>
+<td class="best" style="--v:77" data-tip="GR00T N1.7 · BallMove L0 · Standard" data-value="77%">77</td>
+<td class="best" style="--v:73" data-tip="GR00T N1.7 · BallRetrieve L0 · Standard" data-value="73%">73</td>
+<td style="--v:88" data-tip="GR00T N1.7 · IceBreak L0 · Standard" data-value="88%">88</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:64" data-tip="GR00T N1.7 · BallMove L1 · Standard" data-value="64%">64</td>
+<td style="--v:36" data-tip="GR00T N1.7 · BallRetrieve L1 · Standard" data-value="36%">36</td>
+<td style="--v:66" data-tip="GR00T N1.7 · IceBreak L1 · Standard" data-value="66%">66</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="best" style="--v:10" data-tip="GR00T N1.7 · BallMove L2 · Standard" data-value="10%">10</td>
+<td style="--v:9" data-tip="GR00T N1.7 · BallRetrieve L2 · Standard" data-value="9%">9</td>
+<td style="--v:31" data-tip="GR00T N1.7 · IceBreak L2 · Standard" data-value="31%">31</td>
+</tr>
+<tr><th scope="row">Cosmos 3 Edge<small>WAM</small></th>
+<td style="--v:12" data-tip="Cosmos 3 Edge Policy · BallMove L0 · Standard" data-value="12%">12</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · BallRetrieve L0 · Standard" data-value="0%">0</td>
+<td style="--v:2" data-tip="Cosmos 3 Edge Policy · IceBreak L0 · Standard" data-value="2%">2</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · BallMove L1 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · BallRetrieve L1 · Standard" data-value="0%">0</td>
+<td style="--v:1" data-tip="Cosmos 3 Edge Policy · IceBreak L1 · Standard" data-value="1%">1</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · BallMove L2 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · BallRetrieve L2 · Standard" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · IceBreak L2 · Standard" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">FastWAM<small>WAM</small></th>
+<td style="--v:64" data-tip="FastWAM · BallMove L0 · Standard" data-value="64%">64</td>
+<td style="--v:62" data-tip="FastWAM · BallRetrieve L0 · Standard" data-value="62%">62</td>
+<td class="best" style="--v:98" data-tip="FastWAM · IceBreak L0 · Standard" data-value="98%">98</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="best" style="--v:76" data-tip="FastWAM · BallMove L1 · Standard" data-value="76%">76</td>
+<td class="best" style="--v:57" data-tip="FastWAM · BallRetrieve L1 · Standard" data-value="57%">57</td>
+<td class="best" style="--v:86" data-tip="FastWAM · IceBreak L1 · Standard" data-value="86%">86</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:9" data-tip="FastWAM · BallMove L2 · Standard" data-value="9%">9</td>
+<td class="best" style="--v:20" data-tip="FastWAM · BallRetrieve L2 · Standard" data-value="20%">20</td>
+<td class="best" style="--v:69" data-tip="FastWAM · IceBreak L2 · Standard" data-value="69%">69</td>
+</tr>
+</tbody></table></div></div>
+<div class="pane" data-pane="D"><h4 class="pane-title">Decoy (D)</h4><div class="scroll-x"><table class="heat" aria-label="Simulation success rate in percent, decoy mode">
+<colgroup><col class="c-name"><col span="3"><col class="c-gap"><col span="3"><col class="c-gap"><col span="3"></colgroup>
+<thead><tr class="lv"><th scope="col" rowspan="2"><span class="skip">Policy</span></th>
+<th scope="colgroup" colspan="3">L0 <span>Select</span></th>
+<th class="gap" rowspan="2" aria-hidden="true"></th>
+<th scope="colgroup" colspan="3">L1 <span>Stationary</span></th>
+<th class="gap" rowspan="2" aria-hidden="true"></th>
+<th scope="colgroup" colspan="3">L2 <span>Mobile</span></th>
+</tr><tr>
+<th scope="col">Move</th>
+<th scope="col">Retrieve</th>
+<th scope="col">Break</th>
+<th scope="col">Move</th>
+<th scope="col">Retrieve</th>
+<th scope="col">Break</th>
+<th scope="col">Move</th>
+<th scope="col">Retrieve</th>
+<th scope="col">Break</th>
+</tr></thead><tbody>
+<tr><th scope="row">ACT<small>IL</small></th>
+<td style="--v:3" data-tip="ACT · BallMove L0 · Decoy" data-value="3%">3</td>
+<td style="--v:4" data-tip="ACT · BallRetrieve L0 · Decoy" data-value="4%">4</td>
+<td style="--v:1" data-tip="ACT · IceBreak L0 · Decoy" data-value="1%">1</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="ACT · BallMove L1 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · BallRetrieve L1 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · IceBreak L1 · Decoy" data-value="0%">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="ACT · BallMove L2 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · BallRetrieve L2 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="ACT · IceBreak L2 · Decoy" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">DP<small>IL</small></th>
+<td style="--v:11" data-tip="DP · BallMove L0 · Decoy" data-value="11%">11</td>
+<td style="--v:9" data-tip="DP · BallRetrieve L0 · Decoy" data-value="9%">9</td>
+<td style="--v:13" data-tip="DP · IceBreak L0 · Decoy" data-value="13%">13</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="DP · BallMove L1 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="DP · BallRetrieve L1 · Decoy" data-value="0%">0</td>
+<td style="--v:1" data-tip="DP · IceBreak L1 · Decoy" data-value="1%">1</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="DP · BallMove L2 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="DP · BallRetrieve L2 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="DP · IceBreak L2 · Decoy" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">π<sub>0.5</sub><small>VLA</small></th>
+<td style="--v:26" data-tip="π0.5 · BallMove L0 · Decoy" data-value="26%">26</td>
+<td style="--v:28" data-tip="π0.5 · BallRetrieve L0 · Decoy" data-value="28%">28</td>
+<td style="--v:21" data-tip="π0.5 · IceBreak L0 · Decoy" data-value="21%">21</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:5" data-tip="π0.5 · BallMove L1 · Decoy" data-value="5%">5</td>
+<td style="--v:3" data-tip="π0.5 · BallRetrieve L1 · Decoy" data-value="3%">3</td>
+<td style="--v:1" data-tip="π0.5 · IceBreak L1 · Decoy" data-value="1%">1</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:1" data-tip="π0.5 · BallMove L2 · Decoy" data-value="1%">1</td>
+<td style="--v:1" data-tip="π0.5 · BallRetrieve L2 · Decoy" data-value="1%">1</td>
+<td class="z" style="--v:0" data-tip="π0.5 · IceBreak L2 · Decoy" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">Ψ<sub>0</sub><small>VLA</small></th>
+<td style="--v:14" data-tip="Ψ0 · BallMove L0 · Decoy" data-value="14%">14</td>
+<td style="--v:15" data-tip="Ψ0 · BallRetrieve L0 · Decoy" data-value="15%">15</td>
+<td style="--v:18" data-tip="Ψ0 · IceBreak L0 · Decoy" data-value="18%">18</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:7" data-tip="Ψ0 · BallMove L1 · Decoy" data-value="7%">7</td>
+<td style="--v:3" data-tip="Ψ0 · BallRetrieve L1 · Decoy" data-value="3%">3</td>
+<td style="--v:8" data-tip="Ψ0 · IceBreak L1 · Decoy" data-value="8%">8</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:3" data-tip="Ψ0 · BallMove L2 · Decoy" data-value="3%">3</td>
+<td style="--v:1" data-tip="Ψ0 · BallRetrieve L2 · Decoy" data-value="1%">1</td>
+<td class="z" style="--v:0" data-tip="Ψ0 · IceBreak L2 · Decoy" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">GR00T N1.7<small>VLA</small></th>
+<td style="--v:67" data-tip="GR00T N1.7 · BallMove L0 · Decoy" data-value="67%">67</td>
+<td class="best" style="--v:59" data-tip="GR00T N1.7 · BallRetrieve L0 · Decoy" data-value="59%">59</td>
+<td style="--v:75" data-tip="GR00T N1.7 · IceBreak L0 · Decoy" data-value="75%">75</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:58" data-tip="GR00T N1.7 · BallMove L1 · Decoy" data-value="58%">58</td>
+<td style="--v:30" data-tip="GR00T N1.7 · BallRetrieve L1 · Decoy" data-value="30%">30</td>
+<td style="--v:63" data-tip="GR00T N1.7 · IceBreak L1 · Decoy" data-value="63%">63</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="best" style="--v:30" data-tip="GR00T N1.7 · BallMove L2 · Decoy" data-value="30%">30</td>
+<td style="--v:5" data-tip="GR00T N1.7 · BallRetrieve L2 · Decoy" data-value="5%">5</td>
+<td style="--v:48" data-tip="GR00T N1.7 · IceBreak L2 · Decoy" data-value="48%">48</td>
+</tr>
+<tr><th scope="row">Cosmos 3 Edge<small>WAM</small></th>
+<td style="--v:14" data-tip="Cosmos 3 Edge Policy · BallMove L0 · Decoy" data-value="14%">14</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · BallRetrieve L0 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · IceBreak L0 · Decoy" data-value="0%">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:2" data-tip="Cosmos 3 Edge Policy · BallMove L1 · Decoy" data-value="2%">2</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · BallRetrieve L1 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · IceBreak L1 · Decoy" data-value="0%">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:1" data-tip="Cosmos 3 Edge Policy · BallMove L2 · Decoy" data-value="1%">1</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · BallRetrieve L2 · Decoy" data-value="0%">0</td>
+<td class="z" style="--v:0" data-tip="Cosmos 3 Edge Policy · IceBreak L2 · Decoy" data-value="0%">0</td>
+</tr>
+<tr><th scope="row">FastWAM<small>WAM</small></th>
+<td class="best" style="--v:74" data-tip="FastWAM · BallMove L0 · Decoy" data-value="74%">74</td>
+<td style="--v:45" data-tip="FastWAM · BallRetrieve L0 · Decoy" data-value="45%">45</td>
+<td class="best" style="--v:93" data-tip="FastWAM · IceBreak L0 · Decoy" data-value="93%">93</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="best" style="--v:75" data-tip="FastWAM · BallMove L1 · Decoy" data-value="75%">75</td>
+<td class="best" style="--v:45" data-tip="FastWAM · BallRetrieve L1 · Decoy" data-value="45%">45</td>
+<td class="best" style="--v:82" data-tip="FastWAM · IceBreak L1 · Decoy" data-value="82%">82</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:8" data-tip="FastWAM · BallMove L2 · Decoy" data-value="8%">8</td>
+<td class="best" style="--v:11" data-tip="FastWAM · BallRetrieve L2 · Decoy" data-value="11%">11</td>
+<td class="best" style="--v:61" data-tip="FastWAM · IceBreak L2 · Decoy" data-value="61%">61</td>
+</tr>
+</tbody></table></div></div></div>
+      <div class="card-foot">
+        <span>Move, Retrieve, Break: the three scenarios. IL: imitation learning. VLA: vision-language-action. WAM: world-action model.</span>
+        <span class="scale">0%<i></i>100%</span>
+      </div>
+    </div>
+
+    <div class="findings">
+      <article class="finding">
+        <div class="num">76%<span class="to">→</span>9%<small>FastWAM, BallMove, L1 to L2</small></div>
+        <h4>Moving makes it much harder</h4>
+        <p>For every policy, success falls from L1 to L2 whenever L1 success is above zero.</p>
+      </article>
+      <article class="finding">
+        <div class="num">57%<span class="to">→</span>45%<small>FastWAM, BallRetrieve L1, standard to decoy</small></div>
+        <h4>Decoys hurt even the strongest policies</h4>
+        <p>GR00T N1.7 and FastWAM score lower in decoy mode in all three L1 scenarios.</p>
+      </article>
+      <article class="finding">
+        <div class="num">6/10<span class="to">vs</span>1/10<small>GR00T N1.7 vs ACT, real BallMove</small></div>
+        <h4>Simulation strength carries over to the real robot</h4>
+        <p>After 5,000 fine-tuning updates on 91 real demonstrations.</p>
+      </article>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><h3>Real Unitree G1, L1 tasks</h3><p>successes out of 10 trials</p></div>
+      <div class="card-body scroll-x"><table class="plain real" style="min-width:720px" aria-label="Real-robot L1 successes out of 10 trials">
+<thead><tr><th scope="col">Policy</th><th scope="col">BallMove · S</th><th scope="col">BallMove · D</th><th scope="col">BallRetrieve · S</th><th scope="col">BallRetrieve · D</th></tr></thead><tbody>
+<tr><th scope="row">ACT</th>
+<td><b>1/10</b><span class="pips" aria-hidden="true"><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>0/10</b><span class="pips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>2/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>1/10</b><span class="pips" aria-hidden="true"><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+</tr>
+<tr><th scope="row">GR00T N1.7</th>
+<td><b>6/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>4/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>4/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>4/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+</tr>
+<tr><th scope="row">FastWAM</th>
+<td><b>5/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>4/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>4/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+<td><b>5/10</b><span class="pips" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i class=on></i><i></i><i></i><i></i><i></i><i></i></span></td>
+</tr>
+</tbody></table></div>
+    </div>
+
+    <div class="more-group">
+      <details class="more">
+        <summary>Policies, training and evaluation settings</summary>
+        <div class="inner">
+          <div class="scroll-x">
+          <table class="plain" style="min-width:600px" aria-label="Evaluated policies">
+            <thead><tr><th scope="col">Policy</th><th scope="col">Family</th><th scope="col">Parameters</th><th scope="col">Action chunk</th><th scope="col">Real robot</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">ACT</th><td>IL</td><td>52.1M</td><td>100</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+              <tr><th scope="row">DP</th><td>IL</td><td>84.7M</td><td>16</td><td class="no">–</td></tr>
+              <tr><th scope="row">π<sub>0.5</sub></th><td>VLA</td><td>3.62B</td><td>16</td><td class="no">–</td></tr>
+              <tr><th scope="row">Ψ<sub>0</sub></th><td>VLA</td><td>2.63B</td><td>30</td><td class="no">–</td></tr>
+              <tr><th scope="row">GR00T N1.7</th><td>VLA</td><td>3.14B</td><td>40</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+              <tr><th scope="row">Cosmos 3 Edge Policy</th><td>WAM</td><td>3.37B</td><td>16</td><td class="no">–</td></tr>
+              <tr><th scope="row">FastWAM</th><td>WAM</td><td>6.02B</td><td>32</td><td class="yes"><svg class="mk" viewBox="0 0 16 16" role="img" aria-label="yes"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+            </tbody>
+          </table>
+          </div>
+          <p class="note">40,000 updates with 128 samples per update, drawing from all 18 tasks. Episodes last at most 3,000 control steps at 50 Hz, with seeds matched across policies. ACT and DP take language through a frozen CLIP ViT-L/14 text encoder.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="analysis" class="tint">
+  <div class="wrap">
+    <p class="eyebrow">Analysis</p>
+    <h2>Where do policies fail?</h2>
+    <p class="lede">Every rollout records five events, from touching any candidate to finishing the task.</p>
+
+    <div class="card" style="margin-top:28px">
+      <div class="card-head">
+        <h3>Share of episodes that reach each event (%)</h3>
+        <p>Averaged over the three scenarios and over L1 and L2.</p>
+        <div class="tabs" data-tabs hidden role="group" aria-label="Tool-set mode"><button type="button" data-mode="S" aria-pressed="true">Standard</button><button type="button" data-mode="D" aria-pressed="false">Decoy</button></div>
+      </div>
+      <div class="card-body"><div class="pane" data-pane="S"><h4 class="pane-title">Standard (S)</h4><div class="scroll-x"><table class="heat" aria-label="Execution-event rate in percent, standard mode">
+<colgroup><col class="c-name"><col span="5"></colgroup>
+<thead><tr class="lv"><th scope="col"><span class="skip">Policy</span></th>
+<th scope="col">Candidate contact</th>
+<th scope="col">Correct first contact</th>
+<th scope="col">Correct-tool lift</th>
+<th scope="col">Tool-target contact</th>
+<th scope="col">Success</th>
+</tr></thead><tbody>
+<tr><th scope="row">ACT<small>IL</small></th>
+<td style="--v:46" data-tip="ACT · Standard · Candidate contact" data-value="46.0%">46.0</td>
+<td style="--v:46" data-tip="ACT · Standard · Correct first contact" data-value="46.0%">46.0</td>
+<td style="--v:5.3" data-tip="ACT · Standard · Correct-tool lift" data-value="5.3%">5.3</td>
+<td style="--v:2.5" data-tip="ACT · Standard · Tool-target contact" data-value="2.5%">2.5</td>
+<td class="z" style="--v:0" data-tip="ACT · Standard · Success" data-value="0.0%">0.0</td>
+</tr>
+<tr><th scope="row">DP<small>IL</small></th>
+<td style="--v:89.8" data-tip="DP · Standard · Candidate contact" data-value="89.8%">89.8</td>
+<td style="--v:70" data-tip="DP · Standard · Correct first contact" data-value="70.0%">70.0</td>
+<td style="--v:15" data-tip="DP · Standard · Correct-tool lift" data-value="15.0%">15.0</td>
+<td style="--v:7.7" data-tip="DP · Standard · Tool-target contact" data-value="7.7%">7.7</td>
+<td style="--v:0.3" data-tip="DP · Standard · Success" data-value="0.3%">0.3</td>
+</tr>
+<tr><th scope="row">π<sub>0.5</sub><small>VLA</small></th>
+<td style="--v:98.8" data-tip="π0.5 · Standard · Candidate contact" data-value="98.8%">98.8</td>
+<td style="--v:72.7" data-tip="π0.5 · Standard · Correct first contact" data-value="72.7%">72.7</td>
+<td style="--v:44.2" data-tip="π0.5 · Standard · Correct-tool lift" data-value="44.2%">44.2</td>
+<td style="--v:22.3" data-tip="π0.5 · Standard · Tool-target contact" data-value="22.3%">22.3</td>
+<td style="--v:2.8" data-tip="π0.5 · Standard · Success" data-value="2.8%">2.8</td>
+</tr>
+<tr><th scope="row">Ψ<sub>0</sub><small>VLA</small></th>
+<td style="--v:98.1" data-tip="Ψ0 · Standard · Candidate contact" data-value="98.1%">98.1</td>
+<td style="--v:74.4" data-tip="Ψ0 · Standard · Correct first contact" data-value="74.4%">74.4</td>
+<td style="--v:38.3" data-tip="Ψ0 · Standard · Correct-tool lift" data-value="38.3%">38.3</td>
+<td style="--v:26.6" data-tip="Ψ0 · Standard · Tool-target contact" data-value="26.6%">26.6</td>
+<td style="--v:4.3" data-tip="Ψ0 · Standard · Success" data-value="4.3%">4.3</td>
+</tr>
+<tr><th scope="row">GR00T N1.7<small>VLA</small></th>
+<td style="--v:99.7" data-tip="GR00T N1.7 · Standard · Candidate contact" data-value="99.7%">99.7</td>
+<td style="--v:87.3" data-tip="GR00T N1.7 · Standard · Correct first contact" data-value="87.3%">87.3</td>
+<td style="--v:90" data-tip="GR00T N1.7 · Standard · Correct-tool lift" data-value="90.0%">90.0</td>
+<td style="--v:79.8" data-tip="GR00T N1.7 · Standard · Tool-target contact" data-value="79.8%">79.8</td>
+<td style="--v:36" data-tip="GR00T N1.7 · Standard · Success" data-value="36.0%">36.0</td>
+</tr>
+<tr><th scope="row">Cosmos 3 Edge<small>WAM</small></th>
+<td style="--v:39.8" data-tip="Cosmos 3 Edge Policy · Standard · Candidate contact" data-value="39.8%">39.8</td>
+<td style="--v:33.2" data-tip="Cosmos 3 Edge Policy · Standard · Correct first contact" data-value="33.2%">33.2</td>
+<td style="--v:6.3" data-tip="Cosmos 3 Edge Policy · Standard · Correct-tool lift" data-value="6.3%">6.3</td>
+<td style="--v:2.3" data-tip="Cosmos 3 Edge Policy · Standard · Tool-target contact" data-value="2.3%">2.3</td>
+<td style="--v:0.2" data-tip="Cosmos 3 Edge Policy · Standard · Success" data-value="0.2%">0.2</td>
+</tr>
+<tr><th scope="row">FastWAM<small>WAM</small></th>
+<td style="--v:99.8" data-tip="FastWAM · Standard · Candidate contact" data-value="99.8%">99.8</td>
+<td style="--v:87.7" data-tip="FastWAM · Standard · Correct first contact" data-value="87.7%">87.7</td>
+<td style="--v:89.2" data-tip="FastWAM · Standard · Correct-tool lift" data-value="89.2%">89.2</td>
+<td style="--v:88.2" data-tip="FastWAM · Standard · Tool-target contact" data-value="88.2%">88.2</td>
+<td style="--v:52.8" data-tip="FastWAM · Standard · Success" data-value="52.8%">52.8</td>
+</tr>
+</tbody></table></div></div>
+<div class="pane" data-pane="D"><h4 class="pane-title">Decoy (D)</h4><div class="scroll-x"><table class="heat" aria-label="Execution-event rate in percent, decoy mode">
+<colgroup><col class="c-name"><col span="5"></colgroup>
+<thead><tr class="lv"><th scope="col"><span class="skip">Policy</span></th>
+<th scope="col">Candidate contact</th>
+<th scope="col">Correct first contact</th>
+<th scope="col">Correct-tool lift</th>
+<th scope="col">Tool-target contact</th>
+<th scope="col">Success</th>
+</tr></thead><tbody>
+<tr><th scope="row">ACT<small>IL</small></th>
+<td style="--v:57.2" data-tip="ACT · Decoy · Candidate contact" data-value="57.2%">57.2</td>
+<td style="--v:44.8" data-tip="ACT · Decoy · Correct first contact" data-value="44.8%">44.8</td>
+<td style="--v:5.5" data-tip="ACT · Decoy · Correct-tool lift" data-value="5.5%">5.5</td>
+<td style="--v:2.3" data-tip="ACT · Decoy · Tool-target contact" data-value="2.3%">2.3</td>
+<td class="z" style="--v:0" data-tip="ACT · Decoy · Success" data-value="0.0%">0.0</td>
+</tr>
+<tr><th scope="row">DP<small>IL</small></th>
+<td style="--v:97" data-tip="DP · Decoy · Candidate contact" data-value="97.0%">97.0</td>
+<td style="--v:49.2" data-tip="DP · Decoy · Correct first contact" data-value="49.2%">49.2</td>
+<td style="--v:12.2" data-tip="DP · Decoy · Correct-tool lift" data-value="12.2%">12.2</td>
+<td style="--v:5.7" data-tip="DP · Decoy · Tool-target contact" data-value="5.7%">5.7</td>
+<td style="--v:0.2" data-tip="DP · Decoy · Success" data-value="0.2%">0.2</td>
+</tr>
+<tr><th scope="row">π<sub>0.5</sub><small>VLA</small></th>
+<td style="--v:99.5" data-tip="π0.5 · Decoy · Candidate contact" data-value="99.5%">99.5</td>
+<td style="--v:44.3" data-tip="π0.5 · Decoy · Correct first contact" data-value="44.3%">44.3</td>
+<td style="--v:29.7" data-tip="π0.5 · Decoy · Correct-tool lift" data-value="29.7%">29.7</td>
+<td style="--v:15.7" data-tip="π0.5 · Decoy · Tool-target contact" data-value="15.7%">15.7</td>
+<td style="--v:1.8" data-tip="π0.5 · Decoy · Success" data-value="1.8%">1.8</td>
+</tr>
+<tr><th scope="row">Ψ<sub>0</sub><small>VLA</small></th>
+<td style="--v:99.7" data-tip="Ψ0 · Decoy · Candidate contact" data-value="99.7%">99.7</td>
+<td style="--v:52" data-tip="Ψ0 · Decoy · Correct first contact" data-value="52.0%">52.0</td>
+<td style="--v:25.3" data-tip="Ψ0 · Decoy · Correct-tool lift" data-value="25.3%">25.3</td>
+<td style="--v:18.8" data-tip="Ψ0 · Decoy · Tool-target contact" data-value="18.8%">18.8</td>
+<td style="--v:3.7" data-tip="Ψ0 · Decoy · Success" data-value="3.7%">3.7</td>
+</tr>
+<tr><th scope="row">GR00T N1.7<small>VLA</small></th>
+<td style="--v:100" data-tip="GR00T N1.7 · Decoy · Candidate contact" data-value="100.0%">100.0</td>
+<td style="--v:77.2" data-tip="GR00T N1.7 · Decoy · Correct first contact" data-value="77.2%">77.2</td>
+<td style="--v:83.7" data-tip="GR00T N1.7 · Decoy · Correct-tool lift" data-value="83.7%">83.7</td>
+<td style="--v:74.3" data-tip="GR00T N1.7 · Decoy · Tool-target contact" data-value="74.3%">74.3</td>
+<td style="--v:39" data-tip="GR00T N1.7 · Decoy · Success" data-value="39.0%">39.0</td>
+</tr>
+<tr><th scope="row">Cosmos 3 Edge<small>WAM</small></th>
+<td style="--v:51.3" data-tip="Cosmos 3 Edge Policy · Decoy · Candidate contact" data-value="51.3%">51.3</td>
+<td style="--v:26.3" data-tip="Cosmos 3 Edge Policy · Decoy · Correct first contact" data-value="26.3%">26.3</td>
+<td style="--v:7.8" data-tip="Cosmos 3 Edge Policy · Decoy · Correct-tool lift" data-value="7.8%">7.8</td>
+<td style="--v:2.3" data-tip="Cosmos 3 Edge Policy · Decoy · Tool-target contact" data-value="2.3%">2.3</td>
+<td style="--v:0.5" data-tip="Cosmos 3 Edge Policy · Decoy · Success" data-value="0.5%">0.5</td>
+</tr>
+<tr><th scope="row">FastWAM<small>WAM</small></th>
+<td style="--v:100" data-tip="FastWAM · Decoy · Candidate contact" data-value="100.0%">100.0</td>
+<td style="--v:74.7" data-tip="FastWAM · Decoy · Correct first contact" data-value="74.7%">74.7</td>
+<td style="--v:84.5" data-tip="FastWAM · Decoy · Correct-tool lift" data-value="84.5%">84.5</td>
+<td style="--v:81" data-tip="FastWAM · Decoy · Tool-target contact" data-value="81.0%">81.0</td>
+<td style="--v:47" data-tip="FastWAM · Decoy · Success" data-value="47.0%">47.0</td>
+</tr>
+</tbody></table></div></div></div>
+      <div class="card-foot">
+        <span>An episode can start with a wrong first contact and still lift the suitable tool later.</span>
+        <span class="scale">0%<i></i>100%</span>
+      </div>
+    </div>
+
+    <div class="findings two">
+      <article class="finding">
+        <div class="num">98.8%<span class="to">→</span>44.2%<small>π<sub>0.5</sub>, candidate contact to correct-tool lift</small></div>
+        <h4>Weaker policies touch a tool but do not pick it up</h4>
+      </article>
+      <article class="finding">
+        <div class="num">88.2%<span class="to">→</span>52.8%<small>FastWAM, tool-target contact to success</small></div>
+        <h4>Stronger policies reach the target and still fall short</h4>
+      </article>
+    </div>
+
+    <div class="row-head"><h3>Same policy, same task, two outcomes</h3><p>GR00T N1.7 on BallMove L1 in standard mode.</p></div>
+    <div class="clips two">
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/groot-success.webp" aria-label="GR00T N1.7 picks up a stick and pushes the ball into the ring"><source src="static/video/clips/groot-success.mp4" type="video/mp4"></video><figcaption><b>Success<span class="chip ok">rollout</span></b><span class="cap">The policy picks the long stick and pushes the ball into the ring.</span></figcaption></figure>
+      <figure class="clip"><video data-clip muted loop playsinline preload="none" width="640" height="360" poster="static/video/clips/groot-failure.webp" aria-label="GR00T N1.7 picks up a stick but does not get the ball into the ring"><source src="static/video/clips/groot-failure.mp4" type="video/mp4"></video><figcaption><b>Failure<span class="chip bad">rollout</span></b><span class="cap">The ball never reaches the ring and the episode runs into the one-minute limit. Time-lapse after the first 8 s.</span></figcaption></figure>
+    </div>
+
+    <div class="row-head"><h3>Does the behaviour follow the tool and the instruction?</h3><p>Two probes of a GR00T N1.7 policy trained on standard mode only.</p></div>
+    <div class="probes" style="margin-top:0">
+      <article class="probe">
+        <span><span class="chip">Unseen tools</span></span>
+        <h4>Selection drops when a suitable tool looks unfamiliar</h4>
+        <p>Correct first contact falls from <b>85% to 74%</b> on BallMove and from <b>59% to 36%</b> on BallRetrieve.</p>
+        <figure class="fig"><a class="zoom" href="static/img/tool-change.webp" target="_blank" rel="noopener" title="Open at full size"><img src="static/img/tool-change.webp" width="1600" height="858" loading="lazy" alt="t-SNE projections of tool-region features for seen and unseen tools, with bars of correct first contact: 85 versus 74 percent for BallMove and 59 versus 36 percent for BallRetrieve."></a><figcaption>Bar A is seen tools, bar B is unseen tools.</figcaption></figure>
+      </article>
+      <article class="probe">
+        <span><span class="chip purple">Changed instructions</span></span>
+        <h4>The task still gets done under an unrelated instruction</h4>
+        <p>Told “The weather is nice today”, the policy still breaks the ice in <b>84%</b> of rollouts, against 77% with the original instruction.</p>
+        <figure class="fig"><a class="zoom" href="static/img/instruction-change.webp" target="_blank" rel="noopener" title="Open at full size"><img src="static/img/instruction-change.webp" width="1600" height="991" loading="lazy" alt="Mean right-arm and right-wrist joint angles over episode progress for the original, paraphrased and unrelated instructions, and a bar chart of success rates: 77, 70 and 84 percent."></a><figcaption>One fixed IceBreak L1 scene, 100 rollouts per instruction.</figcaption></figure>
+      </article>
+    </div>
+
+    <div class="more-group">
+      <details class="more">
+        <summary>Selection and alignment errors in rollouts</summary>
+        <div class="inner">
+          <figure class="fig"><a class="zoom" href="static/img/failure-modes.webp" target="_blank" rel="noopener" title="Open at full size"><img src="static/img/failure-modes.webp" width="1600" height="699" loading="lazy" alt="Two rows of rollout frames. Top row: the hand picks up a decoy. Bottom row: the tool is held at an angle that misses the ice block."></a><figcaption>Reviewed rollouts show decoy pickup (top) and tool-target alignment errors (bottom). Yellow borders mark the frames where spatial alignment errors occur.</figcaption></figure>
+        </div>
+      </details>
+      <details class="more">
+        <summary>Limitations</summary>
+        <div class="inner">
+          <ul class="facts">
+            <li>The comparison uses <b>one training run per policy</b>, so variation reflects scenes and rollouts, not training seeds.</li>
+            <li>The real-robot study covers <b>three policies on two L1 scenarios</b>.</li>
+            <li><b>First contact is a proxy</b> for the initial choice, and execution levels differ in layout as well as in locomotion.</li>
+            <li>The instruction probe uses <b>one fixed IceBreak scene</b>.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="toolbook">
+  <div class="wrap">
+    <p class="eyebrow">ToolBook</p>
+    <h2>3,094 human demonstrations of selecting and using tools</h2>
+    <p class="lede">Recorded by eight teleoperators with Meta Quest, in simulation and on the real G1.</p>
+
+    <div class="sum" role="group" aria-label="1,803 plus 1,200 plus 91 equals 3,094 trajectories">
+      <div class="t"><b>1,803</b><strong>Simulation, L0</strong><span>Cut at the moment the tool is lifted</span></div>
+      <div class="op" aria-hidden="true">+</div>
+      <div class="t"><b>1,200</b><strong>Simulation, L1 and L2</strong><span>100 successes for each of 12 tasks</span></div>
+      <div class="op" aria-hidden="true">+</div>
+      <div class="t"><b>91</b><strong>Real robot, L1</strong><span>BallMove and BallRetrieve</span></div>
+      <div class="op" aria-hidden="true">=</div>
+      <div class="t total"><b>3,094</b><strong>Trajectories</strong><span>LeRobot format, on Hugging Face</span></div>
+    </div>
+
+    <p style="margin:24px 0 0"><a class="btn" href="https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/></svg>Download from Hugging Face</a></p>
+    <p class="note">Released under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> for non-commercial research.</p>
+
+    <div class="more-group">
+      <details class="more">
+        <summary>Coverage by task and how it was collected</summary>
+        <div class="inner">
+          <div class="scroll-x">
+          <table class="plain" style="min-width:520px" aria-label="ToolBook coverage by task, standard and decoy counts">
+            <thead><tr><th scope="col">Simulation (S / D)</th><th scope="col">L0</th><th scope="col">L1</th><th scope="col">L2</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">BallMove</th><td>289 / 244</td><td>100 / 100</td><td>100 / 100</td></tr>
+              <tr><th scope="row">BallRetrieve</th><td>388 / 313</td><td>100 / 100</td><td>100 / 100</td></tr>
+              <tr><th scope="row">IceBreak</th><td>316 / 253</td><td>100 / 100</td><td>100 / 100</td></tr>
+              <tr class="grp"><th scope="col">Real robot (S / D)</th><th scope="col"></th><th scope="col">L1</th><th scope="col"></th></tr>
+              <tr><th scope="row">BallMove</th><td class="no">–</td><td>29 / 21</td><td class="no">–</td></tr>
+              <tr><th scope="row">BallRetrieve</th><td class="no">–</td><td>20 / 21</td><td class="no">–</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <ul class="facts" style="margin-top:16px">
+            <li><b>1,959 simulation attempts</b> at L1 and L2 produced the 1,200 successful demonstrations.</li>
+            <li><b>L0 needs no separate collection.</b> Every attempt that lifts the suitable tool by 0.08 m is cut at that frame: 1,189 come from successful attempts and 614 from unsuccessful ones.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="start" class="tint">
+  <div class="wrap">
+    <p class="eyebrow">Get started</p>
+    <h2>Evaluate a policy on the 18 tasks</h2>
+    <p class="lede">Needs Linux with an NVIDIA GPU, <a href="https://docs.astral.sh/uv/">uv</a>, Git and <code>zstd</code>.</p>
+
+    <div class="start">
+      <div class="code">
+        <button class="copy" type="button">Copy</button>
+        <pre data-copy="git clone https://github.com/SNU-PI/HumanoidToolBench.git
+cd HumanoidToolBench
+uv run --no-project scripts/setup_evaluation.py
+
+# One-episode check that simulation, inference and recording work
+MODEL=snupilab/humanoidtoolbench-act-sim-3003
+uv run htb-eval --model $MODEL --episodes 1 --max-steps 100
+
+# Standard protocol: one task, or all 18
+uv run htb-eval G1BallRetrieve-L1-R --model $MODEL
+uv run htb-eval all --model $MODEL
+
+# Your own policy: predict(request) returns (T, 36) actions
+uv run htb-eval G1BallMove-L1-S --policy my_policy:predict \
+  --checkpoint MODEL_ID"><code><span class="k">git clone</span> https://github.com/SNU-PI/HumanoidToolBench.git
+<span class="k">cd </span>HumanoidToolBench
+<span class="k">uv run</span> --no-project scripts/setup_evaluation.py
+
+<span class="c"># One-episode check that simulation, inference and recording work</span>
+<span class="k">MODEL=</span>snupilab/humanoidtoolbench-act-sim-3003
+<span class="k">uv run</span> htb-eval --model $MODEL --episodes 1 --max-steps 100
+
+<span class="c"># Standard protocol: one task, or all 18</span>
+<span class="k">uv run</span> htb-eval G1BallRetrieve-L1-R --model $MODEL
+<span class="k">uv run</span> htb-eval all --model $MODEL
+
+<span class="c"># Your own policy: predict(request) returns (T, 36) actions</span>
+<span class="k">uv run</span> htb-eval G1BallMove-L1-S --policy my_policy:predict \
+  --checkpoint MODEL_ID</code></pre>
+      </div>
+      <ul class="links">
+        <li><a href="https://github.com/SNU-PI/HumanoidToolBench#quick-start"><b>Quick start</b><span>Requirements and the first run</span></a></li>
+        <li><a href="https://github.com/SNU-PI/HumanoidToolBench/blob/main/docs/PUBLIC_EVALUATION.md"><b>Evaluation guide</b><span>Policy interface and protocol</span></a></li>
+        <li><a href="https://github.com/SNU-PI/HumanoidToolBench/blob/main/docs/ENVIRONMENTS.md"><b>Environments</b><span>Instructions and thresholds</span></a></li>
+        <li><a href="https://github.com/SNU-PI/HumanoidToolBench/blob/main/data/README.md"><b>Dataset guide</b><span>ToolBook layout and formats</span></a></li>
+        <li><a href="https://huggingface.co/snupilab/humanoidtoolbench-act-sim-3003"><b>ACT checkpoint</b><span>Simulation, 3,003 demonstrations</span></a></li>
+        <li><a href="https://huggingface.co/snupilab/humanoidtoolbench-dp-sim-3003"><b>DP checkpoint</b><span>Simulation, 3,003 demonstrations</span></a></li>
+      </ul>
+    </div>
+
+    <div class="sub" id="citation">
+      <h3>Citation</h3>
+      <p>The paper is on its way to arXiv, and the BibTeX entry will appear here. Until then, please link to this page or to the <a href="https://github.com/SNU-PI/HumanoidToolBench">code repository</a>.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <img src="static/img/logo-480.webp" width="480" height="109" alt="HumanoidToolBench" loading="lazy">
+      <p>Built by the <a href="https://pi.snu.ac.kr/">SNU PI Lab</a>. Code under the MIT license, ToolBook under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Parts of the simulation code are derived from <a href="https://github.com/physical-superintelligence-lab/SIMPLE">SIMPLE</a>, the control stack is adapted from GR00T-WholeBodyControl, and the tool assets come from Objaverse through MolmoSpaces. Third-party assets, models and data keep their own terms.</p>
+    </div>
+    <nav aria-label="Links">
+      <a href="https://github.com/SNU-PI/HumanoidToolBench">GitHub</a>
+      <a href="https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop">ToolBook dataset</a>
+      <a href="https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61">Checkpoints</a>
+      <a href="#top">Back to top</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="static/js/main.js" defer></script>
+</body>
+</html>
