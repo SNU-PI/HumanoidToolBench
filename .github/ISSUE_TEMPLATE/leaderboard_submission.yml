@@ -1,0 +1,63 @@
+name: Leaderboard submission
+description: Submit standard-protocol results on the 18 HumanoidToolBench tasks.
+title: "[Leaderboard] MODEL NAME"
+labels: ["leaderboard"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting. Results are listed on https://snu-pi.github.io/HumanoidToolBench/leaderboard.html once they pass review.
+        Run all 18 conditions with the toolkit's default settings (`uv run htb-eval all ...`) and check that `summary.json` says `"reportable": true`.
+  - type: input
+    id: model
+    attributes:
+      label: Model name
+      description: As it should appear on the leaderboard.
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Model type
+      options:
+        - IL (imitation learning)
+        - VLA (vision-language-action)
+        - WAM (world-action model)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: contributor
+    attributes:
+      label: Contributor
+      description: Team or organization to credit.
+    validations:
+      required: true
+  - type: input
+    id: links
+    attributes:
+      label: Links
+      description: Checkpoint, paper and code, if public. A public checkpoint lets the maintainers re-run and verify the result.
+  - type: textarea
+    id: training
+    attributes:
+      label: Training data and setup
+      description: Which data the policy was trained on (ToolBook, other data), its size and the action chunk length.
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results
+      description: Attach `summary.json` and the 18 `benchmark_result.json` files (a zip is fine), or link to them.
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Confirmation
+      options:
+        - label: The results come from an unmodified copy of the toolkit with the default protocol (100 episodes, seeds 10000-10099, 3,000 steps).
+          required: true
+        - label: The policy was not tuned or selected on the evaluation seeds.
+          required: true

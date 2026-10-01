@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/796a6ff9-8247-457b-b40d-e6305630faed
 
-**[Project page](https://snu-pi.github.io/HumanoidToolBench/)** · [ToolBook dataset](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [Checkpoints](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
+**[Project page](https://snu-pi.github.io/HumanoidToolBench/)** · [Leaderboard](https://snu-pi.github.io/HumanoidToolBench/leaderboard.html) · [ToolBook dataset](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [Checkpoints](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
 
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
