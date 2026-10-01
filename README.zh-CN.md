@@ -34,7 +34,7 @@ uv run --no-project scripts/setup_evaluation.py
 uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
 ```
 
-然后运行标准协议（100 回合，随机种子 10000 至 10099，每回合最多 3000 步）。第一个参数选择条件，下例为带易混淆工具（R）的 BallRetrieve L1；`all` 运行全部 18 个条件：
+然后运行标准协议（100 回合，随机种子 10000 至 10099，每回合最多 3000 步）。第一个参数选择条件，下例为诱饵模式（R）下的 BallRetrieve L1；`all` 运行全部 18 个条件：
 
 ```bash
 uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3003
@@ -96,11 +96,11 @@ uv run htb-eval G1BallMove-L0-S --host 127.0.0.1 --port 21000 --episodes 1 --max
 
 | 场景 | 正确工具 | L0 | L1 | L2 |
 | --- | --- | --- | --- | --- |
-| BallMove | 长杆 | 拿起工具 | 把球推进圆环 | 同上，先沿工作台移动 |
-| BallRetrieve | 钩子 | 拿起工具 | 把球拉进圆环 | 同上，先沿工作台移动 |
-| IceBreak | 金属锤 | 拿起工具 | 敲碎两块冰 | 同上，先沿工作台移动 |
+| BallMove | 长杆 | 拿起工具 | 把球推进圆环 | 同上，先沿桌子移动 |
+| BallRetrieve | 钩子 | 拿起工具 | 把球拉进圆环 | 同上，先沿桌子移动 |
+| IceBreak | 金属锤 | 拿起工具 | 敲碎两块冰 | 同上，先沿桌子移动 |
 
-模式 **S** 把正确工具与两个无关物体放在一起；模式 **R** 再加入一个易混淆工具（短杆、直杆，或苍蝇拍、油漆滚筒、马桶搋子这类轻而柔软的干扰工具）。成功状态需保持一秒；L0 要求把正确工具抬起 8 cm。指令、阈值和记录的指标见 [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md)。
+模式 **S**（标准模式）把正确工具与两个无关物体放在一起；模式 **R**（论文中记为 D 的诱饵模式）再加入一个诱饵工具（短杆、直杆，或苍蝇拍、油漆滚筒、马桶搋子这类轻而柔软的工具）。成功状态需保持一秒；L0 要求把正确工具抬起 8 cm。指令、阈值和记录的指标见 [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md)。
 
 ## 数据与训练
 

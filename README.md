@@ -57,7 +57,7 @@ uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --m
 
 Then run the standard protocol (100 episodes, seeds 10000 through 10099, up to
 3000 steps). The first argument picks the condition, here BallRetrieve at L1
-with the confusable tool (R); `all` runs the 18 conditions:
+in decoy mode (R); `all` runs the 18 conditions:
 
 ```bash
 uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3003
@@ -154,13 +154,14 @@ are specified in the [policy interface](docs/PUBLIC_EVALUATION.md#policy-interfa
 
 | Scenario | Correct tool | L0 | L1 | L2 |
 | --- | --- | --- | --- | --- |
-| BallMove | Long stick | Pick the tool | Push the ball into the ring | Same, after moving along the bench |
-| BallRetrieve | Hook | Pick the tool | Pull the ball into the ring | Same, after moving along the bench |
-| IceBreak | Metal hammer | Pick the tool | Break both ice blocks | Same, after moving along the bench |
+| BallMove | Long stick | Pick the tool | Push the ball into the ring | Same, after moving along the table |
+| BallRetrieve | Hook | Pick the tool | Pull the ball into the ring | Same, after moving along the table |
+| IceBreak | Metal hammer | Pick the tool | Break both ice blocks | Same, after moving along the table |
 
-Mode **S** places the correct tool beside two irrelevant objects; mode **R**
-adds one confusable tool (a short stick, a straight stick, or a light,
-compliant decoy such as a fly swatter, paint roller or plunger). Success must
+Mode **S** (standard) places the correct tool beside two irrelevant objects;
+mode **R**, the decoy mode written D in the paper, adds one decoy tool (a short
+stick, a straight stick, or a light, compliant tool such as a fly swatter,
+paint roller or plunger). Success must
 hold for one second; L0 requires lifting the correct tool by 8 cm.
 Instructions, thresholds and recorded metrics are listed in
 [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).

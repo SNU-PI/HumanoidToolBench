@@ -43,36 +43,35 @@ S and R conditions receive the same wording. The exact strings live in
 
 ## Scenarios
 
-The robot stands in front of a single 1.80 by 0.80 m bench top; the
-placement code treats its left and right halves as separate benches, called
-the left and right bench below. Tools always lie on the left bench. At L0 and L1 the task object starts on the right
-bench; the Levels section describes what L2 moves to the left bench.
+The robot stands in front of a single 1.80 by 0.80 m table. Tools always lie
+on its left half. At L0 and L1 the task object starts on the right half; the
+Levels section describes what L2 moves to the left half.
 
-| Scenario | Reasoning axis | Correct tool | Confusable tool added in mode R | Task |
+| Scenario | Requirement | Correct tool | Decoy tool added in mode R | Task |
 | --- | --- | --- | --- | --- |
 | BallMove | Spatial: the ball is out of reach of the shorter tool | Long stick, 0.50 m | Short stick, 0.30 m, drawn from the same rod pool with the same cross-section and mass | Push a ball into a painted ring of radius 0.12 m. At L0 and L1 the ring centre is 0.22 to 0.32 m from the ball. |
 | BallRetrieve | Affordance: only a hook can pull | Hook, 0.50 m | Straight stick of the same length and mass | Pull a ball back into a ring of radius 0.12 m. At L0 and L1 the ring is 0.20 m nearer the robot than the ball. |
 | IceBreak | Physical: a stiff, heavy head delivers the impact that breaks ice | Metal hammer, 0.42 m, 0.15 kg | Light, compliant decoy (fly swatter, paint roller or plunger mesh), 0.04 kg | Break both 0.16 m ice cubes. |
 
 Both modes also place two small irrelevant household objects (fruit,
-tableware, containers, books, candles, clocks and the like) on the tool
-bench. Object positions, tool slots and object identities are drawn from the
+tableware, containers, books, candles, clocks and the like) on the left
+half. Object positions, tool slots and object identities are drawn from the
 episode seed.
 
 ## Levels
 
 | Level | What the policy must do | Layout |
 | --- | --- | --- |
-| L0 | Select the correct tool and lift it. | Object and goal on the right bench, as in L1, but only the pick is scored. |
-| L1 | Select the tool and use it where the robot stands. | Object and goal on the right bench. |
-| L2 | Select the tool and use it after moving. | The goal (BallMove ring), the object (BallRetrieve ball) or the second block (IceBreak) is placed on the far strip of the left bench, so the robot has to step along the bench. |
+| L0 | Select the correct tool and lift it. | Object and goal on the right half, as in L1, but only the pick is scored. |
+| L1 | Select the tool and use it where the robot stands. | Object and goal on the right half. |
+| L2 | Select the tool and use it after moving. | The goal (BallMove ring), the object (BallRetrieve ball) or the second block (IceBreak) is placed on the far strip of the left half, so the robot has to step along the table. |
 
 ## Modes
 
-| Mode | Tool bench contents | Paper notation |
+| Mode | Left-half contents | Paper notation |
 | --- | --- | --- |
-| S | Correct tool and two irrelevant objects (3 objects) | R0 |
-| R | Same as S plus one confusable tool from the scenario's tool set (4 objects) | R1 |
+| S | Correct tool and two irrelevant objects (3 objects) | S (standard) |
+| R | Same as S plus one decoy tool from the scenario's tool set (4 objects) | D (decoy) |
 
 The difference between R and S measures the cost of ruling out a plausible
 wrong tool. The instruction is identical, and the irrelevant objects are
@@ -108,8 +107,8 @@ per-step `metrics/episode_<seed>.jsonl` and four videos under
 | Metric | Meaning |
 | --- | --- |
 | `tool_lift`, `picked_correct_tool` | Height gained by the correct tool in metres, and whether it is at least 0.08 m at this step. |
-| `first_touch_role`, `first_touch_correct`, `wrong_touch_count` | Which object a hand touched first (0 correct tool, 1 confusable tool, 2 irrelevant object, -1 none yet) and how many wrong objects were touched before the correct tool. |
-| `tool_touched_target`, `wrong_tool_touched_target` | Whether the correct or the confusable tool has contacted the ball or ice. |
+| `first_touch_role`, `first_touch_correct`, `wrong_touch_count` | Which object a hand touched first (0 correct tool, 1 decoy tool, 2 irrelevant object, -1 none yet) and how many wrong objects were touched before the correct tool. |
+| `tool_touched_target`, `wrong_tool_touched_target` | Whether the correct or the decoy tool has contacted the ball or ice. |
 | `on_spot`, `push_distance`, `reach_shortfall` (BallMove) | Ball inside the ring at this step; metres pushed from the start; a diagnostic of how far the ball starts beyond arm reach plus the short stick. |
 | `in_target_area`, `retrieve_gain` (BallRetrieve) | Ball inside the ring at this step; metres the ball has come towards the robot's working spot (the spawn at L0 and L1, the standing spot at L2). |
 | `ice_broken`, `ice_broken_count`, `ice_broke_1`, `ice_broke_2`, `peak_impulse` (IceBreak) | Both blocks broken; number broken; at least one broken; both broken; largest qualifying impact in N s. A block counts as broken once it has fractured and its shards have spread at least 0.03 m. |
