@@ -174,7 +174,9 @@ class DecoupledGoal:
 
     All joint vectors use the G1 joint tuple exported next to this class.
     ``torso_rpy`` is roll, pitch, yaw. ``navigate_cmd`` is
-    ``[vx, vy, vyaw, target_yaw]``.  Arrays are copied, converted to float32,
+    ``[vx, vy, vyaw, target_yaw]``, where ``vyaw`` keeps the controller's name
+    but is a turn flag: a magnitude of at least 0.1 makes the controller turn
+    towards ``target_yaw``; it is not a yaw rate.  Arrays are copied, converted to float32,
     checked for finite values, and made read-only during construction.
     """
 

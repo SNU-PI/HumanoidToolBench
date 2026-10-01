@@ -256,10 +256,11 @@ after undoing training-time action normalization.
 | `21:28` | Right arm joints | Right arm joint targets |
 | `28:31` | Measured torso joint values in roll/pitch/yaw order | Torso roll/pitch/yaw commands |
 | `31:32` | Previous base-height command | Base-height command |
-| `32:36` | Not present | Navigation vx, vy, yaw rate, target yaw |
+| `32:36` | Not present | Navigation vx, vy, turn flag, target yaw |
 
 Joint angles and angular commands use radians, base height uses metres, and
-navigation velocities use metres/second or radians/second. The flat left-hand
+navigation velocities use metres/second; slot 34 is a turn flag and slot 35
+an absolute heading in radians (see the table below). The flat left-hand
 order is thumb/middle/index; the right-hand order is thumb/index/middle. The
 definitions are in [actions/g1.py](../src/humanoidtoolbench/actions/g1.py) and the
 state builder in [remote_humanoid.py](../src/humanoidtoolbench/policies/remote_humanoid.py).
