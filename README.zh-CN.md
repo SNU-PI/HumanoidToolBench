@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/796a6ff9-8247-457b-b40d-e6305630faed
 
-**[项目主页](https://snu-pi.github.io/HumanoidToolBench/)** · [排行榜](https://snu-pi.github.io/HumanoidToolBench/leaderboard.html) · [ToolBook 数据集](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [模型检查点](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
+**[项目主页](https://snu-pi.github.io/HumanoidToolBench/)** · [ToolBook 数据集](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [模型检查点](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
 
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
@@ -45,14 +45,9 @@ uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 
 `--model` 从 Hugging Face ID 或本地路径加载 **HumanoidToolBench ACT 和 Diffusion Policy 仿真检查点**，例如 `snupilab/humanoidtoolbench-act-sim-3003` 和 `snupilab/humanoidtoolbench-dp-sim-3003`。其他模型通过 `--policy` 或下面的策略服务器进行评测。
 
-### 参考结果
+### 结果
 
-| 策略 | 条件 | 成功 |
-| --- | --- | --- |
-| `snupilab/humanoidtoolbench-act-sim-3003` | `G1BallMove-L0-S` | 2 / 100 |
-| 未经训练、随机初始化的 ACT | `G1BallMove-L0-S` | 0 / 100 |
-
-两行都使用标准协议、本版本附带的资源清单（`assets.manifest_sha256` 以 `7891d62a` 开头）和提交 `bd8abfa` 的评测代码（`source_digest` 以 `10cab839` 开头）。ACT 一行使用 SHA-256 以 `1e6459cb` 开头的权重（发布于模型版本 `ffd733de`），用时约两小时。第二行使用已发布的 ACT 配置和重新初始化的权重（SHA-256 以 `66788a3b` 开头，未发布）。随附的 ACT 检查点是接近下限的参考点，而不是强基线，因此新策略得分低本身并不说明安装有问题。上面的单回合诊断运行预期输出 0/1。DP 检查点和其他条件尚未测量。
+论文中 7 个策略在每个条件下的成功率见[项目主页](https://snu-pi.github.io/HumanoidToolBench/#results)。发布的 ACT 和 DP 检查点就是论文中的 ACT 与 DP 策略。ACT 是接近下限的参考点，而不是强基线，因此新策略得分低本身并不说明安装有问题。上面的单回合诊断运行预期输出 0/1。
 
 ## 基准简介
 

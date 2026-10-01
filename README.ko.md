@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/796a6ff9-8247-457b-b40d-e6305630faed
 
-**[프로젝트 페이지](https://snu-pi.github.io/HumanoidToolBench/)** · [리더보드](https://snu-pi.github.io/HumanoidToolBench/leaderboard.html) · [ToolBook 데이터셋](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [체크포인트](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
+**[프로젝트 페이지](https://snu-pi.github.io/HumanoidToolBench/)** · [ToolBook 데이터셋](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [체크포인트](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
 
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
@@ -79,23 +79,13 @@ uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 Diffusion Policy 시뮬레이션 체크포인트**를 Hugging Face ID나 로컬 경로에서
 불러옵니다. 그 외 모델은 `--policy`나 아래 정책 서버로 평가합니다.
 
-### 기준 결과
+### 결과
 
-| 정책 | 조건 | 성공 |
-| --- | --- | --- |
-| `snupilab/humanoidtoolbench-act-sim-3003` | `G1BallMove-L0-S` | 2 / 100 |
-| 학습하지 않은 무작위 초기화 ACT | `G1BallMove-L0-S` | 0 / 100 |
-
-두 결과 모두 정식 프로토콜, 이 배포본의 에셋 매니페스트
-(`assets.manifest_sha256`가 `7891d62a`로 시작), 커밋 `bd8abfa`의 평가
-코드(`source_digest`가 `10cab839`로 시작)를 사용했습니다. ACT는 SHA-256이
-`1e6459cb`로 시작하는 가중치(모델 리비전 `ffd733de`로 공개)를 사용했고 약
-2시간이 걸렸습니다. 두 번째 행은 공개된 ACT 설정에 가중치만
-새로 초기화한 것입니다(SHA-256이 `66788a3b`로 시작, 비공개). 배포된 ACT
-체크포인트는 바닥에 가까운 기준점이지 강한 베이스라인이 아니므로, 새 정책의
-점수가 낮다는 것만으로 설치가 잘못되었다고 볼 수는 없습니다. 위의 1
-에피소드 진단 실행은 0/1이 나오는 것이 정상입니다. DP 체크포인트와 다른
-조건은 아직 측정하지 않았습니다.
+논문에 실린 정책 7개의 조건별 성공률은 [프로젝트 페이지](https://snu-pi.github.io/HumanoidToolBench/#results)에
+있습니다. 공개된 ACT와 DP 체크포인트는 논문의 ACT·DP 정책입니다. ACT는
+바닥에 가까운 기준점이지 강한 베이스라인이 아니므로, 새 정책의 점수가
+낮다는 것만으로 설치가 잘못되었다고 볼 수는 없습니다. 위의 1 에피소드 진단
+실행은 0/1이 나오는 것이 정상입니다.
 
 ## 벤치마크 소개
 

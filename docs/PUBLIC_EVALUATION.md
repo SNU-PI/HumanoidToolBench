@@ -43,8 +43,8 @@ This release freezes the MolmoSpaces meshes and colliders listed in
 [`evaluation_assets.json`](../src/humanoidtoolbench/resources/evaluation_assets.json).
 Locally generated CoACD parts do not replace the frozen colliders. Asset
 hashes are checked before evaluation, and `benchmark_result.json` records the
-manifest hash as `assets.manifest_sha256`. This asset selection does not
-establish parity with the paper's historical runs. Compare scores only between
+manifest hash as `assets.manifest_sha256`.
+Compare scores only between
 reportable results whose `assets.manifest_sha256` and `source_digest` match.
 
 Run evaluation with `uv run htb-eval`. The command configures headless EGL

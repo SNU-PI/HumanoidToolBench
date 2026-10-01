@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/796a6ff9-8247-457b-b40d-e6305630faed
 
-**[Project page](https://snu-pi.github.io/HumanoidToolBench/)** · [Leaderboard](https://snu-pi.github.io/HumanoidToolBench/leaderboard.html) · [ToolBook dataset](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [Checkpoints](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
+**[Project page](https://snu-pi.github.io/HumanoidToolBench/)** · [ToolBook dataset](https://huggingface.co/datasets/snupilab/humanoidtoolbench-teleop) · [Checkpoints](https://huggingface.co/collections/snupilab/humanoidtoolbench-6aa6d654e29d415b0dafbe61)
 
 [English](README.md) | [中文](README.zh-CN.md) | [한국어](README.ko.md)
 
@@ -80,24 +80,14 @@ checkpoints** from a Hugging Face ID or a local path, such as
 `snupilab/humanoidtoolbench-dp-sim-3003`. Any other model is evaluated with
 `--policy` or the policy server below.
 
-### Reference results
+### Results
 
-| Policy | Condition | Successes |
-| --- | --- | --- |
-| `snupilab/humanoidtoolbench-act-sim-3003` | `G1BallMove-L0-S` | 2 / 100 |
-| ACT with untrained, randomly initialized weights | `G1BallMove-L0-S` | 0 / 100 |
-
-Both rows use the standard protocol, the asset manifest shipped in this
-release (`assets.manifest_sha256` starting `7891d62a`) and the evaluation code
-at commit `bd8abfa` (`source_digest` starting `10cab839`). The ACT row used
-weights with SHA-256 starting `1e6459cb`, published at model revision
-`ffd733de`, and took about two hours. The second row used the released ACT
-configuration with freshly initialized weights (SHA-256 starting `66788a3b`,
-not published). The shipped ACT checkpoint is a reference point near the
-floor, not a strong baseline, so a low score from a new policy does not by
-itself mean the setup is broken. The one-episode diagnostic above is expected
-to print 0/1. The DP checkpoint and the other conditions have not been
-measured yet.
+The success rates of the seven policies in the paper, for every condition, are
+on the [project page](https://snu-pi.github.io/HumanoidToolBench/#results). The released ACT and DP checkpoints
+are the paper's ACT and DP policies; ACT is a reference point near the floor,
+not a strong baseline, so a low score from a new policy does not by itself
+mean the setup is broken. The one-episode diagnostic above is expected to
+print 0/1.
 
 ## The benchmark
 
