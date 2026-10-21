@@ -103,6 +103,33 @@ _FRICTION = [1.5, 0.1, 0.005]
 TOOL_ROLLING_FRICTION = 0.02
 TOOL_CONTACT_PRIORITY = 11
 
+# Meshes whose shipped convex colliders lose contact with the table top. With a
+# handle over the near edge, as the placer lays every tool, MuJoCo's convex
+# collider flips the contact normal between +z and -z on alternate steps and the
+# flipped steps carry no normal force, so the tool sinks through the 3.5 cm slab
+# while the robot stabilizes, before any policy acts. Over the test seeds
+# 10000 to 10099 that left the correct tool on the floor or inside the table in
+# BallMove 10002, 10016, 10023 and IceBreak 10014, 10070, and the decoy in
+# BallRetrieve R 10014, 10048, 10051, 10060, 10070, 10082, 10093 and IceBreak R
+# 10014, 10048, 10053, 10054, 10079, 10081. These meshes collide as one box per
+# convex part, fitted to that part (see the engine's `_box_collider`); box
+# contacts use MuJoCo's analytic box collider and keep each of them on the table.
+# Every other mesh keeps its convex colliders, so no other layout changes.
+BOX_COLLIDER_UIDS = frozenset(
+    {
+        "0eedc541d1bb4a32935fc6ed7a2fea08",  # long and short stick
+        "2b429b2d6618419d8480251d6243397c",  # straight stick
+        "bfd89cebcb3f4835ae4cc64a9e1d46f3",  # straight, long and short stick
+        "c8714f25b5d844f7a2d28b3e69f2ea36",  # straight stick
+        "9207d6a0c4874d6082daee015f53be11",  # metal hammer
+        "fc6a748b0a3f48e5a2109e2d20554fa5",  # metal hammer
+        "6a1a1a0bef1145e6a9ff5893dc384745",  # physical distractor
+        "8a796d92b21e4257a2ed79d973064318",  # physical distractor
+        "9a4c9d19a1bc4bb5820e9fb5e98e9b29",  # physical distractor
+        "9ce080633f6f48be9ecc761bbeb7f640",  # physical distractor
+    }
+)
+
 # MolmoSpaces asset ids per slot. A slot holds a pool, not one asset: the
 # scenario draws from it each episode, so a policy sees many hooks rather than
 # memorising one. The controls hold across the pool because they are applied
@@ -501,6 +528,8 @@ def mesh_asset(
     # Where the shape's middle sits relative to the origin the scan left it,
     # so a row can line up what is seen rather than what is stored.
     asset.centre_offset = [float(v) for v in centre]
+    # Collide as fitted boxes rather than convex meshes (see BOX_COLLIDER_UIDS).
+    asset.box_colliders = asset_uid in BOX_COLLIDER_UIDS
     return asset
 
 

@@ -47,6 +47,9 @@ WRIST_CAM_BASE = (0.0415, 0.00299, 0.0)
 # The camera's orientation on that link, in ROS camera convention, straight
 # from Unitree's camera_configs.py. Both hands share it there.
 WRIST_CAM_ROS_QUAT = (0.00539, 0.86024, 0.0424, 0.50809)
+# Fitted collider boxes per (collider file, mesh scale): fitting takes a few
+# milliseconds and the spec is rebuilt on every reset.
+_BOX_COLLIDER_CACHE: dict = {}
 
 
 class MujocoSimulator(Simulator):
@@ -270,6 +273,58 @@ class MujocoSimulator(Simulator):
         if not getattr(asset, "static", False):
             body.add_freejoint(name=f"{label}_joint")
 
+    @staticmethod
+    def _box_collider(path: str, mesh_scale) -> tuple[list[float], list[float], list[float]]:
+        """(pos, quat, half size) of the smallest box found around one convex collider part.
+
+        The box bounds every vertex of the part, in the body frame the mesh geom
+        would have used (the scaled file coordinates; MuJoCo's own recentring of
+        a mesh is compensated by the geom pose, so a box placed here sits where
+        the mesh did). Its axes are the file axes or the part's principal axes,
+        turned about one of them in 0.5 degree steps, whichever encloses the
+        least volume: a principal-axis box around a thin rod with a near-square
+        section can come out diagonal and twice the rod's volume, which lifts the
+        tool off the table and fattens its grip.
+        """
+        key = (str(path), None if mesh_scale is None else tuple(float(v) for v in mesh_scale))
+        cached = _BOX_COLLIDER_CACHE.get(key)
+        if cached is not None:
+            return cached
+        points = []
+        with open(path) as stream:
+            for line in stream:
+                if line.startswith("v "):
+                    points.append([float(v) for v in line.split()[1:4]])
+        points = np.asarray(points, dtype=float)
+        if mesh_scale is not None:
+            points = points * np.asarray(mesh_scale, dtype=float)
+        centre = points.mean(axis=0)
+        _, principal = np.linalg.eigh(np.cov((points - centre).T))
+        if np.linalg.det(principal) < 0:
+            principal[:, 0] = -principal[:, 0]
+        best_volume, best_axes = np.inf, np.eye(3)
+        for base in (np.eye(3), principal):
+            for k in range(3):
+                i, j = [a for a in range(3) if a != k]
+                for angle in np.radians(np.arange(0.0, 90.0, 0.5)):
+                    c, s_ = np.cos(angle), np.sin(angle)
+                    axes = base.copy()
+                    axes[:, i] = c * base[:, i] + s_ * base[:, j]
+                    axes[:, j] = -s_ * base[:, i] + c * base[:, j]
+                    local = points @ axes
+                    volume = float(np.prod(local.max(axis=0) - local.min(axis=0)))
+                    if volume < best_volume:
+                        best_volume, best_axes = volume, axes
+        local = points @ best_axes
+        low, high = local.min(axis=0), local.max(axis=0)
+        pos = best_axes @ (0.5 * (low + high))
+        quat = np.zeros(4)
+        mujoco.mju_mat2Quat(quat, best_axes.flatten())
+        half = np.maximum(0.5 * (high - low), 5e-4)
+        result = (pos.tolist(), quat.tolist(), half.tolist())
+        _BOX_COLLIDER_CACHE[key] = result
+        return result
+
     def _build_object(self, mjSpec, mjWorld, actor: ObjectActor):
         if getattr(actor.asset, "geoms", None):
             self._build_primitive_object(mjWorld, actor)
@@ -305,7 +360,14 @@ class MujocoSimulator(Simulator):
         texture = getattr(asset, "texture", None)
 
         mesh_kwargs = {"scale": mesh_scale} if mesh_scale is not None else {}
-        for i in range(num_convex):
+        # A few meshes collide as fitted boxes instead of their convex parts
+        # (assets/tools.py BOX_COLLIDER_UIDS says why); they need no collider mesh.
+        boxes = (
+            [self._box_collider(path, mesh_scale) for path in collision_meshes]
+            if getattr(asset, "box_colliders", False)
+            else None
+        )
+        for i in range(num_convex if boxes is None else 0):
             mjSpec.add_mesh(
                 name=f"{label}_mesh_convex{i}",
                 file=collision_meshes[i],
@@ -351,10 +413,22 @@ class MujocoSimulator(Simulator):
 
         num_convex = len(collision_meshes)
         for i in range(num_convex):
+            shape = (
+                {
+                    "meshname": f"{label}_mesh_convex{i}",
+                    "type": mujoco.mjtGeom.mjGEOM_MESH,
+                }
+                if boxes is None
+                else {
+                    "type": mujoco.mjtGeom.mjGEOM_BOX,
+                    "pos": boxes[i][0],
+                    "quat": boxes[i][1],
+                    "size": boxes[i][2],
+                }
+            )
             mj_obj.add_geom(
                 name=f"{label}_convex_{i}",
-                meshname=f"{label}_mesh_convex{i}",
-                type=mujoco.mjtGeom.mjGEOM_MESH,
+                **shape,
                 # opposing slip in the tangent plane, rotation around the contact normal
                 # and rotation around the two axes of the tangent plane
                 condim=condim,
