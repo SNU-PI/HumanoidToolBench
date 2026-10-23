@@ -47,45 +47,16 @@ uv run --no-project scripts/setup_evaluation.py
 받고, 벤치마크 메쉬를 내려받은 뒤 자체 점검을 실행합니다. 기존 설치를
 확인하려면 `--check`를 붙이세요.
 
-시뮬레이션, 추론, 녹화가 동작하는지 기본 조건 `G1BallMove-L0-S`에서 짧은
-진단 실행으로 확인합니다(모델 로딩 후 시뮬레이션은 1분이 채 걸리지
-않으며, 벤치마크 점수가 아닙니다).
-
 ```bash
-uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
-```
-
-그다음 정식 프로토콜(100 에피소드, 시드 10000~10099, 최대 3000스텝)을
-실행합니다. 첫 인자로 조건을 고르며, 아래 예시는 decoy 모드(R)의
-BallRetrieve L1입니다. `all`은 18개 조건 전체를 실행합니다.
-
-```bash
-uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3003
 uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
-
-조건마다 `data/evals/<condition>/run-<id>/benchmark_result.json`에 성공
-횟수가 기록되고 에피소드당 카메라 영상 네 개가 저장됩니다. 진단 설정으로
-돌린 결과는 `reportable: false`가 됩니다. `all`은 `data/evals/summary.json`도
-쓰고, 조건 하나가 실패해도 나머지를 계속 실행합니다. 같은 명령을 다시
-실행하면 같은 정책, 코드, 에셋, 실행 환경으로 이미 검증된 결과가 있는
-조건은 건너뜁니다. `--list-envs`는 조건 ID 목록을, `--dry-run`은 실행 없이 환경과
-에피소드 설정만 출력합니다. 여러 GPU에 조건을 나눠 돌리는 방법은
-[조건 병렬 실행](docs/PUBLIC_EVALUATION.md#running-conditions-in-parallel)을
-참고하세요.
-
-`--model`은 `snupilab/humanoidtoolbench-act-sim-3003`,
-`snupilab/humanoidtoolbench-dp-sim-3003` 같은 **HumanoidToolBench ACT 및
-Diffusion Policy 시뮬레이션 체크포인트**를 Hugging Face ID나 로컬 경로에서
-불러옵니다. 그 외 모델은 `--policy`나 아래 정책 서버로 평가합니다.
 
 ### 결과
 
 논문에 실린 정책 7개의 조건별 성공률은 [프로젝트 페이지](https://snu-pi.github.io/HumanoidToolBench/#results)에
 있습니다. 공개된 ACT와 DP 체크포인트는 논문의 ACT·DP 정책입니다. ACT는
 바닥에 가까운 기준점이지 강한 베이스라인이 아니므로, 새 정책의 점수가
-낮다는 것만으로 설치가 잘못되었다고 볼 수는 없습니다. 위의 1 에피소드 진단
-실행은 0/1이 나오는 것이 정상입니다.
+낮다는 것만으로 설치가 잘못되었다고 볼 수는 없습니다.
 
 ## 벤치마크 소개
 

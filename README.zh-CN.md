@@ -28,26 +28,13 @@ uv run --no-project scripts/setup_evaluation.py
 
 安装命令会创建锁定的 Python 环境，按固定版本拉取控制器仓库，下载基准网格资源并运行自检。加上 `--check` 可检查已有安装。
 
-先在默认条件 `G1BallMove-L0-S` 上用一次简短的诊断运行确认仿真、推理和录像正常（模型加载后仿真用时远少于一分钟，不是基准得分）：
-
 ```bash
-uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
-```
-
-然后运行标准协议（100 回合，随机种子 10000 至 10099，每回合最多 3000 步）。第一个参数选择条件，下例为诱饵模式（R）下的 BallRetrieve L1；`all` 运行全部 18 个条件：
-
-```bash
-uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3003
 uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
 
-每个条件会写入 `data/evals/<condition>/run-<id>/benchmark_result.json`，包含成功次数，并保存每回合四路相机视频。诊断设置得到的结果为 `reportable: false`。`all` 还会写入 `data/evals/summary.json`，并在某个条件失败时继续运行其余条件。再次运行同一命令时，已由相同策略、代码、资源和运行环境得到验证结果的条件会被跳过。`--list-envs` 打印条件 ID 列表，`--dry-run` 只打印环境和回合设置而不运行。在多块 GPU 上分配条件的方法见[并行运行条件](docs/PUBLIC_EVALUATION.md#running-conditions-in-parallel)。
-
-`--model` 从 Hugging Face ID 或本地路径加载 **HumanoidToolBench ACT 和 Diffusion Policy 仿真检查点**，例如 `snupilab/humanoidtoolbench-act-sim-3003` 和 `snupilab/humanoidtoolbench-dp-sim-3003`。其他模型通过 `--policy` 或下面的策略服务器进行评测。
-
 ### 结果
 
-论文中 7 个策略在每个条件下的成功率见[项目主页](https://snu-pi.github.io/HumanoidToolBench/#results)。发布的 ACT 和 DP 检查点就是论文中的 ACT 与 DP 策略。ACT 是接近下限的参考点，而不是强基线，因此新策略得分低本身并不说明安装有问题。上面的单回合诊断运行预期输出 0/1。
+论文中 7 个策略在每个条件下的成功率见[项目主页](https://snu-pi.github.io/HumanoidToolBench/#results)。发布的 ACT 和 DP 检查点就是论文中的 ACT 与 DP 策略。ACT 是接近下限的参考点，而不是强基线，因此新策略得分低本身并不说明安装有问题。
 
 ## 基准简介
 
