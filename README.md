@@ -47,38 +47,9 @@ controller repositories at their pinned revisions, downloads the benchmark
 meshes and runs a self-check. Add `--check` to verify an existing
 installation.
 
-Check that simulation, inference and recording work with a short diagnostic
-run on the default condition `G1BallMove-L0-S` (well under a minute of
-simulation once the model has loaded; not a benchmark score):
-
 ```bash
-uv run htb-eval --model snupilab/humanoidtoolbench-act-sim-3003 --episodes 1 --max-steps 100
-```
-
-Then run the standard protocol (100 episodes, seeds 10000 through 10099, up to
-3000 steps). The first argument picks the condition, here BallRetrieve at L1
-in decoy mode (R); `all` runs the 18 conditions:
-
-```bash
-uv run htb-eval G1BallRetrieve-L1-R --model snupilab/humanoidtoolbench-act-sim-3003
 uv run htb-eval all --model snupilab/humanoidtoolbench-act-sim-3003
 ```
-
-Each condition writes `data/evals/<condition>/run-<id>/benchmark_result.json`
-with the success count and four camera videos per episode. Diagnostic
-settings produce `reportable: false`. `all` also writes
-`data/evals/summary.json` and keeps going when one condition fails.
-Rerunning a command skips conditions that already have a validated result
-from the same policy, code, assets and runtime. `--list-envs` prints the condition
-IDs and `--dry-run` prints the environment and episode settings without
-running anything. To spread the conditions over several GPUs, see
-[running conditions in parallel](docs/PUBLIC_EVALUATION.md#running-conditions-in-parallel).
-
-`--model` loads **HumanoidToolBench ACT and Diffusion Policy simulation
-checkpoints** from a Hugging Face ID or a local path, such as
-`snupilab/humanoidtoolbench-act-sim-3003` and
-`snupilab/humanoidtoolbench-dp-sim-3003`. Any other model is evaluated with
-`--policy` or the policy server below.
 
 ### Results
 
@@ -86,8 +57,7 @@ The success rates of the seven policies in the paper, for every condition, are
 on the [project page](https://snu-pi.github.io/HumanoidToolBench/#results). The released ACT and DP checkpoints
 are the paper's ACT and DP policies; ACT is a reference point near the floor,
 not a strong baseline, so a low score from a new policy does not by itself
-mean the setup is broken. The one-episode diagnostic above is expected to
-print 0/1.
+mean the setup is broken.
 
 ## The benchmark
 
