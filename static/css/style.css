@@ -1593,3 +1593,47 @@ footer nav {
 .hero-sum.after-video {
   margin-top: 22px;
 }
+
+.institution-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 28px 48px;
+  margin: 28px auto 32px;
+}
+
+.institution-logos a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 74px;
+  padding: 8px;
+}
+
+.institution-logos .institution-snu {
+  width: 60px;
+}
+
+.institution-logos .institution-umass {
+  width: 280px;
+}
+
+.institution-logos .institution-google {
+  width: 228px;
+}
+
+@media (max-width: 560px) {
+  .institution-logos {
+    gap: 12px 20px;
+    margin: 22px auto 28px;
+  }
+
+  .institution-logos .institution-umass {
+    width: 210px;
+  }
+
+  .institution-logos .institution-google {
+    width: 210px;
+  }
+}
