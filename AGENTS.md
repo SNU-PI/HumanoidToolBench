@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Instructions for coding agents (Claude Code, Codex, and others) working in this repository. [CLAUDE.md](CLAUDE.md) is a symlink to this file, so every agent reads the same text.
+Instructions for coding agents (Claude Code, Codex, Antigravity, and others) working in this repository. There is intentionally no `CLAUDE.md`: Claude Code 2.1.277 and later read this file when none exists, so do not add one.
 
 This repository is the **HumanoidToolBench evaluation toolkit**. Most people who open it with an agent want one thing: evaluate **their own policy** on the 18 benchmark conditions and get success rates. Follow the workflow below for that. The full reference is [docs/PUBLIC_EVALUATION.md](docs/PUBLIC_EVALUATION.md) and [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md); read the relevant section there before improvising. Training pipelines are not included here; do not try to build one unless the user asks.
 
