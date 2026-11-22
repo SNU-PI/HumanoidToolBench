@@ -170,6 +170,19 @@
       });
   });
 
+  /* ---------- Agent study: links to it open the toggle ---------- */
+  const study = document.getElementById("agents");
+  if (study) {
+    const openStudy = () => {
+      if (location.hash === "#agents") study.open = true;
+    };
+    openStudy();
+    window.addEventListener("hashchange", openStudy);
+    document.querySelectorAll('a[href="#agents"]').forEach((a) =>
+      a.addEventListener("click", () => (study.open = true))
+    );
+  }
+
   /* ---------- Copy button ---------- */
   document.querySelectorAll(".copy").forEach((btn) => {
     btn.addEventListener("click", async () => {

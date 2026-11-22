@@ -1637,3 +1637,218 @@ footer nav {
     width: 210px;
   }
 }
+
+/* ---------- Agent study: the toggle under the overview video ---------- */
+
+details.study {
+  max-width: 920px;
+  margin: 26px auto 0;
+  text-align: left;
+  box-shadow: var(--shadow);
+}
+
+details.study > summary {
+  padding: 15px 20px;
+  font-size: 16.5px;
+}
+
+details.study > .inner {
+  padding: 20px 22px 24px;
+}
+
+.study h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 32px 0 10px;
+  font-size: 18.5px;
+  line-height: 1.35;
+}
+
+.study h3 .q {
+  flex-basis: 100%;
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.study p {
+  max-width: 800px;
+  margin: 10px 0 0;
+  color: var(--ink-2);
+  font-size: 15.5px;
+  line-height: 1.62;
+}
+
+.study p b {
+  color: var(--ink);
+}
+
+.study .study-lede {
+  margin-top: 0;
+  font-size: 16.5px;
+}
+
+.study .facts,
+.study .clips {
+  margin-top: 14px;
+}
+
+.study p.note {
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+/* Group labels inside the heat tables: trained policies, then LLM agents. */
+
+.heat tr.grp th {
+  position: static;
+  padding: 14px 0 4px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.heat tbody tr.grp:first-child th {
+  padding-top: 2px;
+}
+
+.heat tr.grp th small {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.plain.agents th:first-child {
+  white-space: nowrap;
+}
+
+/* Playback-speed badge on a clip that is not shown in real time. */
+
+.clip.sped {
+  position: relative;
+}
+
+.clip .speed {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(16, 19, 31, 0.72);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* ---------- News, under the overview video ---------- */
+
+.news {
+  max-width: 920px;
+  margin: 26px auto 0;
+  padding: 0;
+  text-align: left;
+}
+
+.news .news-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.news ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.news li {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 4px 16px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.news time {
+  color: var(--ink-3);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.7;
+}
+
+details.study > summary .study-date {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .news li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  details.study > summary {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  details.study > summary .study-date {
+    flex-basis: 100%;
+    margin-left: 20px;
+    padding-left: 0;
+  }
+}
+
+/* Get started: agent steps */
+.start .steps { display: grid; gap: 12px; min-width: 0; }
+.start .step { margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); }
+.start .step + .code { margin-bottom: 8px; }
+.start .step b {
+  flex: none; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--brand); color: #fff; font-size: 13px;
+}
+.start .step-note { margin: 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.6; }
+
+/* The cost table sits inside the study toggle: keep the card's own heading styles */
+.study .card { margin-top: 16px; }
+.study .card-head h3 { display: block; margin: 0; font-size: 17px; }
+.study .card-head p { max-width: none; margin: 0; color: var(--ink-3); font-size: 13.5px; line-height: 1.5; }
+
+/* Author's view at the end of the study */
+.study .insight {
+  margin-top: 22px;
+  padding: 16px 20px 18px;
+  border-left: 3px solid var(--brand);
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+}
+.study .insight h4 {
+  margin: 0 0 8px;
+  color: var(--brand-deep);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.study .insight ul { margin: 0; padding-left: 18px; display: grid; gap: 10px; }
+.study .insight li { color: var(--ink-2); font-size: 15px; line-height: 1.62; }
+.study .insight li b { color: var(--ink); }

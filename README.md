@@ -16,6 +16,11 @@ A cell in the result tables is `<td style="--v:76">76</td>`: `--v` is the
 value in percent and sets the shade. To edit the author list or add the BibTeX
 entry, search `index.html` for `AUTHORS` and for `id="citation"`.
 
+The zero-shot LLM agent study is the `<details id="agents">` block under the
+overview video, with the `id="agent-cost"` table inside it, and the "Zero-shot
+LLM agents" rows in the two heat tables. Its clips are in `static/video/clips/agents/`: the
+head-camera part of the rollout videos, cropped to 480x272 and sped up 4x.
+
 Preview locally with `python3 -m http.server` in this directory.
 
 Fonts are self-hosted Inter under the SIL Open Font License (`static/fonts/OFL.txt`).

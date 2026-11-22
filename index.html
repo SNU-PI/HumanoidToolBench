@@ -115,6 +115,98 @@
     </div>
     <p class="note">Three-minute overview, with narration.</p>
     <p class="hero-sum after-video">Can a humanoid pick the right tool and then use it, standing still or on the move? 18 tasks, 55 tools and 3.1k human demonstrations, in simulation and on a real Unitree G1.</p>
+
+    <section class="news" aria-labelledby="news-title">
+      <h2 id="news-title" class="news-title">News</h2>
+      <ul>
+        <li><time datetime="2026-11-23">Nov 23, 2026</time><span>We ran zero-shot LLM agent pipelines (CAP and RUA) on HumanoidToolBench. See the <a href="#agents">analysis</a>.</span></li>
+        <li><time datetime="2026-10-01">Oct 1, 2026</time><span>The paper is on <a href="https://arxiv.org/abs/2610.02089">arXiv</a>.</span></li>
+      </ul>
+    </section>
+    <details class="more study" id="agents">
+      <summary><span class="chip">Agent study</span>Can a zero-shot LLM agent solve HumanoidToolBench tasks with no training at all?<time class="study-date" datetime="2026-11-23">Nov 23, 2026</time></summary>
+      <div class="inner">
+        <p class="study-lede">We ran the same 18 tasks with LLM agents and no training. Scores are in <a href="#results">Results</a> and <a href="#analysis">Analysis</a>. This is why they came out that way.</p>
+
+        <h3>Setup</h3>
+        <ul class="facts">
+          <li><b>CAP, Code-as-Policies.</b> One camera image in, one Python program out. It runs without the model, with up to three tries per episode.</li>
+          <li><b>RUA, Robot-Use Agent.</b> One command at a time. The model reads each result before choosing the next.</li>
+          <li><b>Models.</b> Claude Opus 5.5, GPT-6.1 Sol and GPT-6 Astra. 3 episodes per task, 60 s of robot motion each.</li>
+          <li><b>Commands.</b> Inverse kinematics, finger poses, walking and a tool locator. The docs give a recipe for picking a tool up, and none for using it.</li>
+        </ul>
+
+        <h3><span class="q">Main question</span>Does a zero-shot agent beat a policy trained on the task?</h3>
+        <p><b>At picking the tool up, yes. At using it, no.</b> With RUA, Sol and Astra lift the right tool in every L0 episode. At L1 and L2, 1 of 216 agent episodes succeeds, while FastWAM finishes 57 to 86% of the standard L1 tasks.</p>
+
+        <h3><span class="q">Question 1</span>How do CAP and RUA differ, and the models?</h3>
+        <ul class="facts">
+          <li><b>CAP fixes every decision in code.</b> Sol and Astra add checks that stop the program when the solver does not converge. That flag is noisy, so their programs stop before the hand closes.</li>
+          <li><b>RUA decides step by step.</b> The same models read the same warning, carry on, and pick the tool up every time. Their fixes stay local, and each retry costs time.</li>
+        </ul>
+        <div class="clips two">
+<figure class="clip sped"><span class="speed" aria-label="Played at 4 times speed">4×</span><video data-clip muted loop playsinline preload="none" width="480" height="272" poster="static/video/clips/agents/cap-sol-abort.webp" aria-label="A simulated humanoid reaches toward a stick several times and stops each time before grasping it"><source src="static/video/clips/agents/cap-sol-abort.mp4" type="video/mp4"></video><figcaption><b>CAP, GPT-6.1 Sol<span class="chip bad">stops early</span></b><span class="cap">BallMove L1. Every program stops on its own check before grasping.</span></figcaption></figure>
+<figure class="clip sped"><span class="speed" aria-label="Played at 4 times speed">4×</span><video data-clip muted loop playsinline preload="none" width="480" height="272" poster="static/video/clips/agents/rua-sol-slip.webp" aria-label="A simulated humanoid picks up a stick, carries it sideways and drops it"><source src="static/video/clips/agents/rua-sol-slip.mp4" type="video/mp4"></video><figcaption><b>RUA, GPT-6.1 Sol<span class="chip amber">same scene</span></b><span class="cap">Same model, same scene. It picks the stick up, then drops it while carrying.</span></figcaption></figure>
+        </div>
+        <ul class="facts">
+          <li><b>Opus 5.5</b> looks often and changes plan, which gave the one L1 success. It also gives up early, and it is the only model that picked the wrong tool.</li>
+          <li><b>GPT-6.1 Sol</b> follows the recipe exactly and reports symptoms, not causes.</li>
+          <li><b>GPT-6 Astra</b> behaves like Sol at about eight times the cost.</li>
+        </ul>
+
+        <h3><span class="q">Question 2</span>How far do agents get, and where is the bottleneck?</h3>
+        <p><b>The tool usually reaches the hand and the target, and no further.</b> The hand fails first, then the reasoning does not change course.</p>
+        <ul class="facts">
+          <li><b>Tool choice.</b> Mostly right, even when the detector mislabels a tool. The exception: with a decoy in BallRetrieve L2, Opus took the straight stick over the hook in 2 of 3 episodes, so it could push the ball but never pull it back.</li>
+          <li><b>Grip.</b> A one-hand pinch lets the tool rotate or fall while it is carried.</li>
+          <li><b>Tool tip.</b> Agents place the hand, not the tip, so sweeps and strikes miss.</li>
+          <li><b>Force.</b> Slow strikes do not break ice. One fast swing did, and the hammer left the hand.</li>
+          <li><b>One hand.</b> The left hand does everything, even when the goal is on the right.</li>
+          <li><b>No change of strategy.</b> The symptom is named, then the same approach is retried.</li>
+        </ul>
+        <div class="clips two">
+<figure class="clip sped"><span class="speed" aria-label="Played at 4 times speed">4×</span><video data-clip muted loop playsinline preload="none" width="480" height="272" poster="static/video/clips/agents/rua-opus-wrong-tool.webp" aria-label="A simulated humanoid passes over a hook on the table and picks up a straight stick instead, then fails to pull a ball back"><source src="static/video/clips/agents/rua-opus-wrong-tool.mp4" type="video/mp4"></video><figcaption><b>RUA, Opus 5.5<span class="chip bad">wrong tool</span></b><span class="cap">BallRetrieve L2 with a decoy. The hook lies on the left. It takes the straight stick, which cannot pull the ball back.</span></figcaption></figure>
+<figure class="clip sped"><span class="speed" aria-label="Played at 4 times speed">4×</span><video data-clip muted loop playsinline preload="none" width="480" height="272" poster="static/video/clips/agents/rua-opus-success.webp" aria-label="A simulated humanoid sweeps a ball into a ring with a long stick"><source src="static/video/clips/agents/rua-opus-success.mp4" type="video/mp4"></video><figcaption><b>RUA, Opus 5.5<span class="chip ok">success</span></b><span class="cap">BallMove L1, the only success. It turns the body and sweeps the ball in.</span></figcaption></figure>
+<figure class="clip sped"><span class="speed" aria-label="Played at 4 times speed">4×</span><video data-clip muted loop playsinline preload="none" width="480" height="272" poster="static/video/clips/agents/rua-opus-one-block.webp" aria-label="A simulated humanoid breaks one ice block with a hammer and keeps striking near a second block"><source src="static/video/clips/agents/rua-opus-one-block.mp4" type="video/mp4"></video><figcaption><b>RUA, Opus 5.5<span class="chip bad">one of two</span></b><span class="cap">IceBreak L1. One block breaks. The second survives every strike.</span></figcaption></figure>
+<figure class="clip sped"><span class="speed" aria-label="Played at 4 times speed">4×</span><video data-clip muted loop playsinline preload="none" width="480" height="272" poster="static/video/clips/agents/rua-astra-ball-off.webp" aria-label="A simulated humanoid drops a hook, reaches for a ball with its hand and pushes it off the table"><source src="static/video/clips/agents/rua-astra-ball-off.mp4" type="video/mp4"></video><figcaption><b>RUA, GPT-6 Astra<span class="chip bad">tool lost</span></b><span class="cap">BallRetrieve L1. The hook slips, and the bare hand knocks the ball away.</span></figcaption></figure>
+        </div>
+
+        <h3><span class="q">Question 3</span>How long does it take, and what does it cost?</h3>
+        <p>An episode holds 60 s of robot motion. With the wait for model responses, its runtime reaches 6 to 23 minutes, which works only because the simulation waits. An episode costs $0.29 to $3.86.</p>
+        <div class="card" id="agent-cost">
+          <div class="card-head"><h3>LLM agents: success, time and cost</h3><p>Successes out of 18 and 36 episodes. Runtime is the longest episode. API cost is the median per episode.</p></div>
+          <div class="card-body scroll-x"><table class="plain agents" style="min-width:640px" aria-label="LLM agent success, runtime and API cost">
+    <thead><tr><th scope="col">Setup</th><th scope="col">L0</th><th scope="col">L1 and L2</th><th scope="col">Runtime</th><th scope="col">API cost</th><th scope="col">Per success</th><th scope="col">Total cost</th></tr></thead><tbody>
+    <tr><th scope="row">CAP, Opus 5.5</th><td><b>14/18</b></td><td><b>0/36</b></td><td>6.3 min</td><td>$1.35</td><td>$4.24</td><td>$59</td></tr>
+    <tr><th scope="row">CAP, GPT-6.1 Sol</th><td><b>2/18</b></td><td><b>0/36</b></td><td>10.6 min</td><td>$0.29</td><td>$7.90</td><td>$16</td></tr>
+    <tr><th scope="row">CAP, GPT-6 Astra</th><td><b>2/18</b></td><td><b>0/36</b></td><td>6.9 min</td><td>$1.51</td><td>$40.12</td><td>$80</td></tr>
+    <tr><th scope="row">RUA, Opus 5.5</th><td><b>16/18</b></td><td><b>1/36</b></td><td>23.0 min</td><td>$1.40</td><td>$4.44</td><td>$76</td></tr>
+    <tr><th scope="row">RUA, GPT-6.1 Sol</th><td><b>18/18</b></td><td><b>0/36</b></td><td>11.7 min</td><td>$0.46</td><td>$1.31</td><td>$24</td></tr>
+    <tr><th scope="row">RUA, GPT-6 Astra</th><td><b>18/18</b></td><td><b>0/36</b></td><td>14.2 min</td><td>$3.86</td><td>$11.00</td><td>$198</td></tr>
+    </tbody></table></div>
+          <div class="card-foot">
+            <span>Runtime is the elapsed time of the longest episode: 60 s of robot motion plus the wait for model responses, while the simulation is paused. Sol and Astra costs use OpenAI list prices on 2026-10-23. Trained-policy cost was not measured.</span>
+          </div>
+        </div>
+
+        <h3>Takeaway</h3>
+        <p>LLM agents choose the tool and plan. Three problems remain.</p>
+        <ul class="facts">
+          <li><b>Low-level control.</b> A one-hand pinch slips while carrying or striking, commands set position but not force or speed, and walking with a tool drifts.</li>
+          <li><b>Reasoning.</b> Agents name the symptom, then retry the same approach. They get no feedback while a command runs, and they use the same order every time.</li>
+          <li><b>Time.</b> An episode takes up to 23 minutes for 60 s of motion.</li>
+        </ul>
+
+        <aside class="insight" aria-labelledby="kyo-insight">
+          <h4 id="kyo-insight">KYO's insight</h4>
+          <ul>
+            <li><b>A low-level control model is needed.</b> GUI agents needed little physical knowledge, and time did not matter. Tool use needs both. However good the LLM, it needs a separate model for low-level control. Whether that is classical control such as PD and IK or a neural action generator such as a VLA is still open. An LLM that could handle force and walking itself would solve this, but running a large LLM for every contact is wasteful. A model specialized in control is the better split. People work this way too: we decide what to do without reasoning through every muscle.</li>
+            <li><b>The reasoning failures are harness problems.</b> Keeping the same strategy comes from implementation, not from the model: the agent has no memory of what it tried before. Getting no feedback during a command and repeating the same order are limits of the agentic pipeline too. The harness should supply that memory and that feedback.</li>
+            <li><b>Time alone calls for System 2 and System 1.</b> A real robot does not wait 23 minutes. A slow planner and a fast controller have to run together.</li>
+          </ul>
+        </aside>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -214,12 +306,12 @@
   <div class="wrap">
     <p class="eyebrow">Results</p>
     <h2>Policies that pick up the right tool still often fail to finish the task</h2>
-    <p class="lede">Each policy is trained once on the 3,003 simulation demonstrations and run for 100 episodes per task.</p>
+    <p class="lede">Each policy is trained once on the 3,003 simulation demonstrations and run for 100 episodes per task. Six zero-shot LLM agent setups are listed below them, with 3 episodes per task.</p>
 
     <div class="card" style="margin-top:28px">
       <div class="card-head">
         <h3>Simulation success rate (%)</h3>
-        <p>Bold marks the best policy in a column.</p>
+        <p>Bold marks the best trained policy in a column.</p>
         <div class="tabs" data-tabs hidden role="group" aria-label="Tool-set mode"><button type="button" data-mode="S" aria-pressed="true">Standard</button><button type="button" data-mode="D" aria-pressed="false">Decoy</button></div>
       </div>
       <div class="card-body"><div class="pane" data-pane="S"><h4 class="pane-title">Standard (S)</h4><div class="scroll-x"><table class="heat" aria-label="Simulation success rate in percent, standard mode">
@@ -241,6 +333,7 @@
 <th scope="col">Retrieve</th>
 <th scope="col">Break</th>
 </tr></thead><tbody>
+<tr class="grp"><th scope="rowgroup" colspan="12">Trained on ToolBook<small>100 episodes per task</small></th></tr>
 <tr><th scope="row">ACT<small>IL</small></th>
 <td style="--v:5" data-tip="ACT · BallMove L0 · Standard" data-value="5%">5</td>
 <td class="z" style="--v:0" data-tip="ACT · BallRetrieve L0 · Standard" data-value="0%">0</td>
@@ -332,6 +425,85 @@
 <td class="best" style="--v:20" data-tip="FastWAM · BallRetrieve L2 · Standard" data-value="20%">20</td>
 <td class="best" style="--v:69" data-tip="FastWAM · IceBreak L2 · Standard" data-value="69%">69</td>
 </tr>
+<tr class="grp"><th scope="rowgroup" colspan="12">Zero-shot LLM agents<small>3 episodes per task</small></th></tr>
+<tr><th scope="row">Opus 5.5<small>CAP</small></th>
+<td style="--v:67" data-tip="CAP, Opus 5.5, BallMove L0, Standard" data-value="2 of 3">67</td>
+<td style="--v:67" data-tip="CAP, Opus 5.5, BallRetrieve L0, Standard" data-value="2 of 3">67</td>
+<td style="--v:100" data-tip="CAP, Opus 5.5, IceBreak L0, Standard" data-value="3 of 3">100</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, BallMove L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, BallRetrieve L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, IceBreak L1, Standard" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, BallMove L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, BallRetrieve L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, IceBreak L2, Standard" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">GPT-6.1 Sol<small>CAP</small></th>
+<td style="--v:33" data-tip="CAP, GPT-6.1 Sol, BallMove L0, Standard" data-value="1 of 3">33</td>
+<td style="--v:33" data-tip="CAP, GPT-6.1 Sol, BallRetrieve L0, Standard" data-value="1 of 3">33</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, IceBreak L0, Standard" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallMove L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallRetrieve L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, IceBreak L1, Standard" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallMove L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallRetrieve L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, IceBreak L2, Standard" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">GPT-6 Astra<small>CAP</small></th>
+<td style="--v:33" data-tip="CAP, GPT-6 Astra, BallMove L0, Standard" data-value="1 of 3">33</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallRetrieve L0, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, IceBreak L0, Standard" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallMove L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallRetrieve L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, IceBreak L1, Standard" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallMove L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallRetrieve L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, IceBreak L2, Standard" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">Opus 5.5<small>RUA</small></th>
+<td style="--v:67" data-tip="RUA, Opus 5.5, BallMove L0, Standard" data-value="2 of 3">67</td>
+<td style="--v:100" data-tip="RUA, Opus 5.5, BallRetrieve L0, Standard" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, Opus 5.5, IceBreak L0, Standard" data-value="3 of 3">100</td>
+<td class="gap" aria-hidden="true"></td>
+<td style="--v:33" data-tip="RUA, Opus 5.5, BallMove L1, Standard" data-value="1 of 3">33</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, BallRetrieve L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, IceBreak L1, Standard" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, BallMove L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, BallRetrieve L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, IceBreak L2, Standard" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">GPT-6.1 Sol<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, BallMove L0, Standard" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, BallRetrieve L0, Standard" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, IceBreak L0, Standard" data-value="3 of 3">100</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, BallMove L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, BallRetrieve L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, IceBreak L1, Standard" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, BallMove L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, BallRetrieve L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, IceBreak L2, Standard" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">GPT-6 Astra<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, BallMove L0, Standard" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, BallRetrieve L0, Standard" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, IceBreak L0, Standard" data-value="3 of 3">100</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, BallMove L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, BallRetrieve L1, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, IceBreak L1, Standard" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, BallMove L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, BallRetrieve L2, Standard" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, IceBreak L2, Standard" data-value="0 of 3">0</td>
+</tr>
 </tbody></table></div></div>
 <div class="pane" data-pane="D"><h4 class="pane-title">Decoy (D)</h4><div class="scroll-x"><table class="heat" aria-label="Simulation success rate in percent, decoy mode">
 <colgroup><col class="c-name"><col span="3"><col class="c-gap"><col span="3"><col class="c-gap"><col span="3"></colgroup>
@@ -352,6 +524,7 @@
 <th scope="col">Retrieve</th>
 <th scope="col">Break</th>
 </tr></thead><tbody>
+<tr class="grp"><th scope="rowgroup" colspan="12">Trained on ToolBook<small>100 episodes per task</small></th></tr>
 <tr><th scope="row">ACT<small>IL</small></th>
 <td style="--v:3" data-tip="ACT · BallMove L0 · Decoy" data-value="3%">3</td>
 <td style="--v:4" data-tip="ACT · BallRetrieve L0 · Decoy" data-value="4%">4</td>
@@ -443,9 +616,88 @@
 <td class="best" style="--v:11" data-tip="FastWAM · BallRetrieve L2 · Decoy" data-value="11%">11</td>
 <td class="best" style="--v:61" data-tip="FastWAM · IceBreak L2 · Decoy" data-value="61%">61</td>
 </tr>
+<tr class="grp"><th scope="rowgroup" colspan="12">Zero-shot LLM agents<small>3 episodes per task</small></th></tr>
+<tr><th scope="row">Opus 5.5<small>CAP</small></th>
+<td style="--v:100" data-tip="CAP, Opus 5.5, BallMove L0, Decoy" data-value="3 of 3">100</td>
+<td style="--v:67" data-tip="CAP, Opus 5.5, BallRetrieve L0, Decoy" data-value="2 of 3">67</td>
+<td style="--v:67" data-tip="CAP, Opus 5.5, IceBreak L0, Decoy" data-value="2 of 3">67</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, BallMove L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, BallRetrieve L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, IceBreak L1, Decoy" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, BallMove L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, BallRetrieve L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, IceBreak L2, Decoy" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">GPT-6.1 Sol<small>CAP</small></th>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallMove L0, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallRetrieve L0, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, IceBreak L0, Decoy" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallMove L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallRetrieve L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, IceBreak L1, Decoy" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallMove L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, BallRetrieve L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, IceBreak L2, Decoy" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">GPT-6 Astra<small>CAP</small></th>
+<td style="--v:33" data-tip="CAP, GPT-6 Astra, BallMove L0, Decoy" data-value="1 of 3">33</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallRetrieve L0, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, IceBreak L0, Decoy" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallMove L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallRetrieve L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, IceBreak L1, Decoy" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallMove L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, BallRetrieve L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, IceBreak L2, Decoy" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">Opus 5.5<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, Opus 5.5, BallMove L0, Decoy" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, Opus 5.5, BallRetrieve L0, Decoy" data-value="3 of 3">100</td>
+<td style="--v:67" data-tip="RUA, Opus 5.5, IceBreak L0, Decoy" data-value="2 of 3">67</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, BallMove L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, BallRetrieve L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, IceBreak L1, Decoy" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, BallMove L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, BallRetrieve L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, IceBreak L2, Decoy" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">GPT-6.1 Sol<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, BallMove L0, Decoy" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, BallRetrieve L0, Decoy" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, IceBreak L0, Decoy" data-value="3 of 3">100</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, BallMove L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, BallRetrieve L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, IceBreak L1, Decoy" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, BallMove L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, BallRetrieve L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, IceBreak L2, Decoy" data-value="0 of 3">0</td>
+</tr>
+<tr><th scope="row">GPT-6 Astra<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, BallMove L0, Decoy" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, BallRetrieve L0, Decoy" data-value="3 of 3">100</td>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, IceBreak L0, Decoy" data-value="3 of 3">100</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, BallMove L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, BallRetrieve L1, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, IceBreak L1, Decoy" data-value="0 of 3">0</td>
+<td class="gap" aria-hidden="true"></td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, BallMove L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, BallRetrieve L2, Decoy" data-value="0 of 3">0</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, IceBreak L2, Decoy" data-value="0 of 3">0</td>
+</tr>
 </tbody></table></div></div></div>
       <div class="card-foot">
-        <span>Move, Retrieve, Break: the three scenarios. IL: imitation learning. VLA: vision-language-action. WAM: world-action model.</span>
+        <span>Move, Retrieve, Break: the three scenarios. IL: imitation learning. VLA: vision-language-action. WAM: world-action model. CAP: one program per attempt. RUA: one command at a time. <a href="#agents">About the agents</a>.</span>
         <span class="scale">0%<i></i>100%</span>
       </div>
     </div>
@@ -465,6 +717,24 @@
         <div class="num">6/10<span class="to">vs</span>1/10<small>GR00T N1.7 vs ACT, real BallMove</small></div>
         <h4>Simulation strength carries over to the real robot</h4>
         <p>After 5,000 fine-tuning updates on 91 real demonstrations.</p>
+      </article>
+    </div>
+
+    <div class="findings">
+      <article class="finding">
+        <div class="num">18/18<span class="to">→</span>0/36<small>GPT-6.1 Sol with RUA, L0 to L1 and L2</small></div>
+        <h4>Agents pick the tool up, then stall</h4>
+        <p>The docs give a recipe for the pick, none for the use.</p>
+      </article>
+      <article class="finding">
+        <div class="num">2/18<span class="to">vs</span>18/18<small>GPT-6.1 Sol at L0, CAP vs RUA</small></div>
+        <h4>The interface decides more than the model</h4>
+        <p>Programs stop on their own checks. Step by step, the same model succeeds.</p>
+      </article>
+      <article class="finding">
+        <div class="num">$24<span class="to">vs</span>$198<small>Sol vs Astra with RUA, 54 episodes each</small></div>
+        <h4>A costlier model bought no extra success</h4>
+        <p>Both finish 18 of 54 episodes.</p>
       </article>
     </div>
 
@@ -512,6 +782,7 @@
           </table>
           </div>
           <p class="note">40,000 updates with 128 samples per update, drawing from all 18 tasks. Episodes last at most 3,000 control steps at 50 Hz, with seeds matched across policies. ACT and DP take language through a frozen CLIP ViT-L/14 text encoder.</p>
+          <p class="note">LLM agents are not trained. Each model runs with CAP and with RUA on 3 seeds per task, under the same 3,000-step limit. <a href="#agents">Setup and findings</a>.</p>
         </div>
       </details>
     </div>
@@ -539,6 +810,7 @@
 <th scope="col">Tool-target contact</th>
 <th scope="col">Success</th>
 </tr></thead><tbody>
+<tr class="grp"><th scope="rowgroup" colspan="6">Trained on ToolBook<small>600 episodes per row</small></th></tr>
 <tr><th scope="row">ACT<small>IL</small></th>
 <td style="--v:46" data-tip="ACT · Standard · Candidate contact" data-value="46.0%">46.0</td>
 <td style="--v:46" data-tip="ACT · Standard · Correct first contact" data-value="46.0%">46.0</td>
@@ -588,6 +860,49 @@
 <td style="--v:88.2" data-tip="FastWAM · Standard · Tool-target contact" data-value="88.2%">88.2</td>
 <td style="--v:52.8" data-tip="FastWAM · Standard · Success" data-value="52.8%">52.8</td>
 </tr>
+<tr class="grp"><th scope="rowgroup" colspan="6">Zero-shot LLM agents<small>18 episodes per row</small></th></tr>
+<tr><th scope="row">Opus 5.5<small>CAP</small></th>
+<td style="--v:100" data-tip="CAP, Opus 5.5, Standard, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:44.4" data-tip="CAP, Opus 5.5, Standard, Correct first contact" data-value="8 of 18">44.4</td>
+<td style="--v:66.7" data-tip="CAP, Opus 5.5, Standard, Correct-tool lift" data-value="12 of 18">66.7</td>
+<td style="--v:22.2" data-tip="CAP, Opus 5.5, Standard, Tool-target contact" data-value="4 of 18">22.2</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, Standard, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">GPT-6.1 Sol<small>CAP</small></th>
+<td style="--v:100" data-tip="CAP, GPT-6.1 Sol, Standard, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:27.8" data-tip="CAP, GPT-6.1 Sol, Standard, Correct first contact" data-value="5 of 18">27.8</td>
+<td style="--v:11.1" data-tip="CAP, GPT-6.1 Sol, Standard, Correct-tool lift" data-value="2 of 18">11.1</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, Standard, Tool-target contact" data-value="0 of 18">0.0</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, Standard, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">GPT-6 Astra<small>CAP</small></th>
+<td style="--v:100" data-tip="CAP, GPT-6 Astra, Standard, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:27.8" data-tip="CAP, GPT-6 Astra, Standard, Correct first contact" data-value="5 of 18">27.8</td>
+<td style="--v:5.6" data-tip="CAP, GPT-6 Astra, Standard, Correct-tool lift" data-value="1 of 18">5.6</td>
+<td style="--v:5.6" data-tip="CAP, GPT-6 Astra, Standard, Tool-target contact" data-value="1 of 18">5.6</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, Standard, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">Opus 5.5<small>RUA</small></th>
+<td style="--v:94.4" data-tip="RUA, Opus 5.5, Standard, Candidate contact" data-value="17 of 18">94.4</td>
+<td style="--v:66.7" data-tip="RUA, Opus 5.5, Standard, Correct first contact" data-value="12 of 18">66.7</td>
+<td style="--v:88.9" data-tip="RUA, Opus 5.5, Standard, Correct-tool lift" data-value="16 of 18">88.9</td>
+<td style="--v:61.1" data-tip="RUA, Opus 5.5, Standard, Tool-target contact" data-value="11 of 18">61.1</td>
+<td style="--v:5.6" data-tip="RUA, Opus 5.5, Standard, Success" data-value="1 of 18">5.6</td>
+</tr>
+<tr><th scope="row">GPT-6.1 Sol<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, Standard, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:61.1" data-tip="RUA, GPT-6.1 Sol, Standard, Correct first contact" data-value="11 of 18">61.1</td>
+<td style="--v:94.4" data-tip="RUA, GPT-6.1 Sol, Standard, Correct-tool lift" data-value="17 of 18">94.4</td>
+<td style="--v:72.2" data-tip="RUA, GPT-6.1 Sol, Standard, Tool-target contact" data-value="13 of 18">72.2</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, Standard, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">GPT-6 Astra<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, Standard, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:61.1" data-tip="RUA, GPT-6 Astra, Standard, Correct first contact" data-value="11 of 18">61.1</td>
+<td style="--v:94.4" data-tip="RUA, GPT-6 Astra, Standard, Correct-tool lift" data-value="17 of 18">94.4</td>
+<td style="--v:61.1" data-tip="RUA, GPT-6 Astra, Standard, Tool-target contact" data-value="11 of 18">61.1</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, Standard, Success" data-value="0 of 18">0.0</td>
+</tr>
 </tbody></table></div></div>
 <div class="pane" data-pane="D"><h4 class="pane-title">Decoy (D)</h4><div class="scroll-x"><table class="heat" aria-label="Execution-event rate in percent, decoy mode">
 <colgroup><col class="c-name"><col span="5"></colgroup>
@@ -598,6 +913,7 @@
 <th scope="col">Tool-target contact</th>
 <th scope="col">Success</th>
 </tr></thead><tbody>
+<tr class="grp"><th scope="rowgroup" colspan="6">Trained on ToolBook<small>600 episodes per row</small></th></tr>
 <tr><th scope="row">ACT<small>IL</small></th>
 <td style="--v:57.2" data-tip="ACT · Decoy · Candidate contact" data-value="57.2%">57.2</td>
 <td style="--v:44.8" data-tip="ACT · Decoy · Correct first contact" data-value="44.8%">44.8</td>
@@ -647,14 +963,57 @@
 <td style="--v:81" data-tip="FastWAM · Decoy · Tool-target contact" data-value="81.0%">81.0</td>
 <td style="--v:47" data-tip="FastWAM · Decoy · Success" data-value="47.0%">47.0</td>
 </tr>
+<tr class="grp"><th scope="rowgroup" colspan="6">Zero-shot LLM agents<small>18 episodes per row</small></th></tr>
+<tr><th scope="row">Opus 5.5<small>CAP</small></th>
+<td style="--v:100" data-tip="CAP, Opus 5.5, Decoy, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:27.8" data-tip="CAP, Opus 5.5, Decoy, Correct first contact" data-value="5 of 18">27.8</td>
+<td style="--v:61.1" data-tip="CAP, Opus 5.5, Decoy, Correct-tool lift" data-value="11 of 18">61.1</td>
+<td style="--v:16.7" data-tip="CAP, Opus 5.5, Decoy, Tool-target contact" data-value="3 of 18">16.7</td>
+<td class="z" style="--v:0" data-tip="CAP, Opus 5.5, Decoy, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">GPT-6.1 Sol<small>CAP</small></th>
+<td style="--v:100" data-tip="CAP, GPT-6.1 Sol, Decoy, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:22.2" data-tip="CAP, GPT-6.1 Sol, Decoy, Correct first contact" data-value="4 of 18">22.2</td>
+<td style="--v:22.2" data-tip="CAP, GPT-6.1 Sol, Decoy, Correct-tool lift" data-value="4 of 18">22.2</td>
+<td style="--v:11.1" data-tip="CAP, GPT-6.1 Sol, Decoy, Tool-target contact" data-value="2 of 18">11.1</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6.1 Sol, Decoy, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">GPT-6 Astra<small>CAP</small></th>
+<td style="--v:100" data-tip="CAP, GPT-6 Astra, Decoy, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:22.2" data-tip="CAP, GPT-6 Astra, Decoy, Correct first contact" data-value="4 of 18">22.2</td>
+<td style="--v:33.3" data-tip="CAP, GPT-6 Astra, Decoy, Correct-tool lift" data-value="6 of 18">33.3</td>
+<td style="--v:11.1" data-tip="CAP, GPT-6 Astra, Decoy, Tool-target contact" data-value="2 of 18">11.1</td>
+<td class="z" style="--v:0" data-tip="CAP, GPT-6 Astra, Decoy, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">Opus 5.5<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, Opus 5.5, Decoy, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:16.7" data-tip="RUA, Opus 5.5, Decoy, Correct first contact" data-value="3 of 18">16.7</td>
+<td style="--v:72.2" data-tip="RUA, Opus 5.5, Decoy, Correct-tool lift" data-value="13 of 18">72.2</td>
+<td style="--v:33.3" data-tip="RUA, Opus 5.5, Decoy, Tool-target contact" data-value="6 of 18">33.3</td>
+<td class="z" style="--v:0" data-tip="RUA, Opus 5.5, Decoy, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">GPT-6.1 Sol<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, Decoy, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:22.2" data-tip="RUA, GPT-6.1 Sol, Decoy, Correct first contact" data-value="4 of 18">22.2</td>
+<td style="--v:100" data-tip="RUA, GPT-6.1 Sol, Decoy, Correct-tool lift" data-value="18 of 18">100.0</td>
+<td style="--v:55.6" data-tip="RUA, GPT-6.1 Sol, Decoy, Tool-target contact" data-value="10 of 18">55.6</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6.1 Sol, Decoy, Success" data-value="0 of 18">0.0</td>
+</tr>
+<tr><th scope="row">GPT-6 Astra<small>RUA</small></th>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, Decoy, Candidate contact" data-value="18 of 18">100.0</td>
+<td style="--v:22.2" data-tip="RUA, GPT-6 Astra, Decoy, Correct first contact" data-value="4 of 18">22.2</td>
+<td style="--v:100" data-tip="RUA, GPT-6 Astra, Decoy, Correct-tool lift" data-value="18 of 18">100.0</td>
+<td style="--v:55.6" data-tip="RUA, GPT-6 Astra, Decoy, Tool-target contact" data-value="10 of 18">55.6</td>
+<td class="z" style="--v:0" data-tip="RUA, GPT-6 Astra, Decoy, Success" data-value="0 of 18">0.0</td>
+</tr>
 </tbody></table></div></div></div>
       <div class="card-foot">
-        <span>An episode can start with a wrong first contact and still lift the suitable tool later.</span>
+        <span>An episode can start with a wrong first contact and still lift the suitable tool later. For agents, first contact is often an accidental brush on the way to the tool.</span>
         <span class="scale">0%<i></i>100%</span>
       </div>
     </div>
 
-    <div class="findings two">
+    <div class="findings">
       <article class="finding">
         <div class="num">98.8%<span class="to">→</span>44.2%<small>π<sub>0.5</sub>, candidate contact to correct-tool lift</small></div>
         <h4>Weaker policies touch a tool but do not pick it up</h4>
@@ -662,6 +1021,10 @@
       <article class="finding">
         <div class="num">88.2%<span class="to">→</span>52.8%<small>FastWAM, tool-target contact to success</small></div>
         <h4>Stronger policies reach the target and still fall short</h4>
+      </article>
+      <article class="finding">
+        <div class="num">94.4%<span class="to">→</span>0.0%<small>GPT-6.1 Sol with RUA, correct-tool lift to success</small></div>
+        <h4>Agents lift the right tool and do not finish</h4>
       </article>
     </div>
 
@@ -702,6 +1065,7 @@
             <li>The real-robot study covers <b>three policies on two L1 scenarios</b>.</li>
             <li><b>First contact is a proxy</b> for the initial choice, and execution levels differ in layout as well as in locomotion.</li>
             <li>The instruction probe uses <b>one fixed IceBreak scene</b>.</li>
+            <li>The LLM agent rows use <b>3 episodes per task</b>, and the agents call a tool locator, inverse kinematics and a validated pick recipe that the policies do not have.</li>
           </ul>
         </div>
       </details>
@@ -759,43 +1123,27 @@
   <div class="wrap">
     <p class="eyebrow">Get started</p>
     <h2>Evaluate a policy on the 18 tasks</h2>
-    <p class="lede">Needs Linux with an NVIDIA GPU, <a href="https://docs.astral.sh/uv/">uv</a>, Git and <code>zstd</code>.</p>
+    <p class="lede">Open the repository in a coding agent and ask. The agent follows <a href="https://github.com/SNU-PI/HumanoidToolBench/blob/main/AGENTS.md">AGENTS.md</a> from installation to the results table.</p>
 
     <div class="start">
-      <div class="code">
-        <button class="copy" type="button">Copy</button>
-        <pre data-copy="git clone https://github.com/SNU-PI/HumanoidToolBench.git
-cd HumanoidToolBench
-uv run --no-project scripts/setup_evaluation.py
-
-# One-episode check that simulation, inference and recording work
-MODEL=snupilab/humanoidtoolbench-act-sim-3003
-uv run htb-eval --model $MODEL --episodes 1 --max-steps 100
-
-# Standard protocol: one task, or all 18
-uv run htb-eval G1BallRetrieve-L1-R --model $MODEL
-uv run htb-eval all --model $MODEL
-
-# Your own policy: predict(request) returns (T, 36) actions
-uv run htb-eval G1BallMove-L1-S --policy my_policy:predict \
-  --checkpoint MODEL_ID"><code><span class="k">git clone</span> https://github.com/SNU-PI/HumanoidToolBench.git
-<span class="k">cd </span>HumanoidToolBench
-<span class="k">uv run</span> --no-project scripts/setup_evaluation.py
-
-<span class="c"># One-episode check that simulation, inference and recording work</span>
-<span class="k">MODEL=</span>snupilab/humanoidtoolbench-act-sim-3003
-<span class="k">uv run</span> htb-eval --model $MODEL --episodes 1 --max-steps 100
-
-<span class="c"># Standard protocol: one task, or all 18</span>
-<span class="k">uv run</span> htb-eval G1BallRetrieve-L1-R --model $MODEL
-<span class="k">uv run</span> htb-eval all --model $MODEL
-
-<span class="c"># Your own policy: predict(request) returns (T, 36) actions</span>
-<span class="k">uv run</span> htb-eval G1BallMove-L1-S --policy my_policy:predict \
-  --checkpoint MODEL_ID</code></pre>
+      <div class="steps">
+        <p class="step"><b>1</b>Clone the repository.</p>
+        <div class="code">
+          <button class="copy" type="button">Copy</button>
+          <pre data-copy="git clone https://github.com/SNU-PI/HumanoidToolBench.git
+cd HumanoidToolBench"><code><span class="k">git clone</span> https://github.com/SNU-PI/HumanoidToolBench.git
+<span class="k">cd </span>HumanoidToolBench</code></pre>
+        </div>
+        <p class="step"><b>2</b>Open the folder in Claude Code or Codex and ask.</p>
+        <div class="code">
+          <button class="copy" type="button">Copy</button>
+          <pre data-copy="Evaluate my policy on HumanoidToolBench."><code>Evaluate my policy on HumanoidToolBench.</code></pre>
+        </div>
+        <p class="step-note">The agent asks what to evaluate, installs the toolkit, connects your policy, runs the tasks and reports the table. Needs Linux with an NVIDIA GPU, <a href="https://docs.astral.sh/uv/">uv</a>, Git and <code>zstd</code>.</p>
       </div>
       <ul class="links">
-        <li><a href="https://github.com/SNU-PI/HumanoidToolBench#quick-start"><b>Quick start</b><span>Requirements and the first run</span></a></li>
+        <li><a href="https://github.com/SNU-PI/HumanoidToolBench/blob/main/AGENTS.md"><b>Agent guide</b><span>The steps the agent follows</span></a></li>
+        <li><a href="https://github.com/SNU-PI/HumanoidToolBench#quick-start"><b>Manual setup</b><span>The same steps by hand</span></a></li>
         <li><a href="https://github.com/SNU-PI/HumanoidToolBench/blob/main/docs/PUBLIC_EVALUATION.md"><b>Evaluation guide</b><span>Policy interface and protocol</span></a></li>
         <li><a href="https://github.com/SNU-PI/HumanoidToolBench/blob/main/docs/ENVIRONMENTS.md"><b>Environments</b><span>Instructions and thresholds</span></a></li>
         <li><a href="https://github.com/SNU-PI/HumanoidToolBench/blob/main/data/README.md"><b>Dataset guide</b><span>ToolBook layout and formats</span></a></li>
