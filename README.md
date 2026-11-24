@@ -36,7 +36,7 @@ Documentation: [Environments](docs/ENVIRONMENTS.md) ·
 
 ## Quick Start
 
-**Using a coding agent? Clone this repository, open it in Claude Code or Codex, and ask: "Evaluate my policy on HumanoidToolBench." The agent follows [AGENTS.md](AGENTS.md) from installation to the results table.**
+**Using a coding agent? Clone this repository, open it in Claude Code, Codex or Antigravity, and ask: "Evaluate my policy on HumanoidToolBench." The agent follows [AGENTS.md](AGENTS.md) from installation to the results table.**
 
 ```bash
 git clone https://github.com/SNU-PI/HumanoidToolBench.git

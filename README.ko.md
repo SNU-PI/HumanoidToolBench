@@ -37,7 +37,7 @@ HumanoidToolBench는 Unitree G1이 적절한 도구를 고르고 그 도구로 �
 
 ## 빠른 시작
 
-**코딩 에이전트를 쓴다면: 저장소를 clone한 뒤 Claude Code나 Codex에서 열고 "HumanoidToolBench로 내 정책을 평가해줘"라고 요청하세요. 에이전트가 [AGENTS.md](AGENTS.md)를 따라 설치부터 결과 표까지 진행합니다.**
+**코딩 에이전트를 쓴다면: 저장소를 clone한 뒤 Claude Code, Codex, Antigravity 중 하나로 열고 "HumanoidToolBench로 내 정책을 평가해줘"라고 요청하세요. 에이전트가 [AGENTS.md](AGENTS.md)를 따라 설치부터 결과 표까지 진행합니다.**
 
 ```bash
 git clone https://github.com/SNU-PI/HumanoidToolBench.git

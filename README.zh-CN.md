@@ -20,7 +20,7 @@ HumanoidToolBench 评测 Unitree G1 能否选择合适的工具并用它完成�
 
 ## 快速开始
 
-**使用编程智能体？克隆本仓库后在 Claude Code 或 Codex 中打开，并输入：“用 HumanoidToolBench 评测我的策略。”智能体会按照 [AGENTS.md](AGENTS.md) 完成从安装到结果表的全过程。**
+**使用编程智能体？克隆本仓库后在 Claude Code、Codex 或 Antigravity 中打开，并输入：“用 HumanoidToolBench 评测我的策略。”智能体会按照 [AGENTS.md](AGENTS.md) 完成从安装到结果表的全过程。**
 
 ```bash
 git clone https://github.com/SNU-PI/HumanoidToolBench.git
